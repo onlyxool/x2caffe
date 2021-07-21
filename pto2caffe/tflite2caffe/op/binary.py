@@ -52,27 +52,7 @@ class Binary(Operator):
         if self.op_code.BuiltinCode() == tflite.BuiltinOperator.ADD:
             self.eltwise_param = dict()
             self.eltwise_param['operation'] = 1
-
-#        op = self.tflite
-#        opcode = self.model.OperatorCodes(op.OpcodeIndex()).BuiltinCode()
-#        assert(opcode in self.TypeMapping)
-#
-#        assert(op.InputsLength() == 2)
-#        assert(op.OutputsLength() == 1)
-#
-#        self.parseInput(0)
-#        self.parseInput(1)
-#        ot = self.parseOutput(0)
-#
-#        self.fakeBroadcast()
-#
-#        # options
-#        op_opt = op.BuiltinOptions()
-#        if opcode in self.OptionMapping:
-#            option = self.OptionMapping[opcode]()
-#            option.Init(op_opt.Bytes, op_opt.Pos)
-#
-#            handleFusedActivation(self, option, ot)
+            self.attrs = self.eltwise_param
 
         self.setParsed()
 
