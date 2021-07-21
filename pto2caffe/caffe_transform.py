@@ -1,7 +1,7 @@
+import os
 import sys
-sys.path.insert(0, '../../mc_768/toolchain/caffe/python')
-sys.path.insert(0, '../../mc_768/toolchain/caffe/python/caffe')
-
+sys.path.append(os.getenv('MCHOME') + 'toolchain/caffe/python')
+sys.path.append(os.getenv('MCHOME') + 'toolchain/caffe/python/caffe')
 import caffe
 import numpy as np
 from caffe.proto import caffe_pb2
@@ -43,7 +43,11 @@ def assign_proto(proto, name, val):
                 for key, value in item.items():
                     assign_proto(proto_item, key, value)
         else:
-            getattr(proto, name).extend(val)
+            try:
+                getattr(proto, name).extend(val)
+            except:
+                print('Value Error: Check Attribute ', name , '\'s data type in caffe.proto')
+                raise ValueError
     elif isinstance(val, dict):
         for key, value in val.items():
             assign_proto(getattr(proto, name), key, value)
@@ -84,7 +88,6 @@ class caffe_layer(object):
         # Param
         for key, value in self.params.items():
             if key.endswith('param'):
-                print(key, value)
                 assign_proto(layer, key, value)
             else:
                 try:
@@ -125,6 +128,8 @@ def make_caffe_input_layer(input, param):
     output = input
     output = [output]
 
+    include = dict()
+    include['phase'] = 1
     image_data_param = dict()
     bin_data_param = dict()
     transform_param = dict()
@@ -172,6 +177,6 @@ def make_caffe_input_layer(input, param):
         transform_param['crop_w'] = param['crop_w']
 
     if ext in ['jpg', 'bmp', 'png', 'jpeg']:
-        return caffe_layer("ImageData", layer_name, [], [], output, transform_param=transform_param, image_data_param=image_data_param)
+        return caffe_layer("ImageData", layer_name, [], [], output, transform_param=transform_param, image_data_param=image_data_param, include=include)
     elif ext == 'bin':
-        return caffe_layer("Input", layer_name, [], [], output, transform_param=transform_param, bin_data_param=bin_data_param, input_param=dict(shape=dict(dim=param['outshape'])))
+        return caffe_layer("Input", layer_name, [], [], output, transform_param=transform_param, bin_data_param=bin_data_param, input_param=dict(shape=dict(dim=param['outshape'])), include=include)

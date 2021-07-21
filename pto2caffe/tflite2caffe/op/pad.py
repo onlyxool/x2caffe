@@ -5,7 +5,7 @@ import numpy as np
 
 from tflite2caffe.op.operator import Operator
 
-logger = logging.getLogger('tflite2onnx')
+logger = logging.getLogger('tflite2caffe')
 
 PaddingMapping = { 
     tflite.Padding.SAME: 'SAME_UPPER',
@@ -76,7 +76,10 @@ class Pad(Operator):
 
 def computePaddingSize(padding_mode, input_size, output_size, proto_param:dict, legacy_pad):
     if padding_mode == 1:
-        return (int(legacy_pad['left']), int(legacy_pad['right']), int(legacy_pad['top']), int(legacy_pad['bottom']))
+        if legacy_pad['left'] == legacy_pad['right'] and legacy_pad['top'] == legacy_pad['bottom']:
+            return (int(legacy_pad['left']), int(legacy_pad['top']))
+        else:
+            return (int(legacy_pad['left']), int(legacy_pad['right']), int(legacy_pad['top']), int(legacy_pad['bottom']))
 
     stride_h = proto_param['stride_h']
     input_h = input_size[2]
@@ -104,4 +107,11 @@ def computePaddingSize(padding_mode, input_size, output_size, proto_param:dict, 
         pad_r = pad_w/2
         pad_l = pad_w/2
 
-    return (int(pad_l+legacy_pad['left']), int(pad_r+legacy_pad['right']), int(pad_t+legacy_pad['top']), int(pad_b+legacy_pad['bottom'])) 
+    pad_l = int(pad_l + legacy_pad['left'])
+    pad_r = int(pad_r + legacy_pad['right'])
+    pad_t = int(pad_t + legacy_pad['top'])
+    pad_b = int(pad_b + legacy_pad['bottom'])
+    if pad_l == pad_r and pad_t == pad_b:
+        return (pad_l, pad_t)
+    else:
+        return (pad_l, pad_r, pad_t, pad_b)

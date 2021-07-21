@@ -5,7 +5,7 @@ import numpy as np
 from caffe_transform import caffe_layer
 from tflite2caffe.op.operator import Operator
 
-logger = logging.getLogger('tflite2onnx')
+logger = logging.getLogger('tflite2caffe')
 
 class Resize(Operator):
     TypeMapping = {
@@ -20,14 +20,14 @@ class Resize(Operator):
 
     @property
     def type(self):
-        if self.op_code.BuiltinCode() == tflite.BuiltinOperator.RESIZE_NEAREST_NEIGHBOR:
+        if self.op_code == tflite.BuiltinOperator.RESIZE_NEAREST_NEIGHBOR:
             if hasattr(self, 'convolution_param'):
                 return 'Deconvolution'
             elif hasattr(self, 'upsample_param'):
                 return 'Upsample'
             else:
                 return 'nearest'
-        elif self.op_code.BuiltinCode() == tflite.BuiltinOperator.RESIZE_BILINEAR:
+        elif self.op_code == tflite.BuiltinOperator.RESIZE_BILINEAR:
             return 'Interp'
         else:
             raise NotImplementedError
@@ -35,7 +35,7 @@ class Resize(Operator):
     def parse(self):
         logger.debug("Parsing %s...", self.type)
 
-        assert(self.op_code.BuiltinCode() in self.TypeMapping)
+        assert(self.op_code in self.TypeMapping)
         assert(self.op.InputsLength() == 2), "TFLite has only two inputs"
         assert(self.op.OutputsLength() == 1)
 
@@ -52,7 +52,7 @@ class Resize(Operator):
 
         # Option
         scale_factor = int(output_h/input_h)
-        if self.op_code.BuiltinCode() == tflite.BuiltinOperator.RESIZE_NEAREST_NEIGHBOR:
+        if self.op_code == tflite.BuiltinOperator.RESIZE_NEAREST_NEIGHBOR:
             if output_h/input_h == output_h//input_h and output_w/input_w == output_w//input_w:
                 self.name = 'Deconvolution' + str(self.index)
                 self.convolution_param = dict()
@@ -73,21 +73,21 @@ class Resize(Operator):
                 self.upsample_param = dict()
                 self.upsample_param['scale'] = scale_factor
                 self.attrs = self.upsample_param
-        elif self.op_code.BuiltinCode() == tflite.BuiltinOperator.RESIZE_BILINEAR:
+        elif self.op_code == tflite.BuiltinOperator.RESIZE_BILINEAR:
             raise NotImplementedError
 
         self.setParsed()
 
 
     def convert(self):
-        if self.op_code.BuiltinCode() == tflite.BuiltinOperator.RESIZE_NEAREST_NEIGHBOR:
+        if self.op_code == tflite.BuiltinOperator.RESIZE_NEAREST_NEIGHBOR:
             if hasattr(self, 'convolution_param'):
                 layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, None, convolution_param=self.convolution_param)
             elif hasattr(self, 'upsample_param'):
                 layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, upsample_param=self.upsample_param)
             else:
                 raise NotImplementedError
-        elif self.op_code.BuiltinCode() == tflite.BuiltinOperator.RESIZE_BILINEAR:
+        elif self.op_code == tflite.BuiltinOperator.RESIZE_BILINEAR:
             print('||||', self.name)
         else:
             raise NotImplementedError

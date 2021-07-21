@@ -5,7 +5,7 @@ from util import *
 from caffe_transform import caffe_layer
 from tflite2caffe.op.operator import Operator
 
-logger = logging.getLogger('tflite2onnx')
+logger = logging.getLogger('tflite2caffe')
 
 class Concat(Operator):
     TypeMapping = {

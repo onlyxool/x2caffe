@@ -132,7 +132,7 @@ def preprocess(param):
     if param['root_folder'] is None:
         param['root_folder'] = source_path
     else:
-        param['root_folder'] = os.path.abspath(param['root_folder'])
+        param['root_folder'] = os.path.abspath(param['root_folder']) + '/'
 
     if param['color_format'] == 'BGR':
         param['mean'] = RGB2BGR(param['mean'])
@@ -195,7 +195,7 @@ def Convert(model_file, caffe_model_name, caffe_model_path=None, dump_level=-1, 
         from tflite2caffe.convert import convert as TensorflowConvert
         TensorflowConvert(model_file, input_tensor, caffe_model_name, caffe_model_path, dump_level, param)
     elif framework == 'onnx':
-        from onnx.convert import convert as OnnxConvert
+        from onnx2caffe.convert import convert as OnnxConvert
         OnnxConvert(model_file, input_tensor, caffe_model_name, caffe_model_path, dump_level, param)
     else:
         raise NotImplementedError

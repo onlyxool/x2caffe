@@ -39,7 +39,6 @@ class Base(ABC):
     def __init__(self, model=None, graph=None, index=None):
         # Overall fields
         self.status = Status.UNINITIALIZED
-        self.name = None
 
         self.model = model
         self.graph = graph

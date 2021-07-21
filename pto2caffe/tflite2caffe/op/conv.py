@@ -5,7 +5,7 @@ from caffe_transform import caffe_layer
 from tflite2caffe.op.operator import Operator
 from tflite2caffe.op.pad import computePaddingSize
 
-logger = logging.getLogger('tflite2onnx')
+logger = logging.getLogger('tflite2caffe')
 
 class Convolution(Operator):
     def __init__(self, tfmodel, tfgraph, tf_op, tf_op_code, index, legacys):
@@ -18,7 +18,7 @@ class Convolution(Operator):
 
     @property
     def isDepthwise(self):
-        return (self.op_code.BuiltinCode() is tflite.BuiltinOperator.DEPTHWISE_CONV_2D)
+        return (self.op_code is tflite.BuiltinOperator.DEPTHWISE_CONV_2D)
 
     def parse(self):
         logger.debug("Parsing %s...", self.type)
@@ -39,6 +39,13 @@ class Convolution(Operator):
         else:
             self.bias = bias
 
+        if self.isDepthwise:
+            print(self.name)
+            for inputs_shape in self.inputs_shape:
+                print(inputs_shape)
+            for output_shape in self.outputs_shape:
+                print(output_shape)
+
         # Option
         op_opt = self.op.BuiltinOptions()
         opt = tflite.DepthwiseConv2DOptions() if self.isDepthwise else tflite.Conv2DOptions()
@@ -51,6 +58,8 @@ class Convolution(Operator):
         self.convolution_param['kernel_h'] = self.weight.shape[2]
         self.convolution_param['kernel_w'] = self.weight.shape[3]
         self.convolution_param['bias_term'] = True if self.bias is not None else False
+        if self.isDepthwise is True:
+            self.convolution_param['engine'] = 1
 
         legacy_pad = {'left': 0, 'right': 0, 'top': 0, 'bottom': 0}
         for legacy in self.legacys:
@@ -58,14 +67,22 @@ class Convolution(Operator):
                 legacy_pad = legacy.pad
                 self.inputs[0] = legacy.inputs[0]
         padding = computePaddingSize(opt.Padding(), self.inputs_shape[0], self.outputs_shape[0],self.convolution_param, legacy_pad)
-        self.convolution_param['pad_l'] = padding[0]
-        self.convolution_param['pad_r'] = padding[1]
-        self.convolution_param['pad_t'] = padding[2]
-        self.convolution_param['pad_b'] = padding[3]
+        if len(padding) == 2:
+            self.convolution_param['pad_w'] = padding[0]
+            self.convolution_param['pad_h'] = padding[1]
+        elif len(padding) == 4:
+            self.convolution_param['pad_l'] = padding[0]
+            self.convolution_param['pad_r'] = padding[1]
+            self.convolution_param['pad_t'] = padding[2]
+            self.convolution_param['pad_b'] = padding[3]
+            print(self.name, padding)
+            if self.isDepthwise is True:
+                raise NotImplementedError("Depthwise Convolution not support asymmetric padding")
 
         activ_type_code = opt.FusedActivationFunction()
         if activ_type_code is not tflite.ActivationFunctionType.NONE:
-            print('TODO: FusedActivationFunction:', activ_type_code)
+            self.activ_type_code = activ_type_code
+
         self.setParsed()
         
     @property
@@ -74,6 +91,5 @@ class Convolution(Operator):
 
     def convert(self):
         layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, convolution_param=self.convolution_param)
-
         self.setConverted()
         return layer

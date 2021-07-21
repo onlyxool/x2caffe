@@ -87,19 +87,19 @@ class Operator(Base):
 
     def parseInput(self):
         for i in range(self.op.InputsLength()):
-            self.inputs.append(self.op.Inputs(i))
-            self.inputs_shape.append(shape_map_nhwc2nchw(self.graph.Tensors(self.inputs[i]).ShapeAsNumpy()))
-            buf = self.getBuffer(self.op.Inputs(i))
-#if buf is not None:
-            self.inputs_buf.append(buf)
-#else:
-#self.inputs_buf.append(buf)
-
+            if self.op.Inputs(i) >= 0:
+                self.inputs.append(self.op.Inputs(i))
+                self.inputs_shape.append(shape_map_nhwc2nchw(self.graph.Tensors(self.inputs[i]).ShapeAsNumpy()))
+                buf = self.getBuffer(self.op.Inputs(i))
+                self.inputs_buf.append(buf)
+            else:
+                self.inputs_buf.append(None)
 
     def parseOutput(self):
         for i in range(self.op.OutputsLength()):
-            self.outputs.append(self.op.Outputs(i))
-            self.outputs_shape.append(shape_map_nhwc2nchw(self.graph.Tensors(self.outputs[0]).ShapeAsNumpy()))
+            if self.op.Outputs(i) >= 0:
+                self.outputs.append(self.op.Outputs(i))
+                self.outputs_shape.append(shape_map_nhwc2nchw(self.graph.Tensors(self.outputs[0]).ShapeAsNumpy()))
 
 
     @property

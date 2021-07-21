@@ -4,21 +4,21 @@ import logging
 from caffe_transform import caffe_layer
 from tflite2caffe.op.operator import Operator
 
-logger = logging.getLogger('tflite2onnx')
+logger = logging.getLogger('tflite2caffe')
 
 class Binary(Operator):
-    TypeMapping = { 
+    TypeMapping = {
         tflite.BuiltinOperator.ADD: 'Add',
         tflite.BuiltinOperator.MUL: 'Mul',
         tflite.BuiltinOperator.SUB: 'Sub',
         tflite.BuiltinOperator.POW: 'Pow',
-    }   
+    }
 
-    OptionMapping = { 
+    OptionMapping = {
         tflite.BuiltinOperator.ADD: tflite.AddOptions,
         tflite.BuiltinOperator.MUL: tflite.MulOptions,
         tflite.BuiltinOperator.SUB: tflite.SubOptions,
-    }   
+    }
 
     def __init__(self, tfmodel, tfgraph, tf_op, tf_op_code, index, legacy):
         super().__init__(tfmodel, tfgraph, tf_op, tf_op_code, index, legacy)
@@ -27,13 +27,13 @@ class Binary(Operator):
 
     @property
     def type(self):
-        if self.op_code.BuiltinCode() == tflite.BuiltinOperator.ADD:
+        if self.op_code == tflite.BuiltinOperator.ADD:
             return 'Eltwise'
-        elif self.op_code.BuiltinCode() == tflite.BuiltinOperator.SUB:
+        elif self.op_code == tflite.BuiltinOperator.SUB:
             return 'TODO'
-        elif self.op_code.BuiltinCode() == tflite.BuiltinOperator.MUL:
+        elif self.op_code == tflite.BuiltinOperator.MUL:
             return 'TODO'
-        elif self.op_code.BuiltinCode() == tflite.BuiltinOperator.POW:
+        elif self.op_code == tflite.BuiltinOperator.POW:
             return 'TODO'
         else:
             raise NotImplementedError
@@ -41,7 +41,7 @@ class Binary(Operator):
     def parse(self):
         logger.debug("Parsing %s...", self.type)
 
-        assert(self.op_code.BuiltinCode() in self.TypeMapping)
+        assert(self.op_code in self.TypeMapping)
         assert(self.op.InputsLength() == 2)
         assert(self.op.OutputsLength() == 1)
 
@@ -49,7 +49,7 @@ class Binary(Operator):
         self.parseOutput()
 
         # Option
-        if self.op_code.BuiltinCode() == tflite.BuiltinOperator.ADD:
+        if self.op_code == tflite.BuiltinOperator.ADD:
             self.eltwise_param = dict()
             self.eltwise_param['operation'] = 1
             self.attrs = self.eltwise_param
@@ -63,7 +63,7 @@ class Binary(Operator):
         pass
 
     def convert(self):
-        if self.op_code.BuiltinCode() == tflite.BuiltinOperator.ADD:
+        if self.op_code == tflite.BuiltinOperator.ADD:
             layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param)
 
         self.setConverted()
