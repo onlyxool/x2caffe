@@ -1,13 +1,16 @@
 import logging
 from onnx import numpy_helper
-from onnx2caffe.op.constant import Constant
+
 from onnx2caffe.op.binary import Binary
 from onnx2caffe.op.concat import Concat
 from onnx2caffe.op.resize import Resize
 from onnx2caffe.op.pooling import Pooling
+from onnx2caffe.op.flatten import Flatten
 from onnx2caffe.op.conv import Convolution
+from onnx2caffe.op.gemm import InnerProduct
+from onnx2caffe.op.constant import Constant
 from onnx2caffe.op.batchnorm import BatchNorm
-from onnx2caffe.op.activation import Activation 
+from onnx2caffe.op.activation import Activation
 
 from caffe_transform import save_caffe_model
 from caffe_transform import make_caffe_input_layer
@@ -21,15 +24,19 @@ logger = logging.getLogger('ONNX2caffe')
 #    pass
 
 OpMap = {
-    'Constant': Constant,
-    'Conv': Convolution,
-    'LeakyRelu': Activation,
     'Add': Binary,
     'Concat': Concat,
-    'BatchNormalization': BatchNorm,
     'Resize': Resize,
-    'Sigmoid': Activation,
+    'Flatten': Flatten,
     'MaxPool': Pooling,
+    'Relu': Activation,
+    'Conv': Convolution,
+    'Gemm': InnerProduct,
+    'Constant': Constant,
+    'Sigmoid': Activation,
+    'LeakyRelu': Activation,
+    'GlobalAveragePool': Pooling,
+    'BatchNormalization': BatchNorm,
 #    'PAD': Pad,
 #    'RESHAPE': Reshape,
 #    'SOFTMAX': Softmax,
@@ -65,6 +72,8 @@ class Model(Base):
         for value_info in self.graph.output:
             self.shape[value_info.name] = [int(dim.dim_value) for dim in value_info.type.tensor_type.shape.dim]
 
+        print(self.shape[self.graph.input[0].name], '===========')
+
         # Get Weight & Bias
         for tensor in self.model.graph.initializer:
             self.input_tensor[tensor.name] =  numpy_helper.to_array(tensor)
@@ -76,16 +85,6 @@ class Model(Base):
             op.parse()
             if op.status.parsed:
                 self.operators.append(op)
-
-#            op = opFactory(self.model, self.graph, node, index, legacys)
-#            op.parse()
-#            if op.status.parsed:
-#                self.operators.append(op)
-#                if hasattr(op, 'activ_type_code'):
-#                    act_op = handleFusedActivation(op)
-#                    self.operators.append(act_op)
-#            else:
-#                legacys.append(op)
 
         self.setParsed()
 

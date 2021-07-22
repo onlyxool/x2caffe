@@ -21,20 +21,20 @@ from base import Base
 logger = logging.getLogger('TFlite2caffe')
 
 OpMap = { 
-    'CONV_2D': Convolution,
-    'LEAKY_RELU': Activation,
     'PAD': Pad,
     'ADD': Binary,
-    'RESIZE_NEAREST_NEIGHBOR': Resize,
-    'CONCATENATION': Concat,
-    'DEPTHWISE_CONV_2D': Convolution,
     'MEAN': Pooling,
-#    'AVERAGE_POOL_2D': AvgPool2d,
-#    'MAX_POOL_2D': MaxPool2d,
-#    'RESHAPE': Reshape,
     'SOFTMAX': Softmax,
+    'CONV_2D': Convolution,
+    'MAX_POOL_2D': Pooling,
+    'CONCATENATION': Concat,
+    'LEAKY_RELU': Activation,
+    'FULLY_CONNECTED': InnerProduct,
+    'DEPTHWISE_CONV_2D': Convolution,
+    'RESIZE_NEAREST_NEIGHBOR': Resize,
+#    'AVERAGE_POOL_2D': AvgPool2d,
+#    'RESHAPE': Reshape,
 #    'MUL': Mul,
-    'FULLY_CONNECTED': InnerProduct
 }
 
 def opFactory(tfmodel, graph, tf_op, index, legacys):

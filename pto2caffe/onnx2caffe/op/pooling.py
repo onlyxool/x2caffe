@@ -22,22 +22,30 @@ class Pooling(Operator):
         self.parseInput()
         self.parseOutput()
 
-        # options
+        # Options
         self.parseAttributes()
-        if self.op_code == 'MaxPool':
+        if self.op_code.endswith('MaxPool'):
             self.pooling_param['pool'] = 0
             self.pooling_param['kernel_h'] = self.attrs['kernel_shape'][0]
             self.pooling_param['kernel_w'] = self.attrs['kernel_shape'][1]
-            self.pooling_param['stride_h'] = self.attrs['strides'][0]
-            self.pooling_param['stride_w'] = self.attrs['strides'][1]
-            self.pooling_param['ceil_mode'] = self.attrs.get('ceil_mode', True)
-            self.pooling_param['pad_l'] = self.attrs['pads'][1]
-            self.pooling_param['pad_r'] = self.attrs['pads'][3]
-            self.pooling_param['pad_t'] = self.attrs['pads'][0]
-            self.pooling_param['pad_b'] = self.attrs['pads'][2]
-            self.attrs = self.pooling_param
+        elif self.op_code.endswith('AveragePool'):
+            self.pooling_param['pool'] = 1
+            self.pooling_param['kernel_h'] = self.inputs_shape[0][2]
+            self.pooling_param['kernel_w'] = self.inputs_shape[0][3]
         else:
             raise NotImplementedError 
+
+        strides = self.attrs.get('strides', [1, 1])
+        self.pooling_param['stride_h'] = strides[0]
+        self.pooling_param['stride_w'] = strides[1]
+        self.pooling_param['ceil_mode'] = self.attrs.get('ceil_mode', True)
+
+        padding = self.attrs.get('pads', [0,0,0,0])
+        self.pooling_param['pad_l'] = padding[1]
+        self.pooling_param['pad_r'] = padding[3]
+        self.pooling_param['pad_t'] = padding[0]
+        self.pooling_param['pad_b'] = padding[2]
+        self.attrs = self.pooling_param
 
         self.setParsed()
 

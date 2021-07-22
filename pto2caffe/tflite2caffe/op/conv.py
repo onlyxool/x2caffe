@@ -39,13 +39,6 @@ class Convolution(Operator):
         else:
             self.bias = bias
 
-        if self.isDepthwise:
-            print(self.name)
-            for inputs_shape in self.inputs_shape:
-                print(inputs_shape)
-            for output_shape in self.outputs_shape:
-                print(output_shape)
-
         # Option
         op_opt = self.op.BuiltinOptions()
         opt = tflite.DepthwiseConv2DOptions() if self.isDepthwise else tflite.Conv2DOptions()
@@ -66,7 +59,7 @@ class Convolution(Operator):
             if legacy.outputs[0] == self.inputs[0]:
                 legacy_pad = legacy.pad
                 self.inputs[0] = legacy.inputs[0]
-        padding = computePaddingSize(opt.Padding(), self.inputs_shape[0], self.outputs_shape[0],self.convolution_param, legacy_pad)
+        padding = computePaddingSize(opt.Padding(), self.inputs_shape[0], self.outputs_shape[0], self.convolution_param, legacy_pad)
         if len(padding) == 2:
             self.convolution_param['pad_w'] = padding[0]
             self.convolution_param['pad_h'] = padding[1]
@@ -75,7 +68,6 @@ class Convolution(Operator):
             self.convolution_param['pad_r'] = padding[1]
             self.convolution_param['pad_t'] = padding[2]
             self.convolution_param['pad_b'] = padding[3]
-            print(self.name, padding)
             if self.isDepthwise is True:
                 raise NotImplementedError("Depthwise Convolution not support asymmetric padding")
 

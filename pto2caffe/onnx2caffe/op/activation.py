@@ -40,9 +40,11 @@ class Activation(Operator):
             self.sigmoid_param = dict()
             self.attrs = self.sigmoid_param
         elif self.op_code == 'PRelu':
-            print('prelu')
+            print('Prelu')
         elif self.op_code == 'Relu':
-            print('relu')
+            self.relu_param = dict()
+            self.relu_param['negative_slope'] = 0
+            self.attrs = self.relu_param
         else:
             print('Error', self.op_code)
 

@@ -40,27 +40,27 @@ class InnerProduct(Operator):
         else:
             self.bias = bias
 
-        # options
+        # Options
         op_opt = self.op.BuiltinOptions()
         opt = tflite.FullyConnectedOptions()
         opt.Init(op_opt.Bytes, op_opt.Pos)
+#        print(opt.WeightsFormat(), opt.KeepNumDims(), opt.FusedActivationFunction(), opt.AsymmetricQuantizeInputs())
         self.inner_product_param['num_output'] = self.outputs_shape[0][1]
         self.inner_product_param['weight_filler'] = dict()
         self.inner_product_param['weight_filler']['type'] = 'xavier'
-        self.inner_product_param['bias_filler'] = dict()
-        self.inner_product_param['bias_filler']['type'] = 'constant'
+        if self.bias is not None:
+            self.inner_product_param['bias_term'] = True
+            self.inner_product_param['bias_filler'] = dict()
+            self.inner_product_param['bias_filler']['type'] = 'constant'
+        else:
+            self.inner_product_param['bias_term'] = False
 
         activ_type_code = opt.FusedActivationFunction()
         if activ_type_code is not tflite.ActivationFunctionType.NONE:
-            print(__file__, 'TODO: FusedActivationFunction:', activ_type_code)
+            self.activ_type_code = activ_type_code
 
         self.setParsed()
 
-    def propagatableTensors(self):
-        return list()
-
-    def transform(self):
-        pass
 
     def convert(self):
         layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, inner_product_param=self.inner_product_param)

@@ -49,10 +49,26 @@ class Binary(Operator):
         self.parseOutput()
 
         # Option
+        op_opt = self.op.BuiltinOptions()
         if self.op_code == tflite.BuiltinOperator.ADD:
+            opt = tflite.AddOptions()
+            opt.Init(op_opt.Bytes, op_opt.Pos)
             self.eltwise_param = dict()
             self.eltwise_param['operation'] = 1
             self.attrs = self.eltwise_param
+        elif self.op_code == tflite.BuiltinOperator.SUB:
+            opt = tflite.SubOptions()
+            opt.Init(op_opt.Bytes, op_opt.Pos)
+        elif self.op_code == tflite.BuiltinOperator.MUL:
+            opt = tflite.MulOptions()
+            opt.Init(op_opt.Bytes, op_opt.Pos)
+        elif self.op_code == tflite.BuiltinOperator.POW:
+            opt = tflite.PowOptions()
+            opt.Init(op_opt.Bytes, op_opt.Pos)
+
+        activ_type_code = opt.FusedActivationFunction()
+        if activ_type_code is not tflite.ActivationFunctionType.NONE:
+            self.activ_type_code = activ_type_code
 
         self.setParsed()
 
@@ -65,6 +81,5 @@ class Binary(Operator):
     def convert(self):
         if self.op_code == tflite.BuiltinOperator.ADD:
             layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param)
-
         self.setConverted()
         return layer

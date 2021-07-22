@@ -64,7 +64,9 @@ class Activation(Operator):
             self.relux_param['x'] = 6
             self.attrs = self.relux_param
         elif self.op_code == tflite.BuiltinOperator.RELU:
-            print('relu')
+            self.relu_param = dict()
+            self.relu_param['negative_slope'] = 0
+            self.attrs = self.relu_param
         else:
             print('Error', self.op_code)
 

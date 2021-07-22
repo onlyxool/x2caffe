@@ -28,44 +28,59 @@ class Pooling(Operator):
     def parse(self):
         logger.debug("Parsing %s...", self.type)
 
-        assert(self.op_code in self.TypeMapping)        
-        assert(self.op.InputsLength() == 2)
+        assert(self.op_code in self.TypeMapping)
+        if self.op_code == tflite.BuiltinOperator.MEAN:
+            assert(self.op.InputsLength() == 2)
+        elif self.op_code == tflite.BuiltinOperator.AVERAGE_POOL_2D \
+                or self.op_code == tflite.BuiltinOperator.MAX_POOL_2D:
+            assert(self.op.InputsLength() == 1)
         assert(self.op.OutputsLength() == 1)
 
         self.parseInput()
         self.parseOutput()
 
-        # options
+        # Options
         op_opt = self.op.BuiltinOptions()
         if self.op_code == tflite.BuiltinOperator.MEAN:
             opt = tflite.ReducerOptions()
+            opt.Init(op_opt.Bytes, op_opt.Pos)
             self.pooling_param['pool'] = 1
             self.pooling_param['kernel_h'] = self.inputs_shape[0][2]
             self.pooling_param['kernel_w'] = self.inputs_shape[0][3]
             self.pooling_param['stride'] = 1
-#            self.pooling_param['stride_h'] = 1
-#            self.pooling_param['stride_w'] = 1
-            self.pooling_param['ceil_mode'] = False
-        else:
+            self.pooling_param['ceil_mode'] = True
+        elif self.op_code == tflite.BuiltinOperator.AVERAGE_POOL_2D or self.op_code == tflite.BuiltinOperator.MAX_POOL_2D:
             opt = tflite.Pool2DOptions()
             opt.Init(op_opt.Bytes, op_opt.Pos)
-            raise NotImplementedError
+            self.pooling_param['pool'] = 1 if self.op_code == tflite.BuiltinOperator.AVERAGE_POOL_2D else 0
+            self.pooling_param['kernel_h'] = opt.FilterHeight()
+            self.pooling_param['kernel_w'] = opt.FilterWidth()
+            self.pooling_param['stride_h'] = opt.StrideH()
+            self.pooling_param['stride_w'] = opt.StrideW()
 
-        if hasattr(opt, 'FusedActivationFunction'):
+            legacy_pad = {'left': 0, 'right': 0, 'top': 0, 'bottom': 0}
+            for legacy in self.legacys:
+                if legacy.outputs[0] == self.inputs[0]:
+                    legacy_pad = legacy.pad
+                    self.inputs[0] = legacy.inputs[0]
+            padding = computePaddingSize(opt.Padding(), self.inputs_shape[0], self.outputs_shape[0], self.pooling_param, legacy_pad)
+            if len(padding) == 2:
+                self.pooling_param['pad_w'] = padding[0]
+                self.pooling_param['pad_h'] = padding[1]
+            elif len(padding) == 4:
+                self.pooling_param['pad_l'] = padding[0]
+                self.pooling_param['pad_r'] = padding[1]
+                self.pooling_param['pad_t'] = padding[2]
+                self.pooling_param['pad_b'] = padding[3]
+
             activ_type_code = opt.FusedActivationFunction()
             if activ_type_code is not tflite.ActivationFunctionType.NONE:
-                print(__file__, 'TODO: FusedActivationFunction:', activ_type_code)
+                self.activ_type_code = activ_type_code
 
         self.setParsed()
 
-    def propagatableTensors(self):
-        pass
-
-    def transform(self):
-        pass
 
     def convert(self):
         layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, pooling_param=self.pooling_param)
-
         self.setConverted()
         return layer

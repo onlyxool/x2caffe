@@ -47,7 +47,7 @@ def assign_proto(proto, name, val):
                 getattr(proto, name).extend(val)
             except:
                 print('Value Error: Check Attribute ', name , '\'s data type in caffe.proto')
-                raise ValueError
+                raise ValueError('Value Error: Check Attribute ', name , '\'s data type in caffe.proto')
     elif isinstance(val, dict):
         for key, value in val.items():
             assign_proto(getattr(proto, name), key, value)
@@ -115,10 +115,13 @@ def save_caffe_model(caffe_name, caffe_path, layers, test=False):
     caffe.set_mode_gpu()
     model = caffe.Net(prototxt_save_path, caffe.TEST)
     for id, layer in enumerate(layers):
-        if layer.weight is not None:
-            np.copyto(model.params[layer.name][0].data, layer.weight, casting='same_kind')
-        if layer.bias is not None:
-            np.copyto(model.params[layer.name][1].data, layer.bias, casting='same_kind')
+        try:
+            if layer.weight is not None:
+                np.copyto(model.params[layer.name][0].data, layer.weight, casting='same_kind')
+            if layer.bias is not None:
+                np.copyto(model.params[layer.name][1].data, layer.bias, casting='same_kind')
+        except:
+            raise Exception(layer.name)
     model_save_path = caffe_path + '/' + caffe_name + '.caffemodel'
     model.save(model_save_path)
 
