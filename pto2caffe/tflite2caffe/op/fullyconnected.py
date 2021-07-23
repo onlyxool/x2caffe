@@ -7,8 +7,8 @@ from tflite2caffe.op.operator import Operator
 logger = logging.getLogger('tflite2caffe')
 
 class InnerProduct(Operator):
-    def __init__(self, tfmodel, tfgraph, tf_op, tf_op_code, index, legacys):
-        super().__init__(tfmodel, tfgraph, tf_op, tf_op_code, index, legacys)
+    def __init__(self, model, tf_op, tf_op_code, index):
+        super().__init__(model, tf_op, tf_op_code, index)
         self.inner_product_param = dict()
         self.attrs = self.inner_product_param
         self.setInited()

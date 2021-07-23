@@ -15,8 +15,8 @@ class Pooling(Operator):
     }
 
 
-    def __init__(self, tfmodel, tfgraph, tf_op, tf_op_code, index, legacys):
-        super().__init__(tfmodel, tfgraph, tf_op, tf_op_code, index, legacys)
+    def __init__(self, model, tf_op, tf_op_code, index):
+        super().__init__(model, tf_op, tf_op_code, index)
         self.pooling_param= dict()
         self.attrs = self.pooling_param
         self.setInited()
@@ -59,7 +59,7 @@ class Pooling(Operator):
             self.pooling_param['stride_w'] = opt.StrideW()
 
             legacy_pad = {'left': 0, 'right': 0, 'top': 0, 'bottom': 0}
-            for legacy in self.legacys:
+            for legacy in self.model.legacys:
                 if legacy.outputs[0] == self.inputs[0]:
                     legacy_pad = legacy.pad
                     self.inputs[0] = legacy.inputs[0]

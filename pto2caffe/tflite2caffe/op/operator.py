@@ -4,12 +4,11 @@ from base import Base
 from util import *
 
 class Operator(Base):
-    def __init__(self, tf_model, tf_graph:tflite.SubGraph, tf_op:tflite.Operator, tf_op_code, index, legacys):
-        super().__init__(tf_model, tf_graph, index)
+    def __init__(self, model, tf_op:tflite.Operator, tf_op_code, index):
+        super().__init__(model, model.graph, index)
         self.op = tf_op
         self.op_code = tf_op_code
         self.name = self.type + str(index)
-        self.index = index
         self.inputs = []
         self.inputs_shape = []
         self.inputs_buf = []
@@ -18,7 +17,6 @@ class Operator(Base):
         self.pre = []  # ops that before this op which to enable TFLite op
         self.post = []  # ops that after this op which to enable TFLite op
         self.attrs = dict()
-        self.legacys = legacys
 
 
     @property
@@ -73,9 +71,9 @@ class Operator(Base):
         t = self.graph.Tensors(tensor_id)
         bi = t.Buffer()
         shape = t.ShapeAsNumpy()
-        assert(bi < self.model.BuffersLength())
+        assert(bi < self.model.tf_model.BuffersLength())
 
-        raw = self.model.Buffers(bi).DataAsNumpy()
+        raw = self.model.tf_model.Buffers(bi).DataAsNumpy()
         if isinstance(raw, int) and raw == 0:
             return None
         data = np.frombuffer(raw, dtype=tensor_type[type_id])

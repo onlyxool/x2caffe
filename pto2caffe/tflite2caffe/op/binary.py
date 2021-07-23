@@ -20,9 +20,8 @@ class Binary(Operator):
         tflite.BuiltinOperator.SUB: tflite.SubOptions,
     }
 
-    def __init__(self, tfmodel, tfgraph, tf_op, tf_op_code, index, legacy):
-        super().__init__(tfmodel, tfgraph, tf_op, tf_op_code, index, legacy)
-
+    def __init__(self, model, tf_op, tf_op_code, index):
+        super().__init__(model, tf_op, tf_op_code, index)
         self.setInited()
 
     @property

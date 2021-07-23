@@ -11,8 +11,8 @@ class Softmax(Operator):
             tflite.BuiltinOperator.SOFTMAX: 'Softmax',
     }
 
-    def __init__(self, tfmodel, tfgraph, tf_op, tf_op_code, index, legacys):
-        super().__init__(tfmodel, tfgraph, tf_op, tf_op_code, index, legacys)
+    def __init__(self, model, tf_op, tf_op_code, index):
+        super().__init__(model, tf_op, tf_op_code, index)
         self.softmax_param = dict()
         self.softmax_param['axis'] = 1
         self.attrs = self.softmax_param

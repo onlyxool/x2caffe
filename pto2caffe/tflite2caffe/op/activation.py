@@ -16,9 +16,8 @@ class Activation(Operator):
         tflite.BuiltinOperator.LEAKY_RELU: 'Leaky_Relu',
     }
 
-    def __init__(self, tfmodel, tfgraph, tf_op, tf_op_code, index, legacy):
-        super().__init__(tfmodel, tfgraph, tf_op, tf_op_code, index, legacy)
-
+    def __init__(self, model, tf_op, tf_op_code, index):
+        super().__init__(model, tf_op, tf_op_code, index)
         self.setInited()
 
     @property
@@ -98,15 +97,15 @@ class Activation(Operator):
         self.setConverted()
         return layer
 
-def handleFusedActivation(preop:Operator):#, activ_type_code):
+def handleFusedActivation(preop:Operator):
     if preop.activ_type_code == tflite.ActivationFunctionType.RELU:
-        op = Activation(preop.model, preop.graph, None, tflite.BuiltinOperator.RELU, preop.index+0.5, None)
+        op = Activation(preop.model, None, tflite.BuiltinOperator.RELU, preop.index+0.5)
     elif preop.activ_type_code == tflite.ActivationFunctionType.RELU_N1_TO_1:
         raise NotImplementedError('ReluN1To1 is not supported.')
     elif preop.activ_type_code == tflite.ActivationFunctionType.RELU6:
-        op = Activation(preop.model, preop.graph, None, tflite.BuiltinOperator.RELU6, preop.index+0.5, None)
+        op = Activation(preop.model, None, tflite.BuiltinOperator.RELU6, preop.index+0.5)
     elif preop.activ_type_code == tflite.ActivationFunctionType.TANH:
-        op = Activation(preop.model, preop.graph, None, tflite.BuiltinOperator.TANH, preop.index+0.5, None)
+        op = Activation(preop.model, None, tflite.BuiltinOperator.TANH, preop.index+0.5)
     elif preop.activ_type_code == tflite.ActivationFunctionType.SIGN_BIT:
          raise NotImplementedError('SignBits is not supported.')
     else:
@@ -117,4 +116,5 @@ def handleFusedActivation(preop:Operator):#, activ_type_code):
         op.inputs.append(output)
     op.inputs_buf.append(None)
     op.parse()
+
     return op

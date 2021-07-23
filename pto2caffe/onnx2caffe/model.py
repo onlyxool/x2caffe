@@ -15,13 +15,10 @@ from onnx2caffe.op.activation import Activation
 from caffe_transform import save_caffe_model
 from caffe_transform import make_caffe_input_layer
 
-
 from base import Base
 
 logger = logging.getLogger('ONNX2caffe')
 
-#def Input(model, node, index, legacy):
-#    pass
 
 OpMap = {
     'Add': Binary,
@@ -52,13 +49,12 @@ class Model(Base):
     def __init__(self, onnx_model, param):
         super().__init__(onnx_model, onnx_model.graph)
         self.param = param
-        self.graph = onnx_model.graph
         self.operators = []
         self.layers = []
         self.input_tensor = dict()
+        self.shape = dict()
         self.legacys = []
         self.setInited()
-        self.shape = dict()
 
 
     def parse(self):
@@ -95,7 +91,7 @@ class Model(Base):
         for input in self.graph.input:
             self.layers.append(make_caffe_input_layer(input.name, self.param))
         for op in self.operators:
-            print(op)
+            logger.debug(op)
             layers = op.convert()
             for layer in layers:
                 self.layers.append(layer)

@@ -8,8 +8,8 @@ from tflite2caffe.op.pad import computePaddingSize
 logger = logging.getLogger('tflite2caffe')
 
 class Convolution(Operator):
-    def __init__(self, tfmodel, tfgraph, tf_op, tf_op_code, index, legacys):
-        super().__init__(tfmodel, tfgraph, tf_op, tf_op_code, index, legacys)
+    def __init__(self, model, tf_op, tf_op_code, index):
+        super().__init__(model, tf_op, tf_op_code, index)
         self.convolution_param = dict()
         self.convolution_param['dilation'] = []
         self.convolution_param['group'] = 1
@@ -55,7 +55,7 @@ class Convolution(Operator):
             self.convolution_param['engine'] = 1
 
         legacy_pad = {'left': 0, 'right': 0, 'top': 0, 'bottom': 0}
-        for legacy in self.legacys:
+        for legacy in self.model.legacys:
             if legacy.outputs[0] == self.inputs[0]:
                 legacy_pad = legacy.pad
                 self.inputs[0] = legacy.inputs[0]
