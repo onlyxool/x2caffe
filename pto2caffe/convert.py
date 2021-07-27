@@ -147,6 +147,8 @@ def preprocess(param):
         for input_file in input_files:
             input_data = get_input_data(param, source_path + input_file, ext)
             input_data = mean_std_scale(param, input_data)
+            if param['dump'] >= 0:
+                param['input_file'] = param.get('input_file', input_file.split('/')[-1])
             if np_tensor is None:
                 np_tensor = hwc2chw_unsqueeze(param, input_data)
             else:
@@ -159,6 +161,9 @@ def preprocess(param):
         input_data = get_input_data(param, source_path + input_files, ext)
         input_data = mean_std_scale(param, input_data)
         np_tensor = hwc2chw_unsqueeze(param, input_data)
+        if param['dump'] >= 0:
+            param['input_file'] = param.get('input_file', input_files.split('/')[-1])
+
 
     set_shape(param, np_tensor, ext)
 
@@ -239,8 +244,10 @@ def args_():
             help = 'Specify if we would like to randomly crop input image')
     args.add_argument('-dump',          type = int,     required = False,   default = -1,   choices=[0, 1, 2],
             help = 'dump blob  1:print output.  2:print input & ouput')
-    args.add_argument('-dummy',        type = bool,    required = False,
+    args.add_argument('-dummy',        type = bool,     required = False,
             help = 'dummy input data')
+    args.add_argument('-compare',       type = int,     required = False,   default = -1,   choices=[0, 1],
+            help = '')
     args = args.parse_args()
     return args
 
@@ -262,6 +269,7 @@ def main():
     caffe_model_name = param['name'] if param['name'] is not None else opt_model_name
     caffe_model_path = os.path.abspath(param['output']) if param['output'] is not None else opt_path
     dump_level = param['dump']
+
     Convert(model_file, caffe_model_name, caffe_model_path, dump_level, param)
 
     # Delete all argmuments

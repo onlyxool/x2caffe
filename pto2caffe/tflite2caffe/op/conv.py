@@ -31,6 +31,7 @@ class Convolution(Operator):
 
         # Weight
         self.weight = self.inputs_buf[1].transpose(3, 0, 1, 2) if self.isDepthwise else self.inputs_buf[1].transpose(0, 3, 1, 2)
+        self.inputs_buf[1] = self.weight
 
         # Bias
         bias = self.inputs_buf[2]
@@ -38,6 +39,7 @@ class Convolution(Operator):
             self.bias = bias.transpose(3, 0, 1, 2) if self.isDepthwise else bias.transpose(0, 3, 1, 2)
         else:
             self.bias = bias
+        self.inputs_buf[2] = self.bias
 
         # Option
         op_opt = self.op.BuiltinOptions()

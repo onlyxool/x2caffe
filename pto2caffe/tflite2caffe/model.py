@@ -1,6 +1,7 @@
 import tflite
 import logging
 
+from dump import Dump
 from caffe_transform import save_caffe_model
 from caffe_transform import make_caffe_input_layer
 from tflite2caffe.op.operator import Operator
@@ -41,7 +42,6 @@ OpMap = {
 class Model(Base):
     def __init__(self, model:tflite.Model, param):
         super().__init__(model, model.Subgraphs(0))
-        self.tf_model = model
         self.param = param
         self.operators = []
         self.layers = []
@@ -52,7 +52,7 @@ class Model(Base):
     def parse(self):
         logger.debug("Parsing the Model...")
         if self.model.SubgraphsLength() > 1:
-            raise ValueError('TFlite model include ' + str(self.model.SubgraphsLength()) + ' graph.')
+            raise ValueError('TFlite model include ' + str(self.model.SubgraphsLength()) + ' graphs.')
 
         for index in range(self.graph.OperatorsLength()):
             tf_op = self.graph.Operators(index)
@@ -80,8 +80,15 @@ class Model(Base):
             logger.debug(op)
             layer = op.convert()
             self.layers.append(layer)
+
         self.setConverted()
 
 
     def save(self, caffe_name, caffe_path):
         save_caffe_model(caffe_name, caffe_path, self.layers)
+
+
+    def dump(self, model_byte, model_name, input_tensor, dump_level=-1):
+        dump = Dump('tflite', model_byte, model_name, input_tensor, self.param, dump_level)
+        for op in self.operators:
+            dump.operator(op)

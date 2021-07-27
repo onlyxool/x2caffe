@@ -32,6 +32,7 @@ class InnerProduct(Operator):
             self.weight = self.inputs_buf[1].transpose(0, 3, 1, 2)
         else:
             self.weight = weight
+        self.inputs_buf[1] = self.weight
 
         # Bias
         bias = self.inputs_buf[2]
@@ -39,6 +40,7 @@ class InnerProduct(Operator):
             self.bias = bias.transpose(0, 3, 1, 2)
         else:
             self.bias = bias
+        self.inputs_buf[2] = self.bias
 
         # Options
         op_opt = self.op.BuiltinOptions()

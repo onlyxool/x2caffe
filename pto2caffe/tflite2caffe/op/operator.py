@@ -71,9 +71,9 @@ class Operator(Base):
         t = self.graph.Tensors(tensor_id)
         bi = t.Buffer()
         shape = t.ShapeAsNumpy()
-        assert(bi < self.model.tf_model.BuffersLength())
+        assert(bi < self.model.model.BuffersLength())
 
-        raw = self.model.tf_model.Buffers(bi).DataAsNumpy()
+        raw = self.model.model.Buffers(bi).DataAsNumpy()
         if isinstance(raw, int) and raw == 0:
             return None
         data = np.frombuffer(raw, dtype=tensor_type[type_id])
