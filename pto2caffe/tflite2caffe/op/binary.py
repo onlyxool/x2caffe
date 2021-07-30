@@ -81,4 +81,4 @@ class Binary(Operator):
         if self.op_code == tflite.BuiltinOperator.ADD:
             layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param)
         self.setConverted()
-        return layer
+        return [layer]

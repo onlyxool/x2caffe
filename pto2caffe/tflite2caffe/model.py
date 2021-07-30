@@ -1,11 +1,9 @@
 import tflite
 import logging
-
 from dump import Dump
-from caffe_transform import save_caffe_model
-from caffe_transform import make_caffe_input_layer
 
-from tflite2caffe.op.operator import Operator
+
+from base import Base
 
 from tflite2caffe.op.pad import Pad
 from tflite2caffe.op.binary import Binary
@@ -18,7 +16,9 @@ from tflite2caffe.op.activation import Activation
 from tflite2caffe.op.fullyconnected import InnerProduct
 from tflite2caffe.op.activation import handleFusedActivation
 
-from base import Base
+from caffe_transform import save_caffe_model
+from caffe_transform import make_caffe_input_layer
+
 
 logger = logging.getLogger('TFlite2caffe')
 
@@ -51,7 +51,8 @@ class Model(Base):
 
 
     def parse(self):
-        logger.debug("Parsing the Model...")
+        logger.debug("Parsing the TFLite Model...")
+
         if self.model.SubgraphsLength() > 1:
             raise ValueError('TFlite model include ' + str(self.model.SubgraphsLength()) + ' graphs.')
 
@@ -76,11 +77,13 @@ class Model(Base):
     def convert(self):
         logger.debug("Converting the Model...")
 
-        self.layers.append(make_caffe_input_layer(self.graph.Inputs(0), self.param))
+        for i in range(self.graph.InputsLength()):
+            self.layers.append(make_caffe_input_layer(self.graph.Inputs(i), self.param))
         for op in self.operators:
             logger.debug(op)
-            layer = op.convert()
-            self.layers.append(layer)
+            layers = op.convert()
+            for layer in layers:
+                self.layers.append(layer)
 
         self.setConverted()
 

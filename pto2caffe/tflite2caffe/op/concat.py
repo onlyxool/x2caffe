@@ -59,4 +59,4 @@ class Concat(Operator):
     def convert(self):
         layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, concat_param=self.concat_param)
         self.setConverted()
-        return layer
+        return [layer]

@@ -2,6 +2,8 @@ import logging
 from dump import Dump
 from onnx import numpy_helper
 
+from base import Base
+
 from onnx2caffe.op.binary import Binary
 from onnx2caffe.op.concat import Concat
 from onnx2caffe.op.resize import Resize
@@ -16,7 +18,6 @@ from onnx2caffe.op.activation import Activation
 from caffe_transform import save_caffe_model
 from caffe_transform import make_caffe_input_layer
 
-from base import Base
 
 logger = logging.getLogger('ONNX2caffe')
 
@@ -59,7 +60,7 @@ class Model(Base):
 
 
     def parse(self):
-        logger.debug("Parsing the Model...")
+        logger.debug("Parsing the ONNX Model...")
 
         # Get Shape
         for value_info in self.graph.value_info:
@@ -96,6 +97,7 @@ class Model(Base):
             layers = op.convert()
             for layer in layers:
                 self.layers.append(layer)
+
         self.setConverted()
 
 

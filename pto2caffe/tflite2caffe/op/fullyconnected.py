@@ -67,4 +67,4 @@ class InnerProduct(Operator):
     def convert(self):
         layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, inner_product_param=self.inner_product_param)
         self.setConverted()
-        return layer
+        return [layer]

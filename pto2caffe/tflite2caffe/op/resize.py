@@ -93,7 +93,7 @@ class Resize(Operator):
             raise NotImplementedError
 
         self.setConverted()
-        return layer
+        return [layer]
 
     def propagatableTensors(self):
         return list()

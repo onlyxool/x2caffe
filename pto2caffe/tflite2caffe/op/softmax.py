@@ -42,4 +42,4 @@ class Softmax(Operator):
     def convert(self):
         layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, softmax_param=self.softmax_param)
         self.setConverted()
-        return layer
+        return [layer]

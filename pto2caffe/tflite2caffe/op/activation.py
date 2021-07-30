@@ -95,7 +95,7 @@ class Activation(Operator):
             raise NotImplementedError
 
         self.setConverted()
-        return layer
+        return [layer]
 
 def handleFusedActivation(preop:Operator):
     if preop.activ_type_code == tflite.ActivationFunctionType.RELU:

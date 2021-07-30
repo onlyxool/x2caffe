@@ -86,4 +86,4 @@ class Convolution(Operator):
     def convert(self):
         layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, convolution_param=self.convolution_param)
         self.setConverted()
-        return layer
+        return [layer]
