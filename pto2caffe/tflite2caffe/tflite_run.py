@@ -26,8 +26,8 @@ def buffer_change_output_tensor_to(model_buffer, new_tensor_i):
     return model_buffer[:output_tensor_index_offset] + new_tensor_i_bytes + model_buffer[output_tensor_index_offset + 4:]
 
 
-def get_output(model, input_tensor, op, index):
-    model = buffer_change_output_tensor_to(model, op.outputs[index])
+def get_output(model, input_tensor, blob_name):
+    model = buffer_change_output_tensor_to(model, blob_name)
     interpreter = tf.lite.Interpreter(model_content=model)
     interpreter.allocate_tensors()
 

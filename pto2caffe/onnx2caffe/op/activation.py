@@ -73,24 +73,3 @@ class Activation(Operator):
 
         self.setConverted()
         return [layer]
-
-def handleFusedActivation(preop:Operator):#, activ_type_code):
-    if preop.activ_type_code == tflite.ActivationFunctionType.RELU:
-        op = Activation(preop.model, preop.graph, None, tflite.BuiltinOperator.RELU, preop.index+0.5, None)
-    elif preop.activ_type_code == tflite.ActivationFunctionType.RELU_N1_TO_1:
-        raise NotImplementedError('ReluN1To1 is not supported.')
-    elif preop.activ_type_code == tflite.ActivationFunctionType.RELU6:
-        op = Activation(preop.model, preop.graph, None, tflite.BuiltinOperator.RELU6, preop.index+0.5, None)
-    elif preop.activ_type_code == tflite.ActivationFunctionType.TANH:
-        op = Activation(preop.model, preop.graph, None, tflite.BuiltinOperator.TANH, preop.index+0.5, None)
-    elif preop.activ_type_code == tflite.ActivationFunctionType.SIGN_BIT:
-         raise NotImplementedError('SignBits is not supported.')
-    else:
-        return
-
-    for output in preop.outputs:
-        op.outputs.append(output)
-        op.inputs.append(output)
-    op.inputs_buf.append(None)
-    op.parse()
-    return op

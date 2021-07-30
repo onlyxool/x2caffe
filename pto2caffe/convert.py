@@ -161,8 +161,7 @@ def preprocess(param):
         input_data = get_input_data(param, source_path + input_files, ext)
         input_data = mean_std_scale(param, input_data)
         np_tensor = hwc2chw_unsqueeze(param, input_data)
-        if param['dump'] >= 0:
-            param['input_file'] = param.get('input_file', input_files.split('/')[-1])
+        param['input_file'] = param.get('input_file', input_files.split('/')[-1])
 
 
     set_shape(param, np_tensor, ext)
@@ -242,7 +241,7 @@ def args_():
             help = 'Specify if we would like to randomly crop input image')
     args.add_argument('-crop_w',        type = int,     required = False,
             help = 'Specify if we would like to randomly crop input image')
-    args.add_argument('-dump',          type = int,     required = False,   default = -1,   choices=[0, 1, 2],
+    args.add_argument('-dump',          type = int,     required = False,   default = -1,   choices=[0, 1, 2, 3],
             help = 'dump blob  1:print output.  2:print input & ouput')
     args.add_argument('-dummy',        type = bool,     required = False,
             help = 'dummy input data')
@@ -257,7 +256,7 @@ def main():
     param = args.__dict__
     param['model'] = os.path.abspath(param['model'])
     model_file = param['model']
-    os.environ['GLOG_minloglevel'] = '2'
+    os.environ['GLOG_minloglevel'] = '0'
 
     if not os.path.isfile(model_file):
         print('Model File not exist!')

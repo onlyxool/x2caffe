@@ -5,7 +5,8 @@ sys.path.append(os.getenv('MCHOME') + 'toolchain/caffe/python/caffe')
 import caffe
 import numpy as np
 from caffe.proto import caffe_pb2
-from collections import Iterable,Iterator
+#from collections import Iterable,Iterator
+
 
 def param_name_dict():
     """Find out the correspondence between layer names and parameter names."""
@@ -100,7 +101,7 @@ class caffe_layer(object):
 
 _param_names = param_name_dict()
 
-def save_caffe_model(caffe_name, caffe_path, layers, test=False):
+def save_caffe_model(caffe_name, caffe_path, layers):
     proto = caffe_pb2.NetParameter()
     proto_layers = []
     for id, layer in enumerate(layers):
@@ -120,6 +121,8 @@ def save_caffe_model(caffe_name, caffe_path, layers, test=False):
                 np.copyto(model.params[layer.name][0].data, layer.weight, casting='same_kind')
             if layer.bias is not None:
                 np.copyto(model.params[layer.name][1].data, layer.bias, casting='same_kind')
+            if layer.type == 'BatchNorm':
+                np.copyto(model.params[layer.name][2].data, np.array([1.0]), casting='same_kind')
         except:
             raise Exception(layer.name)
     model_save_path = caffe_path + '/' + caffe_name + '.caffemodel'
@@ -133,6 +136,7 @@ def make_caffe_input_layer(input, param):
 
     include = dict()
     include['phase'] = 1
+
     image_data_param = dict()
     bin_data_param = dict()
     transform_param = dict()

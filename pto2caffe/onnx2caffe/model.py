@@ -1,4 +1,5 @@
 import logging
+from dump import Dump
 from onnx import numpy_helper
 
 from onnx2caffe.op.binary import Binary
@@ -100,3 +101,9 @@ class Model(Base):
 
     def save(self, caffe_name, caffe_path):
         save_caffe_model(caffe_name, caffe_path, self.layers)
+
+
+    def dump(self, onnx_model, model_name, input_tensor, dump_level=-1):
+        dump = Dump('onnx', onnx_model, model_name, input_tensor, self.param, dump_level)
+        for op in self.operators:
+            dump.operator(op)

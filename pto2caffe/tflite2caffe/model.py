@@ -4,6 +4,7 @@ import logging
 from dump import Dump
 from caffe_transform import save_caffe_model
 from caffe_transform import make_caffe_input_layer
+
 from tflite2caffe.op.operator import Operator
 
 from tflite2caffe.op.pad import Pad
