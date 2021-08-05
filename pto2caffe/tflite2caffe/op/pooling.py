@@ -48,7 +48,7 @@ class Pooling(Operator):
             self.pooling_param['kernel_h'] = self.inputs_shape[0][2]
             self.pooling_param['kernel_w'] = self.inputs_shape[0][3]
             self.pooling_param['stride'] = 1
-            self.pooling_param['ceil_mode'] = True
+            self.pooling_param['ceil_mode'] = False
         elif self.op_code == tflite.BuiltinOperator.AVERAGE_POOL_2D or self.op_code == tflite.BuiltinOperator.MAX_POOL_2D:
             opt = tflite.Pool2DOptions()
             opt.Init(op_opt.Bytes, op_opt.Pos)
@@ -57,12 +57,15 @@ class Pooling(Operator):
             self.pooling_param['kernel_w'] = opt.FilterWidth()
             self.pooling_param['stride_h'] = opt.StrideH()
             self.pooling_param['stride_w'] = opt.StrideW()
+            self.pooling_param['ceil_mode'] = False
 
+            # Padding
             legacy_pad = {'left': 0, 'right': 0, 'top': 0, 'bottom': 0}
             for legacy in self.model.legacys:
                 if legacy.outputs[0] == self.inputs[0]:
                     legacy_pad = legacy.pad
                     self.inputs[0] = legacy.inputs[0]
+                    self.inputs_shape[0] = legacy.inputs_shape[0]
             padding = computePaddingSize(opt.Padding(), self.inputs_shape[0], self.outputs_shape[0], self.pooling_param, legacy_pad)
             if len(padding) == 2:
                 self.pooling_param['pad_w'] = padding[0]
@@ -73,6 +76,7 @@ class Pooling(Operator):
                 self.pooling_param['pad_t'] = padding[2]
                 self.pooling_param['pad_b'] = padding[3]
 
+            # FusedActivation
             activ_type_code = opt.FusedActivationFunction()
             if activ_type_code is not tflite.ActivationFunctionType.NONE:
                 self.activ_type_code = activ_type_code

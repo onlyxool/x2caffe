@@ -61,6 +61,8 @@ class Convolution(Operator):
             if legacy.outputs[0] == self.inputs[0]:
                 legacy_pad = legacy.pad
                 self.inputs[0] = legacy.inputs[0]
+                self.inputs_shape[0] = legacy.inputs_shape[0]
+
         padding = computePaddingSize(opt.Padding(), self.inputs_shape[0], self.outputs_shape[0], self.convolution_param, legacy_pad)
         if len(padding) == 2:
             self.convolution_param['pad_w'] = padding[0]
