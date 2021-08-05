@@ -94,5 +94,9 @@ class Model(Base):
 
     def dump(self, model_byte, model_name, input_tensor, dump_level=-1):
         dump = Dump('tflite', model_byte, model_name, input_tensor, self.param, dump_level)
-        for op in self.operators:
+        from progress_bar import ProgressBar
+        progressBar = ProgressBar(len(self.operators), 0, "TFlite dump processing")
+        for i, op in enumerate(self.operators):
             dump.operator(op)
+            progressBar.setValue(i)
+        progressBar.onCancel()
