@@ -27,6 +27,8 @@ def buffer_change_output_tensor_to(model_buffer, new_tensor_i):
 
 
 def get_output(model, input_tensor, blob_name):
+    if isinstance(blob_name, str):
+        blob_name = int(blob_name.split('_')[0])
     model = buffer_change_output_tensor_to(model, blob_name)
     interpreter = tf.lite.Interpreter(model_content=model)
     interpreter.allocate_tensors()

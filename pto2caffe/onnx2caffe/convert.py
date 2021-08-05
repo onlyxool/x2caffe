@@ -14,7 +14,6 @@ def convert(onnx_file, input_tensor, caffe_model_name, caffe_model_path, dump_le
 
     model = Model(onnx_model, param)
     model.parse()
-
     model.convert()
     model.save(caffe_model_name, caffe_model_path)
 
@@ -25,5 +24,6 @@ def convert(onnx_file, input_tensor, caffe_model_name, caffe_model_path, dump_le
         dump_caffe_model(caffe_model_name, caffe_model_path, input_tensor, param['input_file'])
 
     if param.get('compare', -1) == 1:
-        compare('onnx', caffe_model_name, param['input_file'])
+        compare('onnx', onnx_model, caffe_model_name, caffe_model_path, input_tensor)
+#        compare('onnx', caffe_model_name, param['input_file'])
 

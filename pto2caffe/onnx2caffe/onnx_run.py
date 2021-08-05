@@ -39,10 +39,7 @@ def get_output(model, input_tensor, blob_name):
             output = onnx_run(model, input_tensor)
             return np.array(output[0])
         else:
-            for output in model.graph.output:
-                if output.name == blob_name:
+            for index, output in enumerate(model.graph.output):
+                if blob_name == output.name:
                     outputs = onnx_run(model, input_tensor)
-                    for output_tensor in outputs:
-                        return np.array(output_tensor)
-
-
+                    return np.array(outputs[index])
