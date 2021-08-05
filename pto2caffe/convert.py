@@ -256,7 +256,7 @@ def main():
     param = args.__dict__
     param['model'] = os.path.abspath(param['model'])
     model_file = param['model']
-    os.environ['GLOG_minloglevel'] = '0'
+    os.environ['GLOG_minloglevel'] = '2'
 
     if not os.path.isfile(model_file):
         print('Model File not exist!')

@@ -72,6 +72,7 @@ def dump_caffe_model(caffe_name, caffe_path, input_tensor, input_file_name):
             file_size = caffe_net._blobs[idx].count
             file_name = dump_path + '/l' + '%03d'%i + 'i' + '_' + caffe_net._layer_names[i] + '_'+ caffe_net._blob_names[idx] +'_'+ str(file_size) + '.txt'
             np.savetxt(file_name, data.reshape(-1), fmt='%-10.6f')
+
         for j in range(len(caffe_net.layers[i].blobs)):
             data = caffe_net.layers[i].blobs[j].data
             file_size = caffe_net.layers[i].blobs[j].count

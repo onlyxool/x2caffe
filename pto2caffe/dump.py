@@ -33,7 +33,6 @@ class Dump(object):
                 else:
                     self.blob(output_tensors, op.name, op.outputs[index], index, 'o')
 
-
         self.layer_no += 1
 
 
