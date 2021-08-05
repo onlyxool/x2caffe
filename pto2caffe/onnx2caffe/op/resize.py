@@ -20,7 +20,7 @@ class Resize(Operator):
                 return 'Upsample'
             else:
                 return 'nearest'
-        elif self.op_code == tflite.BuiltinOperator.RESIZE_BILINEAR:
+        elif self.op_code == 'Upsample':
             return 'Interp'
         else:
             raise NotImplementedError

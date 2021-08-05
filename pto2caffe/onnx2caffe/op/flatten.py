@@ -6,6 +6,7 @@ from onnx2caffe.op.operator import Operator
 logger = logging.getLogger('onnx2caffe')
 
 class Flatten(Operator):
+
     def __init__(self, model, node, index):
         super().__init__(model, node, index)
         self.flatten_param = dict()
@@ -27,6 +28,7 @@ class Flatten(Operator):
         self.parseAttributes()
         self.flatten_param['axis'] = self.attrs.get('axis', 1)
         self.attrs = self.flatten_param
+
         self.setParsed()
 
 

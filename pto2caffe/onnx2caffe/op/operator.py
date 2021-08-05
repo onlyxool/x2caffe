@@ -8,7 +8,6 @@ class Operator(Base):
         super().__init__(model, model.graph, index)
         self.node = node
         self.op_code = node.op_type
-        self.name = self.type + str(index)
         self.index = index
         self.inputs = []
         self.inputs_shape = []
@@ -23,6 +22,11 @@ class Operator(Base):
     @property
     def type(self):
         raise NotImplementedError("Method Operator.type() must be overrided!")
+
+
+    @property
+    def name(self):
+        return self.type + str(self.index)
 
 
     def propagatableTensors(self):

@@ -2,7 +2,6 @@ import logging
 
 from caffe_transform import caffe_layer
 from onnx2caffe.op.operator import Operator
-#from onnx2caffe.op.pad import computePaddingSize
 
 logger = logging.getLogger('onnx2caffe')
 
@@ -33,30 +32,35 @@ class Convolution(Operator):
         self.convolution_param['group'] = self.attrs.get('group', 1)
         self.convolution_param['kernel_size'] = self.attrs['kernel_shape']
         self.convolution_param['bias_term'] = True if self.bias is not None else False
-        self.convolution_param['pad_l'] = self.attrs['pads'][1]
-        self.convolution_param['pad_r'] = self.attrs['pads'][3]
-        self.convolution_param['pad_t'] = self.attrs['pads'][0]
-        self.convolution_param['pad_b'] = self.attrs['pads'][2]
 
-#        legacy_pad = {'left': 0, 'right': 0, 'top': 0, 'bottom': 0}
-#        for legacy in self.model.legacys:
-#            if legacy.outputs[0] == self.inputs[0]:
-#                legacy_pad = legacy.pad
-#                self.inputs[0] = legacy.inputs[0]
-#        padding = computePaddingSize(opt.Padding(), self.inputs_shape[0], self.outputs_shape[0], self.convolution_param, legacy_pad)
-#        if len(padding) == 2:
-#            self.convolution_param['pad_w'] = padding[0]
-#            self.convolution_param['pad_h'] = padding[1]
-#        elif len(padding) == 4:
-#            self.convolution_param['pad_l'] = padding[0]
-#            self.convolution_param['pad_r'] = padding[1]
-#            self.convolution_param['pad_t'] = padding[2]
-#            self.convolution_param['pad_b'] = padding[3]
-#            print(self.name, padding)
-#            if self.isDepthwise is True:
-#                raise NotImplementedError("Depthwise Convolution not support asymmetric padding")
+        # Padding
+        attr_padding = self.attrs.get('pads', [0,0,0,0])
+        for legacy in self.model.legacys:
+            if legacy.outputs[0] == self.inputs[0]:
+                legacy_pad = legacy.pad
+                pad_l = attr_padding[1] + legacy.pad['left']
+                pad_r = attr_padding[3] + legacy.pad['right']
+                pad_t = attr_padding[0] + legacy.pad['top']
+                pad_b = attr_padding[2] + legacy.pad['bottom']
+                self.inputs[0] = legacy.inputs[0]
+                self.inputs_shape[0] = legacy.inputs_shape[0]
+        else:
+            pad_l = attr_padding[1]
+            pad_r = attr_padding[3]
+            pad_t = attr_padding[0]
+            pad_b = attr_padding[2]
+
+        if pad_l == pad_r and pad_t == pad_b:
+            self.convolution_param['pad_w'] = pad_l
+            self.convolution_param['pad_h'] = pad_t
+        else:
+            self.convolution_param['pad_l'] = pad_l
+            self.convolution_param['pad_r'] = pad_r
+            self.convolution_param['pad_t'] = pad_t
+            self.convolution_param['pad_b'] = pad_b
 
         self.attrs = self.convolution_param
+
         self.setParsed()
         
     @property

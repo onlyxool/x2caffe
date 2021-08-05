@@ -4,9 +4,11 @@ from onnx import numpy_helper
 
 from base import Base
 
+from onnx2caffe.op.pad import Pad
 from onnx2caffe.op.binary import Binary
 from onnx2caffe.op.concat import Concat
 from onnx2caffe.op.resize import Resize
+from onnx2caffe.op.reshape import Reshape #Not Finish yet
 from onnx2caffe.op.pooling import Pooling
 from onnx2caffe.op.flatten import Flatten
 from onnx2caffe.op.conv import Convolution
@@ -14,6 +16,7 @@ from onnx2caffe.op.gemm import InnerProduct
 from onnx2caffe.op.constant import Constant
 from onnx2caffe.op.batchnorm import BatchNorm
 from onnx2caffe.op.activation import Activation
+from onnx2caffe.op.upsample import Upsample #Deprecated
 
 from caffe_transform import save_caffe_model
 from caffe_transform import make_caffe_input_layer
@@ -23,6 +26,8 @@ logger = logging.getLogger('ONNX2caffe')
 
 
 OpMap = {
+    'Pad': Pad,
+    'Mul': Binary,
     'Add': Binary,
     'Concat': Concat,
     'Resize': Resize,
@@ -32,14 +37,16 @@ OpMap = {
     'Conv': Convolution,
     'Gemm': InnerProduct,
     'Constant': Constant,
+    'Unsqueeze': Reshape,
     'Sigmoid': Activation,
+    'AveragePool': Pooling,
     'LeakyRelu': Activation,
     'GlobalAveragePool': Pooling,
     'BatchNormalization': BatchNorm,
+    'Upsample': Upsample, #Deprecated
 #    'PAD': Pad,
 #    'RESHAPE': Reshape,
 #    'SOFTMAX': Softmax,
-#    'MUL': Mul,
 #    'AVERAGE_POOL_2D': AvgPool2d,
 #    'FULLY_CONNECTED': InnerProduct,
 #    'DEPTHWISE_CONV_2D': Convolution,
@@ -83,6 +90,8 @@ class Model(Base):
             op.parse()
             if op.status.parsed:
                 self.operators.append(op)
+            else:
+                self.legacys.append(op)
 
         self.setParsed()
 

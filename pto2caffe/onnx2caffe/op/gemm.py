@@ -6,6 +6,7 @@ from onnx2caffe.op.operator import Operator
 logger = logging.getLogger('onnx2caffe')
 
 class InnerProduct(Operator):
+
     def __init__(self, model, node, index):
         super().__init__(model, node, index)
         self.inner_product_param = dict()
@@ -27,16 +28,16 @@ class InnerProduct(Operator):
         # Bias
         self.bias = self.inputs_buf[2] if len(self.inputs_buf) == 3 else None
 
-        # options
+        # Options
         self.parseAttributes()        
         if self.attrs['transB'] != 1:
             raise NotImplementedError(self.name, 'Gemm is supported only for inner_product layer')
         if len(self.weight.shape) != 2 or (self.bias is not None and len(self.bias.shape) != 1):
             raise NotImplementedError(self.name, 'Gemm is supported only for inner_product layer')
 
-        self.inner_product_param['num_output'] = self.outputs_shape[0][1]
+        self.inner_product_param['num_output'] = self.inputs_shape[1][0]
         self.inner_product_param['weight_filler'] = dict()
-        self.inner_product_param['weight_filler']['type'] = 'xavier'
+        self.inner_product_param['weight_filler']['type'] = 'constant'#'xavier'
         if self.bias is not None:
             self.inner_product_param['bias_term'] = True
             self.inner_product_param['bias_filler'] = dict()
@@ -45,6 +46,8 @@ class InnerProduct(Operator):
                 raise NotImplementedError(self.name, 'Gemm is supported only for inner_product layer')
         else:
             self.inner_product_param['bias_term'] = False
+
+        self.attrs = self.inner_product_param
 
         self.setParsed()
 
