@@ -85,9 +85,13 @@ def computePaddingSize(padding_mode, input_size, output_size, proto_param:dict, 
     input_h = input_size[2]
     kernel_h = proto_param['kernel_h']
     output_h = output_size[2]
-    dilation_h = proto_param['dilation'][0]
 
-    pad_h = (output_h - 1) * stride_h - input_h + (dilation_h * (kernel_h - 1) + 1)
+    if 'dilation' in proto_param: # Convolution
+        dilation_h = proto_param['dilation'][0]
+        pad_h = (output_h - 1) * stride_h - input_h + (dilation_h * (kernel_h - 1) + 1)
+    else: # Pooling
+        pad_h = (output_h - 1) * stride_h - input_h + kernel_h
+
     if math.modf(pad_h/2)[0] != 0:
         pad_b = math.ceil(pad_h)
         pad_t = pad_h - pad_b
@@ -99,9 +103,13 @@ def computePaddingSize(padding_mode, input_size, output_size, proto_param:dict, 
     input_w = input_size[3]
     kernel_w = proto_param['kernel_w']
     output_w = output_size[3]
-    dilation_w = proto_param['dilation'][1]
 
-    pad_w = (output_w - 1) * stride_w - input_w + (dilation_w * (kernel_w - 1) + 1)
+    if 'dilation' in proto_param: # Convolution
+        dilation_w = proto_param['dilation'][1]
+        pad_w = (output_w - 1) * stride_w - input_w + (dilation_w * (kernel_w - 1) + 1)
+    else: # Pooling
+        pad_w = (output_w - 1) * stride_w - input_w + kernel_w
+
     if math.modf(pad_w/2)[0] != 0:
         pad_r = math.ceil(pad_w)
         pad_l = pad_w - pad_r
