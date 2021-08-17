@@ -49,6 +49,14 @@ from google.protobuf import text_format
 
 import math
 
+
+def calc_size(array1, array2):
+    if array1.shape != array2.shape:
+        return [array1.shape, array2.shape]
+    else:
+        return None
+
+
 def calc_cosine_simi(array1, array2):
     square_sum1 = sum(array1 ** 2)
     square_sum2 = sum(array2 ** 2)
@@ -89,21 +97,21 @@ def dump_caffe_model(caffe_name, caffe_path, input_tensor):
         caffe_net.blobs[input_name].data[0, ...] = input_tensor
 
     caffe_output_dict = dict()
-    blob_layer_map = dict()
+    blob2layer_map = dict()
     for i in range(len(caffe_net.layers)):
         caffe_net._forward(i, i)
         for idx in caffe_net._top_ids(i):
             data = caffe_net._blobs[idx].data
             caffe_output_dict[caffe_net._blob_names[idx]] = data.reshape(-1)
-            blob_layer_map[caffe_net._blob_names[idx]] = caffe_net._layer_names[i]
+            blob2layer_map[caffe_net._blob_names[idx]] = caffe_net._layer_names[i]
 
-    return caffe_output_dict, blob_layer_map
+    return caffe_output_dict, blob2layer_map
 
 
 def compare(platform, target_model, caffe_model, caffe_path, input_tensor):
     print('Comparing...')
 
-    caffe_output_dict, blob_layer_map = dump_caffe_model(caffe_model, caffe_path, input_tensor)
+    caffe_output_dict, blob2layer_map = dump_caffe_model(caffe_model, caffe_path, input_tensor)
 
     if platform == 'tflite':
         from tflite2caffe.tflite_run import get_output
@@ -123,8 +131,11 @@ def compare(platform, target_model, caffe_model, caffe_path, input_tensor):
         cosin_simi = calc_cosine_simi(caffe_output_dict[blob_name], target_output)
         max_err = calc_max_diff(caffe_output_dict[blob_name], target_output)
         max_ratio = calc_max_ratio(caffe_output_dict[blob_name], target_output)
+        size_diff = calc_size(caffe_output_dict[blob_name], target_output)
 
-        print(blob_layer_map[blob_name], ':')
+        print(blob2layer_map[blob_name], ':')
+        if size_diff is not None:
+            print('  Size compare error:', size_diff)
         print('  cosin_simi: %8f'% cosin_simi)
         print('  cmax_err: %8f'% max_err)
         print('  max_ratio: %8f'% max_ratio, '\n')
