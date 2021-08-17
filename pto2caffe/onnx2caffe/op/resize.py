@@ -43,7 +43,6 @@ class Resize(Operator):
         coordinate = str(self.attrs['coordinate_transformation_mode'], encoding = "utf8")
         if self.mode == 'nearest':
             if scale_factor % 1 == 0:
-                self.name = 'Deconvolution' + str(self.index)
                 self.convolution_param = dict()
                 self.convolution_param['bias_term'] = False
                 self.convolution_param['num_output'] = self.outputs_shape[0][1]
@@ -56,12 +55,10 @@ class Resize(Operator):
                 self.inputs_buf[1] = self.weight
                 self.inputs_shape[1] = self.inputs_buf[1].shape
             else:
-                self.name = 'Upsample' + str(self.index)
                 self.upsample_param = dict()
                 self.upsample_param['scale'] = scale_factor
                 self.attrs = self.upsample_param
         elif self.mode == 'linear':
-            self.name = 'Interp' + str(self.index)
             self.interp_param = dict()
             self.interp_param['align_corners'] = True if coordinate == 'align_corners' else False
             self.attrs = self.interp_param

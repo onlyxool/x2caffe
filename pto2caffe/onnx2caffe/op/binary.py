@@ -1,4 +1,5 @@
 import logging
+import numpy as np
 
 from caffe_transform import caffe_layer
 from onnx2caffe.op.operator import Operator
@@ -41,6 +42,24 @@ class Binary(Operator):
             self.eltwise_param = dict()
             self.eltwise_param['operation'] = 1 #Caffe Eltwise SUM
             self.attrs = self.eltwise_param
+#            for no, buf in enumerate(self.inputs_buf):
+#                if buf is not None:
+#                    hasBuf = True
+#                    index = no
+#                    break
+#            if hasBuf:
+#                self.scale_param = dict()
+#                self.scale_param['bias_term'] = True
+#                self.weight = np.ones(self.inputs_shape[1], dtype=None, order='C')
+#                print(self.inputs_shape[1])
+#                print('weight', self.weight)
+#                self.bias = buf
+#                print('bias', self.bias)
+#                self.attrs = self.scale_param
+#            else:
+#                self.eltwise_param = dict()
+#                self.eltwise_param['operation'] = 1 #Caffe Eltwise SUM
+#                self.attrs = self.eltwise_param
         elif self.op_code == 'Mul':
             if len(self.inputs_shape[0]) == len(self.inputs_shape[1]):
                 self.eltwise_param = dict()

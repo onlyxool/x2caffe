@@ -1,9 +1,9 @@
 import numpy as np
 from base import Base
 from onnx import numpy_helper
-#from util import *
 
 class Operator(Base):
+
     def __init__(self, model, node, index):
         super().__init__(model, model.graph, index)
         self.node = node
@@ -27,6 +27,63 @@ class Operator(Base):
     @property
     def name(self):
         return self.type + str(self.index)
+
+
+    @property
+    def shorty(self):
+        return '[%s](%s)' % (self.name, self.type)
+
+
+    def str(self):
+        return '[' + self.name + '] (' + self.type + ')'
+
+
+    def __str__(self):
+        inames = str([t for t in self.inputs])
+        onames = str([t for t in self.outputs])
+        return '%s attr%s: %s -> %s' % (self.shorty, self.attrs, inames, onames)
+
+
+    def parseInput(self):
+        for input in self.node.input:
+            self.inputs.append(input)
+            self.inputs_buf.append(self.model.input_tensor.get(input, None))
+            if input in self.model.shape:
+                self.inputs_shape.append(self.model.shape[input])
+            elif input in self.model.input_tensor:
+                self.inputs_shape.append(self.model.input_tensor[input].shape)
+            else:
+                self.inputs_shape.append(None)
+
+
+    def parseOutput(self):
+        for output in self.node.output:
+            self.outputs.append(output)
+            self.outputs_shape.append(self.model.shape[output])
+
+
+    def convertAttributeProto(self, attr):
+        if attr.HasField('f'):
+            return attr.f
+        elif attr.HasField('i'):
+            return attr.i
+        elif attr.HasField('s'):
+            return attr.s
+        elif attr.HasField('t'):
+            return numpy_helper.to_array(attr.t)
+        elif len(attr.floats):
+            return list(attr.floats)
+        elif len(attr.ints):
+            return list(attr.ints)
+        elif len(attr.strings):
+            return list(attr.strings)
+        else:
+            raise ValueError("Unsupported ONNX attribute: {}".format(attr))
+
+
+    def parseAttributes(self):
+        for attr in self.node.attribute:
+            self.attrs[attr.name] = self.convertAttributeProto(attr)
 
 
     def propagatableTensors(self):
@@ -64,64 +121,3 @@ class Operator(Base):
         This must be called after the layouts have been propagated across graph.
         """
         raise NotImplementedError("Method %s.transform() must be overrided!" % self.type)
-
-
-    def convertAttributeProto(self, attr):
-        if attr.HasField('f'):
-            return attr.f
-        elif attr.HasField('i'):
-            return attr.i
-        elif attr.HasField('s'):
-            return attr.s
-        elif attr.HasField('t'):
-            return numpy_helper.to_array(attr.t)
-        elif len(attr.floats):
-            return list(attr.floats)
-        elif len(attr.ints):
-            return list(attr.ints)
-        elif len(attr.strings):
-            return list(attr.strings)
-        else:
-            raise ValueError("Unsupported ONNX attribute: {}".format(attr))
-
-
-
-    def parseInput(self):
-        for input in self.node.input:
-            self.inputs.append(input)
-            self.inputs_buf.append(self.model.input_tensor.get(input, None))
-            if input in self.model.shape:
-                self.inputs_shape.append(self.model.shape[input])
-            elif input in self.model.input_tensor:
-                self.inputs_shape.append(self.model.input_tensor[input].shape)
-            else:
-                self.inputs_shape.append(None)
-
-
-    def parseOutput(self):
-        for output in self.node.output:
-            self.outputs.append(output)
-            self.outputs_shape.append(self.model.shape[output])
-
-
-    def parseAttributes(self):
-        for attr in self.node.attribute:
-            self.attrs[attr.name] = self.convertAttributeProto(attr)
-
-
-    @property
-    def type(self):
-        raise NotImplementedError("Method Operator.type() must be overrided!")
-
-    @property
-    def shorty(self):
-        return '[%s](%s)' % (self.name, self.type)
-
-    def str(self):
-        return '[' + self.name + '] (' + self.type + ')'
-
-    def __str__(self):
-        inames = str([t for t in self.inputs])
-        onames = str([t for t in self.outputs])
-        return '%s attr%s: %s -> %s' % (self.shorty, self.attrs, inames, onames)
-

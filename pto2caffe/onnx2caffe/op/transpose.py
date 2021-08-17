@@ -5,17 +5,17 @@ from onnx2caffe.op.operator import Operator
 
 logger = logging.getLogger('onnx2caffe')
 
-class Reshape(Operator):
+class Permute(Operator):
 
     def __init__(self, model, node, index):
         super().__init__(model, node, index)
-        self.reshape_param = dict()
+        self.permute_param = dict()
         self.setInited()
 
 
     @property
     def type(self):
-        return 'Reshape'
+        return 'Permute'
 
 
     def parse(self):
@@ -24,24 +24,17 @@ class Reshape(Operator):
         self.parseInput()
         self.parseOutput()
 
-
         # Option
         self.parseAttributes()
-        if self.op_code == 'Reshape':
-            print(self.attrs)
-            print((self.inputs_buf[1]))
-            print(self.inputs_shape)
-            print(self.outputs_shape)
+        self.permute_param['order'] = list(self.attrs['perm'])
+        self.attrs = self.permute_param
 
-            self.reshape_param = dict(shape=dict(dim=self.outputs_shape[0]))
-
-        self.attrs = self.reshape_param
         self.setParsed()
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, reshape_param=self.reshape_param)
+        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, permute_param=self.permute_param)
 
         self.setConverted()
 
-        return [layer]
+        return [layer]        

@@ -10,9 +10,11 @@ from onnx2caffe.op.operator import Operator
 logger = logging.getLogger('onnx2caffe')
 
 class Upsample(Operator):
+
     def __init__(self, model, node, index):
         super().__init__(model, node, index)
         self.setInited()
+
 
     @property
     def type(self):
@@ -30,9 +32,6 @@ class Upsample(Operator):
         self.mode = str(self.attrs['mode'], encoding = "utf8")
         scale_factor = int(self.attrs.get('height_scale', self.inputs_buf[1][2]))
 
-
-
-        self.name = 'Deconvolution' + str(self.index)
         self.convolution_param = dict()
         self.convolution_param['stride'] = scale_factor
         self.convolution_param['group'] = self.inputs_shape[0][1]
@@ -55,7 +54,10 @@ class Upsample(Operator):
         self.attrs = self.convolution_param
         self.setParsed()
 
+
     def convert(self):
         layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, None, convolution_param=self.convolution_param)
+
         self.setConverted()
+
         return [layer]

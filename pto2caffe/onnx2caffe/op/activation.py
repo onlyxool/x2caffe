@@ -21,6 +21,8 @@ class Activation(Operator):
             return 'PReLU'
         elif self.op_code == 'Relu':
             return 'ReLU'
+        elif self.op_code == 'Clip':
+            return 'ReLUX'
         else:
             raise NotImplementedError
 
@@ -39,8 +41,13 @@ class Activation(Operator):
         elif self.op_code == 'Sigmoid':
             self.sigmoid_param = dict()
             self.attrs = self.sigmoid_param
-        elif self.op_code == 'PRelu':
-            print('Prelu')
+        elif self.op_code == 'Clip':
+            self.relux_param = dict()
+            self.relux_param['x'] = self.attrs['max']
+            self.relux_param['negative_slope'] = self.attrs['min']
+            self.attrs = self.relux_param
+        elif self.op_code == 'prelu':
+            print('prelu')
         elif self.op_code == 'Relu':
             self.relu_param = dict()
             self.relu_param['negative_slope'] = 0
@@ -68,6 +75,8 @@ class Activation(Operator):
             layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, prelu_param=self.prelu_param)
         elif self.op_code == 'Relu':
             layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, relu_param=self.relu_param)
+        elif self.op_code == 'Clip':
+            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, relux_param=self.relux_param)
         else:
             raise NotImplementedError
 

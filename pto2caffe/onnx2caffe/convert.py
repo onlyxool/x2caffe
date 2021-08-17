@@ -25,5 +25,3 @@ def convert(onnx_file, input_tensor, caffe_model_name, caffe_model_path, dump_le
 
     if param.get('compare', -1) == 1:
         compare('onnx', onnx_model, caffe_model_name, caffe_model_path, input_tensor)
-#        compare('onnx', caffe_model_name, param['input_file'])
-

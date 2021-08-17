@@ -6,10 +6,16 @@ from onnx2caffe.op.operator import Operator
 logger = logging.getLogger('onnx2caffe')
 
 class Convolution(Operator):
+
     def __init__(self, model, node, index):
         super().__init__(model, node, index)
         self.convolution_param = dict()
         self.setInited()
+
+
+    @property
+    def type(self):
+        return 'Convolution'
 
 
     def parse(self):
@@ -62,12 +68,12 @@ class Convolution(Operator):
         self.attrs = self.convolution_param
 
         self.setParsed()
-        
-    @property
-    def type(self):
-        return 'Convolution'
+
+
 
     def convert(self):
         layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, convolution_param=self.convolution_param)
+
         self.setConverted()
+
         return [layer]

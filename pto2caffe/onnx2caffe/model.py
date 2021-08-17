@@ -4,16 +4,22 @@ from onnx import numpy_helper
 
 from base import Base
 
+from onnx2caffe.op.log import Log
+from onnx2caffe.op.exp import Exp
 from onnx2caffe.op.pad import Pad
+#from onnx2caffe.op.slice import Cut
+from onnx2caffe.op.tanh import TanH
 from onnx2caffe.op.binary import Binary
 from onnx2caffe.op.concat import Concat
 from onnx2caffe.op.resize import Resize
+from onnx2caffe.op.customop import Mish
 from onnx2caffe.op.reshape import Reshape #Not Finish yet
 from onnx2caffe.op.pooling import Pooling
 from onnx2caffe.op.flatten import Flatten
 from onnx2caffe.op.conv import Convolution
 from onnx2caffe.op.gemm import InnerProduct
 from onnx2caffe.op.constant import Constant
+from onnx2caffe.op.transpose import Permute
 from onnx2caffe.op.batchnorm import BatchNorm
 from onnx2caffe.op.activation import Activation
 from onnx2caffe.op.upsample import Upsample #Deprecated
@@ -26,27 +32,37 @@ logger = logging.getLogger('ONNX2caffe')
 
 
 OpMap = {
+    'Exp': Exp,
+    'Log': Log,
     'Pad': Pad,
+    'Tanh': TanH,
+#    'Slice': Cut,
     'Mul': Binary,
     'Add': Binary,
     'Concat': Concat,
     'Resize': Resize,
+    'Reshape': Reshape,
     'Flatten': Flatten,
     'MaxPool': Pooling,
     'Relu': Activation,
+    'Clip': Activation,
     'Conv': Convolution,
     'Gemm': InnerProduct,
     'Constant': Constant,
     'Unsqueeze': Reshape,
+    'Transpose': Permute,
     'Sigmoid': Activation,
     'AveragePool': Pooling,
     'LeakyRelu': Activation,
+    'ConvTranspose': Convolution,
     'GlobalAveragePool': Pooling,
     'BatchNormalization': BatchNorm,
     'Upsample': Upsample, #Deprecated
+    'Mish': Mish, # Yolov4
 #    'PAD': Pad,
 #    'RESHAPE': Reshape,
 #    'SOFTMAX': Softmax,
+#    'ConstantOfShape': Constant,
 #    'AVERAGE_POOL_2D': AvgPool2d,
 #    'FULLY_CONNECTED': InnerProduct,
 #    'DEPTHWISE_CONV_2D': Convolution,
@@ -55,8 +71,11 @@ OpMap = {
 
 
 class Model(Base):
+
     def __init__(self, onnx_model, param):
         super().__init__(onnx_model, onnx_model.graph)
+        self.model_version = onnx_model.model_version
+        self.producer = onnx_model.producer_name +' '+ onnx_model.producer_version
         self.param = param
         self.operators = []
         self.layers = []
@@ -66,8 +85,40 @@ class Model(Base):
         self.setInited()
 
 
+    def ReplaceActivation(self, node, op_list, activation):
+        skip_op = ['Constant', 'Reshape']
+        for i in range(len(node)):
+            if i >= len(node):
+                break
+            isflag = True
+            cnt = 0
+            for j in range(len(op_list)):
+                if (i+j+cnt>=len(node)) or (node[i+j+cnt].op_type != op_list[j]):
+                    isflag = False
+                    break
+
+                while (i+j+cnt+1 < len(node)) and  node[i+j+cnt+1].op_type in skip_op:
+                    cnt+=1
+
+            if(isflag):
+                node[i].output[0] = node[i+len(op_list)-1+cnt].output[0]
+                node[i].op_type = activation
+                for j in range(len(op_list) - 1 + cnt):
+                    node.remove(node[i+1])
+
+
+    def preprocess(self):
+        nodes = self.graph.node
+
+        self.ReplaceActivation(nodes, ['Exp', 'Add' , 'Log', 'Tanh', 'Mul'], 'Mish')
+        self.ReplaceActivation(nodes, ['Add', 'Clip' , 'Div', 'Mul'], 'Hardswish')
+        self.ReplaceActivation(nodes, ['Sigmoid', 'Mul'], 'Swish')
+
+
     def parse(self):
         logger.debug("Parsing the ONNX Model...")
+
+        self.preprocess()
 
         # Get Shape
         for value_info in self.graph.value_info:
@@ -77,7 +128,7 @@ class Model(Base):
         for value_info in self.graph.output:
             self.shape[value_info.name] = [int(dim.dim_value) for dim in value_info.type.tensor_type.shape.dim]
 
-        print(self.shape[self.graph.input[0].name], '===========')
+        print('ONNX Model Input size:', self.shape[self.graph.input[0].name])
 
         # Get Weight & Bias
         for tensor in self.model.graph.initializer:
@@ -91,7 +142,8 @@ class Model(Base):
             if op.status.parsed:
                 self.operators.append(op)
             else:
-                self.legacys.append(op)
+                if hasattr(op, 'pad'):
+                    self.legacys.append(op)
 
         self.setParsed()
 
@@ -117,7 +169,7 @@ class Model(Base):
     def dump(self, onnx_model, model_name, input_tensor, dump_level=-1):
         dump = Dump('onnx', onnx_model, model_name, input_tensor, self.param, dump_level)
         from progress_bar import ProgressBar
-        progressBar = ProgressBar(len(self.operators), 0, "TFlite dump processing")
+        progressBar = ProgressBar(len(self.operators), 0, "ONNX dump processing")
         for i, op in enumerate(self.operators):
             dump.operator(op)
             progressBar.setValue(i)
