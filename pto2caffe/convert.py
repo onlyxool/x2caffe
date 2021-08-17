@@ -3,14 +3,8 @@ import sys
 import cv2
 import argparse
 import numpy as np
+from util import *
 
-
-trans_dtype = {
-    'u8': np.uint8,
-    's8': np.int8,
-    's16': np.int16,
-    'f32': np.float32
-}
 
 def get_batch_size_from_model(param):
     framework = param['platform'].lower()
@@ -24,7 +18,6 @@ def get_batch_size_from_model(param):
         graph = model.Subgraphs(0)
         param['batch_size'] = graph.Tensors(graph.Inputs(0)).Shape(0)
         param['input_shape'] = list(graph.Tensors(graph.Inputs(0)).ShapeAsNumpy())
-        print(param['input_shape'], '=========')
     elif framework == 'onnx':
         import onnx
         model = onnx.load(param['model'])
@@ -186,7 +179,7 @@ def dummy_input(param):
 
 def Convert(model_file, caffe_model_name, caffe_model_path=None, dump_level=-1, param=None):
     get_batch_size_from_model(param)
-    if param['dummy'] is True:
+    if param.get('dummy', None) is True:
         input_tensor = dummy_input(param)
     else:
         input_tensor = preprocess(param)
@@ -247,6 +240,8 @@ def args_():
             help = 'dummy input data')
     args.add_argument('-compare',       type = int,     required = False,   default = -1,   choices=[0, 1],
             help = '')
+    args.add_argument('-caffe_log',     type = int,     required = False,   default = 2,   choices=[0, 1, 2],
+            help = '')
     args = args.parse_args()
     return args
 
@@ -256,14 +251,21 @@ def main():
     param = args.__dict__
     param['model'] = os.path.abspath(param['model'])
     model_file = param['model']
-    os.environ['GLOG_minloglevel'] = '2'
+    os.environ['GLOG_minloglevel'] = str(param['caffe_log'])
 
     if not os.path.isfile(model_file):
         print('Model File not exist!')
         return
     else:
         opt_path, opt_file_name = os.path.split(model_file)
-        opt_model_name, ext = opt_file_name.split('.')
+        file_name = opt_file_name.split('.')
+        ext = file_name[-1]
+        opt_model_name = ''
+        for piece in file_name:
+            if piece == ext:
+                break
+            opt_model_name += ('.'+piece)
+        opt_model_name = opt_model_name[1:]
 
     caffe_model_name = param['name'] if param['name'] is not None else opt_model_name
     caffe_model_path = os.path.abspath(param['output']) if param['output'] is not None else opt_path
