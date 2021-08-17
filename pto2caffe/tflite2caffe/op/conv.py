@@ -8,6 +8,7 @@ from tflite2caffe.op.pad import computePaddingSize
 logger = logging.getLogger('tflite2caffe')
 
 class Convolution(Operator):
+
     def __init__(self, model, tf_op, tf_op_code, index):
         super().__init__(model, tf_op, tf_op_code, index)
         self.convolution_param = dict()
@@ -16,9 +17,16 @@ class Convolution(Operator):
         self.attrs = self.convolution_param
         self.setInited()
 
+
+    @property
+    def type(self):
+        return 'ConvolutionDepthwise' if self.isDepthwise else 'Convolution'
+
+
     @property
     def isDepthwise(self):
         return (self.op_code is tflite.BuiltinOperator.DEPTHWISE_CONV_2D)
+
 
     def parse(self):
         logger.debug("Parsing %s...", self.type)
@@ -45,7 +53,7 @@ class Convolution(Operator):
         op_opt = self.op.BuiltinOptions()
         opt = tflite.DepthwiseConv2DOptions() if self.isDepthwise else tflite.Conv2DOptions()
         opt.Init(op_opt.Bytes, op_opt.Pos)
-        self.convolution_param['num_output'] = self.outputs_shape[0][1]#self.graph.Tensors(self.outputs[0]).Shape(3)
+        self.convolution_param['num_output'] = self.outputs_shape[0][1]
         self.convolution_param['stride_h'] = opt.StrideH()
         self.convolution_param['stride_w'] = opt.StrideW()
         self.convolution_param['dilation'] = [opt.DilationHFactor(), opt.DilationWFactor()]
@@ -73,19 +81,19 @@ class Convolution(Operator):
             self.convolution_param['pad_t'] = padding[2]
             self.convolution_param['pad_b'] = padding[3]
             if self.isDepthwise is True:
-                raise NotImplementedError("Depthwise Convolution not support asymmetric padding")
+                print(self)
+                raise NotImplementedError("Depthwise Convolution could not support asymmetric padding")
 
         activ_type_code = opt.FusedActivationFunction()
         if activ_type_code is not tflite.ActivationFunctionType.NONE:
             self.activ_type_code = activ_type_code
 
         self.setParsed()
-        
-    @property
-    def type(self):
-        return 'ConvolutionDepthwise' if self.isDepthwise else 'Convolution'
+
 
     def convert(self):
         layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, convolution_param=self.convolution_param)
+
         self.setConverted()
+
         return [layer]

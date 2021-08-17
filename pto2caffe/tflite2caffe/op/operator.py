@@ -1,14 +1,17 @@
 import tflite
+import logging
 import numpy as np
 from base import Base
 from util import *
 
+logger = logging.getLogger('tflite2caffe')
+
 class Operator(Base):
+
     def __init__(self, model, tf_op:tflite.Operator, tf_op_code, index):
         super().__init__(model, model.graph, index)
         self.op = tf_op
         self.op_code = tf_op_code
-        self.name = self.type + str(index)
         self.inputs = []
         self.inputs_shape = []
         self.inputs_buf = []
@@ -22,6 +25,67 @@ class Operator(Base):
     @property
     def type(self):
         raise NotImplementedError("Method Operator.type() must be overrided!")
+
+
+    @property
+    def name(self):
+        return self.type + str(self.index)
+
+
+    @property
+    def shorty(self):
+        return '[%s](%s)' % (self.name, self.type)
+
+
+    def str(self):
+        return '[' + self.name + '] (' + self.type + ')'
+
+
+    def __str__(self):
+        inames = str([t for t in self.inputs])
+        onames = str([t for t in self.outputs])
+        return '%s attr%s: %s -> %s' % (self.shorty, self.attrs, inames, onames)
+
+
+    def getBuffer(self, tensor_id):
+        type_id = self.graph.Tensors(tensor_id).Type()
+        tensor_type = ['float32', 'float16', 'int32', 'uint8', 'int64', 'string', 'bool', 'int16', 'COMPLEX64', 'int8', 'float64']
+        if (tensor_type[type_id] not in ['int32', 'float32', 'uint8']):
+            logger.warning("Data type {} not supported/tested yet, "
+                       "the generated model may contain error".format(tensor_type[type_id]))
+        assert(tensor_id < self.graph.TensorsLength())
+        t = self.graph.Tensors(tensor_id)
+        bi = t.Buffer()
+        shape = t.ShapeAsNumpy()
+        assert(bi < self.model.model.BuffersLength())
+
+        raw = self.model.model.Buffers(bi).DataAsNumpy()
+        if isinstance(raw, int) and raw == 0:
+            return None
+        data = np.frombuffer(raw, dtype=tensor_type[type_id])
+
+        if isinstance(shape, np.ndarray) and len(shape) > 0:
+            data = data.reshape(shape)
+
+        return data.copy()
+
+
+    def parseInput(self):
+        for i in range(self.op.InputsLength()):
+            if self.op.Inputs(i) >= 0:
+                self.inputs.append(self.op.Inputs(i))
+                self.inputs_shape.append(shape_map_nhwc2nchw(self.graph.Tensors(self.inputs[i]).ShapeAsNumpy()))
+                buf = self.getBuffer(self.op.Inputs(i))
+                self.inputs_buf.append(buf)
+            else:
+                self.inputs_buf.append(None)
+
+
+    def parseOutput(self):
+        for i in range(self.op.OutputsLength()):
+            if self.op.Outputs(i) >= 0:
+                self.outputs.append(self.op.Outputs(i))
+                self.outputs_shape.append(shape_map_nhwc2nchw(self.graph.Tensors(self.outputs[0]).ShapeAsNumpy()))
 
 
     def propagatableTensors(self):
@@ -59,60 +123,3 @@ class Operator(Base):
         This must be called after the layouts have been propagated across graph.
         """
         raise NotImplementedError("Method %s.transform() must be overrided!" % self.type)
-
-
-    def getBuffer(self, tensor_id):
-        type_id = self.graph.Tensors(tensor_id).Type()
-        tensor_type = ['float32', 'float16', 'int32', 'uint8', 'int64', 'string', 'bool', 'int16', 'COMPLEX64', 'int8', 'float64']
-        if (tensor_type[type_id] not in ['int32', 'float32', 'uint8']):
-            logger.warning("Data type {} not supported/tested yet, "
-                       "the generated model may contain error".format(tensor_type[type_id]))
-        assert(tensor_id < self.graph.TensorsLength())
-        t = self.graph.Tensors(tensor_id)
-        bi = t.Buffer()
-        shape = t.ShapeAsNumpy()
-        assert(bi < self.model.model.BuffersLength())
-
-        raw = self.model.model.Buffers(bi).DataAsNumpy()
-        if isinstance(raw, int) and raw == 0:
-            return None
-        data = np.frombuffer(raw, dtype=tensor_type[type_id])
-        if len(shape) > 0:
-            data = data.reshape(shape)
-
-        return data.copy()
-
-
-    def parseInput(self):
-        for i in range(self.op.InputsLength()):
-            if self.op.Inputs(i) >= 0:
-                self.inputs.append(self.op.Inputs(i))
-                self.inputs_shape.append(shape_map_nhwc2nchw(self.graph.Tensors(self.inputs[i]).ShapeAsNumpy()))
-                buf = self.getBuffer(self.op.Inputs(i))
-                self.inputs_buf.append(buf)
-            else:
-                self.inputs_buf.append(None)
-
-    def parseOutput(self):
-        for i in range(self.op.OutputsLength()):
-            if self.op.Outputs(i) >= 0:
-                self.outputs.append(self.op.Outputs(i))
-                self.outputs_shape.append(shape_map_nhwc2nchw(self.graph.Tensors(self.outputs[0]).ShapeAsNumpy()))
-
-
-    @property
-    def type(self):
-        raise NotImplementedError("Method Operator.type() must be overrided!")
-
-    @property
-    def shorty(self):
-        return '[%s](%s)' % (self.name, self.type)
-
-    def str(self):
-        return '[' + self.name + '] (' + self.type + ')'
-
-    def __str__(self):
-        inames = str([t for t in self.inputs])
-        onames = str([t for t in self.outputs])
-        return '%s attr%s: %s -> %s' % (self.shorty, self.attrs, inames, onames)
-

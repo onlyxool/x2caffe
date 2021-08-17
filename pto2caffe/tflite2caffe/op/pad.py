@@ -14,16 +14,19 @@ PaddingMapping = {
 
 
 class Pad(Operator):
+
     TypeMapping = { 
         tflite.BuiltinOperator.PAD: 'Pad',
         tflite.BuiltinOperator.MIRROR_PAD: 'Pad',
     }   
+
 
     def __init__(self, model, tf_op, tf_op_code, index,):
         super().__init__(model, tf_op, tf_op_code, index,)
         self.pad = dict()
         self.attrs = self.pad
         self.setInited()
+
 
     @property
     def type(self):
@@ -47,32 +50,9 @@ class Pad(Operator):
         self.pad['bottom'] = pad_tensor[1][1]
 
 
-    def propagatableTensors(self):
-        return [self.inputs[0], self.outputs[0]]
-
-
-    def transform(self):
-        # Padding.transform() handls TFLite/ONNX semantic gap in addition to layout gap
-        # TensorFlow (Lite) pads is `[n, 2]` where `[i, 0]` is _begin_ and `[i, 1]` is _end_
-        # ONNX pads is `[n * 2]` sequenced as `[x1_begin, x2_begin,...,x1_end, x2_end,...]`
-        layout = self.inputs[0].layout
-        pt = self.inputs[1]
-        pads = pt.data
-        pads = np.reshape(pads, pt.shape)
-        if layout is None:
-            pads = np.transpose(pads)
-        else:
-            pads_begin = pads[:, 0]
-            pads_end = pads[:, 1]
-            pads_begin = layout.transform(pads_begin)
-            pads_end = layout.transform(pads_end)
-            pads = np.array([pads_begin, pads_end])
-        pt.data = pads.flatten()
-        pt.shape = [np.prod(pt.shape), ]
-
-
     def convert(self):
         pass
+
 
 def computePaddingSize(padding_mode, input_size, output_size, proto_param:dict, legacy_pad):
     if padding_mode == 1: #tflite.Padding.VALID
@@ -89,11 +69,28 @@ def computePaddingSize(padding_mode, input_size, output_size, proto_param:dict, 
     if 'dilation' in proto_param: # Convolution
         dilation_h = proto_param['dilation'][0]
         pad_h = (output_h - 1) * stride_h - input_h + (dilation_h * (kernel_h - 1) + 1)
+#stride*(input-1)+ dilation*(kernel-1)+ 1 - output = 2pad #TODO Transpos_conv2d
     else: # Pooling
-        pad_h = (output_h - 1) * stride_h - input_h + kernel_h
+        if proto_param['ceil_mode']:
+            if stride_h <= kernel_h:
+#pooled_height_ = (ceil(static_cast<float>(height_ + pad_t_ + pad_b_ - kernel_h_) / stride_h_)) + 1;
+                #(output -1) = ceil((input + 2pad - kernel)/stride)
+                # output - 1 = ((input + 2pad - kernel)/stride)//1 + 1
+                # ouput - 2 = input + 2pad - kernel)/stride
+                # (output - 2) * stride - input + kernel = 2pad
+                # 2pad = (output - 2) * stride - input + kernel
+#pad_h = (output_h - 1) * stride_h - input_h + kernel_h
+                pad_h = (output_h - 1) * stride_h - input_h + kernel_h
+            else:
+                pad_h = (output_h - 0) * stride_h - input_h
+        else:
+            if stride_h <= kernel_h:
+                pad_h = (output_h - 1) * stride_h - input_h + kernel_h
+            else:
+                pad_h = output_h * stride_h - input_h
 
     if math.modf(pad_h/2)[0] != 0:
-        pad_b = math.ceil(pad_h)
+        pad_b = math.ceil(pad_h/2)
         pad_t = pad_h - pad_b
     else:
         pad_t = pad_h/2
@@ -108,10 +105,19 @@ def computePaddingSize(padding_mode, input_size, output_size, proto_param:dict, 
         dilation_w = proto_param['dilation'][1]
         pad_w = (output_w - 1) * stride_w - input_w + (dilation_w * (kernel_w - 1) + 1)
     else: # Pooling
-        pad_w = (output_w - 1) * stride_w - input_w + kernel_w
+        if proto_param['ceil_mode']:
+            if stride_w <= kernel_w:
+                pad_w = (output_w - 1) * stride_w - input_w + kernel_w
+            else:
+                pad_w = (output_w - 0) * stride_w - input_w
+        else:
+            if stride_w <= kernel_w:
+                pad_w = (output_w - 1) * stride_w - input_w + kernel_w
+            else:
+                pad_w = output_w * stride_w - input_w
 
     if math.modf(pad_w/2)[0] != 0:
-        pad_r = math.ceil(pad_w)
+        pad_r = math.ceil(pad_w/2)
         pad_l = pad_w - pad_r
     else:
         pad_r = pad_w/2

@@ -2,19 +2,23 @@ import tflite
 import logging
 from dump import Dump
 
-
 from base import Base
 
 from tflite2caffe.op.pad import Pad
+from tflite2caffe.op.split import Slice #TODO
 from tflite2caffe.op.binary import Binary
 from tflite2caffe.op.resize import Resize 
 from tflite2caffe.op.concat import Concat
+from tflite2caffe.op.reshape import Reshape
 from tflite2caffe.op.pooling import Pooling
 from tflite2caffe.op.softmax import Softmax
 from tflite2caffe.op.conv import Convolution
+from tflite2caffe.op.transpose import Permute
 from tflite2caffe.op.activation import Activation
 from tflite2caffe.op.fullyconnected import InnerProduct
 from tflite2caffe.op.activation import handleFusedActivation
+
+
 
 from caffe_transform import save_caffe_model
 from caffe_transform import make_caffe_input_layer
@@ -25,24 +29,34 @@ logger = logging.getLogger('TFlite2caffe')
 OpMap = { 
     'PAD': Pad,
     'ADD': Binary,
+    'MUL': Binary,
+    'SPLIT': Slice,
     'MEAN': Pooling,
+    'RESHAPE': Reshape,
+    'SQUEEZE': Reshape,
     'SOFTMAX': Softmax,
+    'RELU': Activation,
+    'PRELU': Activation,
+    'TRANSPOSE': Permute,
     'CONV_2D': Convolution,
     'MAX_POOL_2D': Pooling,
+#    'STRIDED_SLICE': Slice,
     'CONCATENATION': Concat,
     'LEAKY_RELU': Activation,
+    'RESIZE_BILINEAR': Resize,
+    'AVERAGE_POOL_2D': Pooling,
     'FULLY_CONNECTED': InnerProduct,
     'DEPTHWISE_CONV_2D': Convolution,
     'RESIZE_NEAREST_NEIGHBOR': Resize,
-#    'AVERAGE_POOL_2D': AvgPool2d,
-#    'RESHAPE': Reshape,
-#    'MUL': Mul,
+#    'DIV': Binary,
+#    'MIRROR_PAD': Pad,
 }
 
 
 class Model(Base):
     def __init__(self, model:tflite.Model, param):
         super().__init__(model, model.Subgraphs(0))
+        self.version = model.Version()
         self.param = param
         self.operators = []
         self.layers = []
@@ -55,6 +69,8 @@ class Model(Base):
 
         if self.model.SubgraphsLength() > 1:
             raise ValueError('TFlite model include ' + str(self.model.SubgraphsLength()) + ' graphs.')
+
+        print('TFlite Model Input size:', list(self.graph.Tensors(self.graph.Inputs(0)).ShapeAsNumpy()))
 
         for index in range(self.graph.OperatorsLength()):
             tf_op = self.graph.Operators(index)

@@ -8,6 +8,7 @@ logger = logging.getLogger('tflite2caffe')
 
 
 class Activation(Operator):
+
     TypeMapping = {
         tflite.BuiltinOperator.LOGISTIC: 'Sigmoid',
         tflite.BuiltinOperator.PRELU: 'PRelu',
@@ -16,9 +17,11 @@ class Activation(Operator):
         tflite.BuiltinOperator.LEAKY_RELU: 'Leaky_Relu',
     }
 
+
     def __init__(self, model, tf_op, tf_op_code, index):
         super().__init__(model, tf_op, tf_op_code, index)
         self.setInited()
+
 
     @property
     def type(self):
@@ -35,12 +38,16 @@ class Activation(Operator):
         else:
             raise NotImplementedError
 
+
     def parse(self):
         logger.debug("Parsing %s...", self.type)
 
         assert(self.op_code in self.TypeMapping)
         if self.op is not None:
-            assert(self.op.InputsLength() == 1)
+            if self.op_code == tflite.BuiltinOperator.PRELU:
+                assert(self.op.InputsLength() == 2)
+            else:
+                assert(self.op.InputsLength() == 1)
             assert(self.op.OutputsLength() == 1)
             self.parseInput()
             self.parseOutput()
@@ -56,7 +63,13 @@ class Activation(Operator):
         elif self.op_code == tflite.BuiltinOperator.LOGISTIC:
             print('sigmoid')
         elif self.op_code == tflite.BuiltinOperator.PRELU:
-            print('prelu')
+            self.slope = self.inputs_buf[1].transpose(2, 0, 1)
+            self.prelux_param = dict()
+            if self.slope.shape[0] == 1:
+                self.prelux_param['channel_shared'] = True
+            else:
+                self.prelux_param['channel_shared'] = False
+            self.attrs = self.prelux_param
         elif self.op_code == tflite.BuiltinOperator.RELU6:
             self.relux_param = dict()
             self.relux_param['negative_slope'] = 0
@@ -86,7 +99,7 @@ class Activation(Operator):
         elif self.op_code == tflite.BuiltinOperator.LOGISTIC:
             layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, sigmoid_param=self.sigmoid_param)
         elif self.op_code == tflite.BuiltinOperator.PRELU:
-            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, prelu_param=self.prelu_param)
+            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.slope, prelu_param=self.prelu_param)
         elif self.op_code == tflite.BuiltinOperator.RELU6:
             layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, relux_param=self.relux_param)
         elif self.op_code == tflite.BuiltinOperator.RELU:
@@ -99,13 +112,13 @@ class Activation(Operator):
 
 def handleFusedActivation(preop:Operator):
     if preop.activ_type_code == tflite.ActivationFunctionType.RELU:
-        op = Activation(preop.model, None, tflite.BuiltinOperator.RELU, preop.index+0.5)
+        op = Activation(preop.model, None, tflite.BuiltinOperator.RELU, preop.index)
     elif preop.activ_type_code == tflite.ActivationFunctionType.RELU_N1_TO_1:
         raise NotImplementedError('ReluN1To1 is not supported.')
     elif preop.activ_type_code == tflite.ActivationFunctionType.RELU6:
-        op = Activation(preop.model, None, tflite.BuiltinOperator.RELU6, preop.index+0.5)
+        op = Activation(preop.model, None, tflite.BuiltinOperator.RELU6, preop.index)
     elif preop.activ_type_code == tflite.ActivationFunctionType.TANH:
-        op = Activation(preop.model, None, tflite.BuiltinOperator.TANH, preop.index+0.5)
+        op = Activation(preop.model, None, tflite.BuiltinOperator.TANH, preop.index)
     elif preop.activ_type_code == tflite.ActivationFunctionType.SIGN_BIT:
          raise NotImplementedError('SignBits is not supported.')
     else:
