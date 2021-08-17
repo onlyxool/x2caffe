@@ -3,9 +3,9 @@ import sys
 sys.path.append(os.getenv('MCHOME') + 'toolchain/caffe/python')
 sys.path.append(os.getenv('MCHOME') + 'toolchain/caffe/python/caffe')
 import caffe
+from util import *
 import numpy as np
 from caffe.proto import caffe_pb2
-#from collections import Iterable,Iterator
 
 
 def param_name_dict():
@@ -125,12 +125,13 @@ def save_caffe_model(caffe_name, caffe_path, layers):
                 np.copyto(model.params[layer.name][2].data, np.array([1.0]), casting='same_kind')
         except:
             raise Exception(layer.name)
+
     model_save_path = caffe_path + '/' + caffe_name + '.caffemodel'
     model.save(model_save_path)
 
 
 def make_caffe_input_layer(input, param):
-    layer_name = 'Input'
+    layer_name = 'input.1'
     output = input
     output = [output]
 
@@ -154,7 +155,7 @@ def make_caffe_input_layer(input, param):
     elif ext == 'bin':
         bin_data_param['source'] = param['source']
         bin_data_param['root_folder'] = param['root_folder']
-        bin_data_param['data_format'] = trans_dtype[param['dtype']]
+        bin_data_param['data_format'] = dtype_map[param['dtype']]
         bin_data_param['shape'] = dict(dim=param['inshape'])
     else:
         raise NotImplementedError('Do not support file format: '+ ext)
