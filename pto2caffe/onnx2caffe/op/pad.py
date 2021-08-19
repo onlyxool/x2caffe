@@ -29,6 +29,7 @@ class Pad(Operator):
         self.parseAttributes()
 
         if self.attrs.get('value', 0.0) != 0.0 or self.attrs['mode'].decode() != 'constant':
+#            print('Warning: Caffe only support constant Pad mode.')
             raise NotImplementedError('Caffe only support constant Pad mode.')
 
         pad = np.array(self.attrs['pads']).reshape(-1, len(self.inputs_shape[0]))

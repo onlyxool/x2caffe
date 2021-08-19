@@ -28,11 +28,6 @@ class Reshape(Operator):
         # Option
         self.parseAttributes()
         if self.op_code == 'Reshape':
-            print(self.attrs)
-            print((self.inputs_buf[1]))
-            print(self.inputs_shape)
-            print(self.outputs_shape)
-
             self.reshape_param = dict(shape=dict(dim=self.outputs_shape[0]))
 
         self.attrs = self.reshape_param

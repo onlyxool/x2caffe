@@ -17,7 +17,7 @@ class Binary(Operator):
         if self.op_code == 'Add':
             return 'Eltwise'
         elif self.op_code == 'Sub':
-            return 'TODO'
+            return 'Eltwise'
         elif self.op_code == 'Mul':
             if hasattr(self, 'eltwise_param'):
                 return 'Eltwise'
@@ -25,6 +25,8 @@ class Binary(Operator):
                 return 'Scale'
             else:
                 return 'Mul'
+        elif self.op_code == 'Div':
+            return 'Eltwise'
         elif self.op_code == 'Pow':
             return 'TODO'
         else:
@@ -60,6 +62,10 @@ class Binary(Operator):
 #                self.eltwise_param = dict()
 #                self.eltwise_param['operation'] = 1 #Caffe Eltwise SUM
 #                self.attrs = self.eltwise_param
+        elif self.op_code == 'Sub':
+            self.eltwise_param = dict()
+            self.eltwise_param['operation'] = 3 #Caffe Eltwise SUB
+            self.attrs = self.eltwise_param
         elif self.op_code == 'Mul':
             if len(self.inputs_shape[0]) == len(self.inputs_shape[1]):
                 self.eltwise_param = dict()
@@ -73,8 +79,20 @@ class Binary(Operator):
                         self.scale_param['axis'] = i
                         break
                 self.attrs = self.scale_param
+        elif self.op_code == 'Div':
+            if self.inputs_buf[1] is not None:
+                self.scale_param = dict()
+                self.scale_param['bias_term'] = False
+                for i in range(len(self.inputs_shape[0])):
+                    if self.inputs_shape[0][i] == self.inputs_shape[1][0]:
+                        self.scale_param['axis'] = i
+                        break
+                self.attrs = self.scale_param
+                self.weight = 1/self.inputs_buf[1]
+            else:
+                raise NotImplementedError(self.op_code)
         else:
-            raise NotImplementedError
+            raise NotImplementedError(self.op_code)
 
         self.setParsed()
 
@@ -85,13 +103,15 @@ class Binary(Operator):
         pass
 
     def convert(self):
-        if self.op_code == 'Add':
+        if self.op_code == 'Add' or self.op_code == 'Sub':
             layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param)
         elif self.op_code == 'Mul':
             if hasattr(self, 'eltwise_param'):
                 layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param)
             elif hasattr(self, 'scale_param'):
                 layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, scale_param=self.scale_param)
+        elif self.op_code == 'Div':
+                layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, scale_param=self.scale_param)
         else:
             raise NotImplementedError
 
