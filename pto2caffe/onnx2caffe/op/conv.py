@@ -32,7 +32,7 @@ class Convolution(Operator):
 
         # Option
         self.parseAttributes()
-        self.convolution_param['num_output'] = self.outputs_shape[0][1]#self.graph.Tensors(self.outputs[0]).Shape(3)
+        self.convolution_param['num_output'] = self.weight.shape[0]
         self.convolution_param['stride'] = self.attrs.get('strides', [1, 1])
         self.convolution_param['dilation'] = self.attrs.get('dilations', [1, 1])
         self.convolution_param['group'] = self.attrs.get('group', 1)
