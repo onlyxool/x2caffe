@@ -60,7 +60,7 @@ class Pooling(Operator):
             self.pooling_param['kernel_w'] = opt.FilterWidth()
             self.pooling_param['stride_h'] = opt.StrideH()
             self.pooling_param['stride_w'] = opt.StrideW()
-            self.pooling_param['ceil_mode'] = True #if opt.Padding() == tflite.Padding.SAME else False
+            self.pooling_param['ceil_mode'] = True if opt.Padding() == tflite.Padding.SAME else False
 
             # Padding
             legacy_pad = {'left': 0, 'right': 0, 'top': 0, 'bottom': 0}

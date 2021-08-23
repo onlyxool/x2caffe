@@ -55,7 +55,7 @@ class Pad(Operator):
 
 
 def computePaddingSize(padding_mode, input_size, output_size, proto_param:dict, legacy_pad):
-    if padding_mode == 1: #tflite.Padding.VALID
+    if padding_mode == tflite.Padding.VALID:
         if legacy_pad['left'] == legacy_pad['right'] and legacy_pad['top'] == legacy_pad['bottom']:
             return (int(legacy_pad['left']), int(legacy_pad['top']))
         else:

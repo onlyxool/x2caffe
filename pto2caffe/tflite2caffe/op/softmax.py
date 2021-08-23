@@ -7,6 +7,7 @@ from tflite2caffe.op.operator import Operator
 logger = logging.getLogger('tflite2caffe')
 
 class Softmax(Operator):
+
     TypeMapping = {
             tflite.BuiltinOperator.SOFTMAX: 'Softmax',
     }
