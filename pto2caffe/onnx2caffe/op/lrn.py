@@ -5,17 +5,17 @@ from onnx2caffe.op.operator import Operator
 
 logger = logging.getLogger('onnx2caffe')
 
-class Reshape(Operator):
+class LRN(Operator):
 
     def __init__(self, model, node, index):
         super().__init__(model, node, index)
-        self.reshape_param = dict()
+        self.lrn_param = dict()
         self.setInited()
 
 
     @property
     def type(self):
-        return 'Reshape'
+        return 'LRN'
 
 
     def parse(self):
@@ -26,19 +26,19 @@ class Reshape(Operator):
 
         # Option
         self.parseAttributes()
-#if self.op_code == 'Reshape' or self.op_code == 'Squeeze':
-        if 'shape' in self.attrs:
-            self.reshape_param = dict(shape=dict(dim=self.attrs['shape']))
-        else:
-            self.reshape_param = dict(shape=dict(dim=self.outputs_shape[0]))
+        self.lrn_param['alpha'] = self.attrs['alpha']
+        self.lrn_param['beta'] = self.attrs['beta']
+        self.lrn_param['local_size'] = self.attrs['size']
 
-        self.attrs = self.reshape_param
+        self.attrs = self.lrn_param
+
         self.setParsed()
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, reshape_param=self.reshape_param)
+        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, lrn_param=self.lrn_param)
 
         self.setConverted()
 
         return [layer]
+

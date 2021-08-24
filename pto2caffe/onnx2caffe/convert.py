@@ -6,11 +6,11 @@ from compare import compare
 
 def convert(onnx_file, input_tensor, caffe_model_name, caffe_model_path, dump_level=-1, param=None):
     onnx_model = onnx.load(onnx_file)
+    onnx_model = shape_inference.infer_shapes(onnx_model)
     try:
         onnx.checker.check_model(onnx_model)
     except onnx.checker.ValidationError as e:
         print('The model is invalid: %s' % e)
-    onnx_model = shape_inference.infer_shapes(onnx_model)
 
     model = Model(onnx_model, param)
     model.parse()
@@ -23,5 +23,4 @@ def convert(onnx_file, input_tensor, caffe_model_name, caffe_model_path, dump_le
     if dump_level == 3:
         dump_caffe_model(caffe_model_name, caffe_model_path, input_tensor, param['input_file'])
 
-    if param.get('compare', -1) == 1:
-        compare('onnx', onnx_model, caffe_model_name, caffe_model_path, input_tensor)
+    compare('onnx', onnx_model, caffe_model_name, caffe_model_path, input_tensor, param.get('compare', -1))

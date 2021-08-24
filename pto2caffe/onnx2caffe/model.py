@@ -7,6 +7,7 @@ from base import Base
 from onnx2caffe.op.log import Log
 from onnx2caffe.op.exp import Exp
 from onnx2caffe.op.pad import Pad
+from onnx2caffe.op.lrn import LRN
 #from onnx2caffe.op.slice import Cut
 from onnx2caffe.op.tanh import TanH
 from onnx2caffe.op.binary import Binary
@@ -15,6 +16,7 @@ from onnx2caffe.op.resize import Resize
 from onnx2caffe.op.customop import Mish
 from onnx2caffe.op.reshape import Reshape #Not Finish yet
 from onnx2caffe.op.pooling import Pooling
+from onnx2caffe.op.dropout import Dropout
 from onnx2caffe.op.flatten import Flatten
 from onnx2caffe.op.conv import Convolution
 from onnx2caffe.op.gemm import InnerProduct
@@ -35,15 +37,20 @@ OpMap = {
     'Exp': Exp,
     'Log': Log,
     'Pad': Pad,
+    'LRN': LRN,
     'Tanh': TanH,
 #    'Slice': Cut,
     'Add': Binary,
+    'Sum': Binary,
     'Sub': Binary,
     'Mul': Binary,
     'Div': Binary,
+    'MatMul': Binary,
     'Concat': Concat,
     'Resize': Resize,
+    'Dropout': Dropout,
     'Reshape': Reshape,
+    'Squeeze': Reshape,
     'Flatten': Flatten,
     'MaxPool': Pooling,
     'Relu': Activation,
@@ -54,6 +61,7 @@ OpMap = {
     'Unsqueeze': Reshape,
     'Transpose': Permute,
     'Sigmoid': Activation,
+    'Softmax': Activation,
     'AveragePool': Pooling,
     'LeakyRelu': Activation,
     'ConvTranspose': Convolution,
@@ -81,6 +89,7 @@ class Model(Base):
         self.param = param
         self.operators = []
         self.layers = []
+        self.inputs = []
         self.input_tensor = dict()
         self.shape = dict()
         self.legacys = []
@@ -130,13 +139,17 @@ class Model(Base):
         for value_info in self.graph.output:
             self.shape[value_info.name] = [int(dim.dim_value) for dim in value_info.type.tensor_type.shape.dim]
 
-        print('ONNX Model Input size:', self.shape[self.graph.input[0].name])
-
         # Get Weight & Bias
         for tensor in self.model.graph.initializer:
             self.input_tensor[tensor.name] =  numpy_helper.to_array(tensor)
         for tensor in self.model.graph.sparse_initializer:
             self.input_tensor[tensor.name] =  numpy_helper.to_array(tensor)
+
+        print('ONNX Model Input size: ', end='')
+        for input in self.graph.input:
+            if input.name not in self.input_tensor:
+                self.inputs.append(input.name)
+                print(input.name, self.shape[input.name])
 
         for index, node in enumerate(self.graph.node):
             op = OpMap[node.op_type](self, node, index)
@@ -153,8 +166,8 @@ class Model(Base):
     def convert(self):
         logger.debug("Converting the Model...")
 
-        for input in self.graph.input:
-            self.layers.append(make_caffe_input_layer(input.name, self.param))
+        for input in self.inputs:
+            self.layers.append(make_caffe_input_layer(input, self.param))
         for op in self.operators:
             logger.debug(op)
             layers = op.convert()

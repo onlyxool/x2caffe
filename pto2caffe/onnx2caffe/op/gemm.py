@@ -32,7 +32,7 @@ class InnerProduct(Operator):
         self.parseAttributes()        
         if self.attrs['transB'] != 1:
             raise NotImplementedError(self.name, 'Gemm is supported only for inner_product layer')
-        if len(self.weight.shape) != 2 or (self.bias is not None and len(self.bias.shape) != 1):
+        if len(self.inputs_shape[1]) != 2 or (self.bias is not None and len(self.bias.shape) != 1):
             raise NotImplementedError(self.name, 'Gemm is supported only for inner_product layer')
 
         self.inner_product_param['num_output'] = self.inputs_shape[1][0]
@@ -42,7 +42,7 @@ class InnerProduct(Operator):
             self.inner_product_param['bias_term'] = True
             self.inner_product_param['bias_filler'] = dict()
             self.inner_product_param['bias_filler']['type'] = 'constant'
-            if self.weight.shape[0] != self.bias.shape[0]:
+            if self.inputs_shape[1][0] != self.bias.shape[0]:
                 raise NotImplementedError(self.name, 'Gemm is supported only for inner_product layer')
         else:
             self.inner_product_param['bias_term'] = False

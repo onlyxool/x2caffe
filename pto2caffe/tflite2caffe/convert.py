@@ -20,5 +20,4 @@ def convert(tf_file, input_tensor, caffe_model_name, caffe_model_path, dump_leve
     if dump_level == 3:
         dump_caffe_model(caffe_model_name, caffe_model_path, input_tensor, param['input_file'])
 
-    if param.get('compare', -1) == 1:
-        compare('tflite', model_byte, caffe_model_name, caffe_model_path, input_tensor)
+    compare('tflite', model_byte, caffe_model_name, caffe_model_path, input_tensor, param.get('compare', -1))

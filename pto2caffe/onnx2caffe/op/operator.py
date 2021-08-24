@@ -59,7 +59,7 @@ class Operator(Base):
     def parseOutput(self):
         for output in self.node.output:
             self.outputs.append(output)
-            self.outputs_shape.append(self.model.shape[output])
+            self.outputs_shape.append(self.model.shape.get(output, None))
 
 
     def convertAttributeProto(self, attr):

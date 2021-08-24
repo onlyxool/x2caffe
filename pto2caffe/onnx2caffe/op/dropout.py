@@ -5,17 +5,17 @@ from onnx2caffe.op.operator import Operator
 
 logger = logging.getLogger('onnx2caffe')
 
-class Reshape(Operator):
+class Dropout(Operator):
 
     def __init__(self, model, node, index):
         super().__init__(model, node, index)
-        self.reshape_param = dict()
+        self.dropout_param = dict()
         self.setInited()
 
 
     @property
     def type(self):
-        return 'Reshape'
+        return 'Dropout'
 
 
     def parse(self):
@@ -23,22 +23,22 @@ class Reshape(Operator):
 
         self.parseInput()
         self.parseOutput()
+        if len(self.outputs) == 2: # Remove output mask
+            self.outputs.pop()
+            self.outputs_shape.pop()
 
         # Option
         self.parseAttributes()
-#if self.op_code == 'Reshape' or self.op_code == 'Squeeze':
-        if 'shape' in self.attrs:
-            self.reshape_param = dict(shape=dict(dim=self.attrs['shape']))
-        else:
-            self.reshape_param = dict(shape=dict(dim=self.outputs_shape[0]))
+        self.dropout_param['dropout_ratio'] = self.attrs['ratio']
+        self.attrs = self.dropout_param
 
-        self.attrs = self.reshape_param
         self.setParsed()
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, reshape_param=self.reshape_param)
+        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, dropout_param=self.dropout_param)
 
         self.setConverted()
 
         return [layer]
+

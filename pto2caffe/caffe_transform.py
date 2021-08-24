@@ -112,7 +112,7 @@ def save_caffe_model(caffe_name, caffe_path, layers):
     with open(prototxt_save_path, 'w') as f:
         print(proto, file=f)
 
-    caffe.set_device(3)
+    caffe.set_device(0)
     caffe.set_mode_gpu()
     model = caffe.Net(prototxt_save_path, caffe.TEST)
     for id, layer in enumerate(layers):

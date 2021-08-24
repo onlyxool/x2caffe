@@ -14,23 +14,34 @@ class Binary(Operator):
 
     @property
     def type(self):
-        if self.op_code == 'Add':
+        if hasattr(self, 'eltwise_param'):
             return 'Eltwise'
-        elif self.op_code == 'Sub':
-            return 'Eltwise'
-        elif self.op_code == 'Mul':
-            if hasattr(self, 'eltwise_param'):
-                return 'Eltwise'
-            elif hasattr(self, 'scale_param'):
-                return 'Scale'
-            else:
-                return 'Mul'
-        elif self.op_code == 'Div':
-            return 'Eltwise'
-        elif self.op_code == 'Pow':
-            return 'TODO'
+        elif hasattr(self, 'scale_param'):
+            return 'Scale'
         else:
-            raise NotImplementedError
+            return self.op_code
+
+#        if self.op_code == 'Add':
+#            return 'Eltwise'
+#        elif self.op_code == 'Sum':
+#            return 'Eltwise'
+#        elif self.op_code == 'Sub':
+#            return 'Eltwise'
+#        elif self.op_code == 'Mul':
+#            if hasattr(self, 'eltwise_param'):
+#                return 'Eltwise'
+#            elif hasattr(self, 'scale_param'):
+#                return 'Scale'
+#            else:
+#                return 'Mul'
+#        elif self.op_code == 'Div':
+#            return 'Eltwise'
+#        elif self.op_code == 'Pow':
+#            return 'TODO'
+#        elif self.op_code == 'MatMul':
+#            return 'Eltwise'
+#        else:
+#            raise NotImplementedError
 
     def parse(self):
         logger.debug("Parsing %s...", self.type)
@@ -40,34 +51,29 @@ class Binary(Operator):
 
         # Option
         self.parseAttributes()
-        if self.op_code == 'Add':
+        if self.op_code == 'Add': # TODO: boradcast concern
+            if self.inputs_buf[0] is None and self.inputs_buf[1] is None:
+                self.eltwise_param = dict()
+                self.eltwise_param['operation'] = 1 #Caffe Eltwise SUM
+                self.attrs = self.eltwise_param
+            else:
+                self.weight = np.ones(self.inputs_shape[0][1], dtype=None, order='C')
+                self.bias = self.inputs_buf[1]
+                self.scale_param = dict()
+                self.scale_param['bias_term'] = True
+                self.scale_param['axis'] = self.inputs_shape[0].index(self.inputs_shape[1][0])
+                self.scale_param['num_axes'] = len(self.bias.shape)
+                self.attrs = self.scale_param
+        elif self.op_code == 'Sum':
             self.eltwise_param = dict()
             self.eltwise_param['operation'] = 1 #Caffe Eltwise SUM
             self.attrs = self.eltwise_param
-#            for no, buf in enumerate(self.inputs_buf):
-#                if buf is not None:
-#                    hasBuf = True
-#                    index = no
-#                    break
-#            if hasBuf:
-#                self.scale_param = dict()
-#                self.scale_param['bias_term'] = True
-#                self.weight = np.ones(self.inputs_shape[1], dtype=None, order='C')
-#                print(self.inputs_shape[1])
-#                print('weight', self.weight)
-#                self.bias = buf
-#                print('bias', self.bias)
-#                self.attrs = self.scale_param
-#            else:
-#                self.eltwise_param = dict()
-#                self.eltwise_param['operation'] = 1 #Caffe Eltwise SUM
-#                self.attrs = self.eltwise_param
         elif self.op_code == 'Sub':
             self.eltwise_param = dict()
             self.eltwise_param['operation'] = 3 #Caffe Eltwise SUB
             self.attrs = self.eltwise_param
         elif self.op_code == 'Mul':
-            if len(self.inputs_shape[0]) == len(self.inputs_shape[1]):
+            if self.inputs_buf[0] is None and self.inputs_buf[1] is None:
                 self.eltwise_param = dict()
                 self.eltwise_param['operation'] = 0 #Caffe Eltwise PROD
                 self.attrs = self.eltwise_param
@@ -79,6 +85,8 @@ class Binary(Operator):
                         self.scale_param['axis'] = i
                         break
                 self.attrs = self.scale_param
+                self.weight = self.inputs_buf[1]
+                self.bias = None
         elif self.op_code == 'Div':
             if self.inputs_buf[1] is not None:
                 self.scale_param = dict()
@@ -89,8 +97,13 @@ class Binary(Operator):
                         break
                 self.attrs = self.scale_param
                 self.weight = 1/self.inputs_buf[1]
+                self.bias = None
             else:
                 raise NotImplementedError(self.op_code)
+        elif self.op_code == 'MatMul':
+            self.eltwise_param = dict()
+            self.eltwise_param['operation'] = 0 #Caffe Eltwise PROD
+            self.attrs = self.eltwise_param
         else:
             raise NotImplementedError(self.op_code)
 
@@ -103,17 +116,22 @@ class Binary(Operator):
         pass
 
     def convert(self):
-        if self.op_code == 'Add' or self.op_code == 'Sub':
+        if hasattr(self, 'eltwise_param'):
             layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param)
-        elif self.op_code == 'Mul':
-            if hasattr(self, 'eltwise_param'):
-                layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param)
-            elif hasattr(self, 'scale_param'):
-                layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, scale_param=self.scale_param)
-        elif self.op_code == 'Div':
-                layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, scale_param=self.scale_param)
-        else:
-            raise NotImplementedError
+        elif hasattr(self, 'scale_param'):
+            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, scale_param=self.scale_param)
+
+#        if self.op_code == 'Add' or self.op_code == 'Sum' or self.op_code == 'Sub':
+#            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param)
+#        elif self.op_code == 'Mul' or self.op_code == 'MatMul':
+#            if hasattr(self, 'eltwise_param'):
+#                layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param)
+#            elif hasattr(self, 'scale_param'):
+#                layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, scale_param=self.scale_param)
+#        elif self.op_code == 'Div':
+#                layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, scale_param=self.scale_param)
+#        else:
+#            raise NotImplementedError
 
         self.setConverted()
         return [layer]

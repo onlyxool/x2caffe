@@ -36,6 +36,7 @@ def RGB2BGR(param):
     else:
         return param
 
+
 def set_shape(param, np_tensor, ext):
     framework = param['platform'].lower()
     if ext == 'bin':
@@ -44,6 +45,7 @@ def set_shape(param, np_tensor, ext):
             param['outshape'] = [np_tensor.shape[0], np_tensor.shape[3], np_tensor.shape[1], np_tensor.shape[2]]
         else:
             param['outshape'] = [np_tensor.shape[0], np_tensor.shape[1], np_tensor.shape[2], np_tensor.shape[3]]
+
 
 def get_input_data(param, path, ext):
     if ext in ['jpg', 'bmp', 'png', 'jpeg']:
@@ -156,7 +158,6 @@ def preprocess(param):
         np_tensor = hwc2chw_unsqueeze(param, input_data)
         param['input_file'] = param.get('input_file', input_files.split('/')[-1])
 
-
     set_shape(param, np_tensor, ext)
 
     np_tensor = np.ascontiguousarray(np_tensor).astype(np.float32)
@@ -174,8 +175,10 @@ def preprocess(param):
         raise NotImplementedError
     return input_tensor
 
+
 def dummy_input(param):
     return np.random.rand(param['input_shape'][0], param['input_shape'][1], param['input_shape'][2], param['input_shape'][3])
+
 
 def Convert(model_file, caffe_model_name, caffe_model_path=None, dump_level=-1, param=None):
     get_batch_size_from_model(param)
@@ -238,7 +241,7 @@ def args_():
             help = 'dump blob  1:print output.  2:print input & ouput')
     args.add_argument('-dummy',        type = bool,     required = False,
             help = 'dummy input data')
-    args.add_argument('-compare',       type = int,     required = False,   default = -1,   choices=[0, 1],
+    args.add_argument('-compare',       type = int,     required = False,   default = -1,   choices=[0, 1, 2],
             help = '')
     args.add_argument('-caffe_log',     type = int,     required = False,   default = 2,   choices=[0, 1, 2],
             help = '')
@@ -251,7 +254,7 @@ def main():
     param = args.__dict__
     param['model'] = os.path.abspath(param['model'])
     model_file = param['model']
-    os.environ['GLOG_minloglevel'] = str(param['caffe_log'])
+    os.environ['GLOG_minloglevel'] = str(param.get('caffe_log', 2))
 
     if not os.path.isfile(model_file):
         print('Model File not exist!')
