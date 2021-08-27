@@ -7,9 +7,11 @@ from onnx2caffe.op.operator import Operator
 logger = logging.getLogger('onnx2caffe')
 
 class Resize(Operator):
+
     def __init__(self, model, node, index):
         super().__init__(model, node, index)
         self.setInited()
+
 
     @property
     def type(self):
@@ -25,13 +27,14 @@ class Resize(Operator):
         else:
             raise NotImplementedError
 
+
     def parse(self):
         logger.debug("Parsing %s...", self.type)
 
         self.parseInput()
         self.parseOutput()
 
-        scale = self.inputs_buf[2]
+        scale = self.inputBuf_byName('scales')
         if scale[2] == scale[3]:
             scale_factor = scale[2]
         else:
@@ -40,7 +43,7 @@ class Resize(Operator):
         # Option
         self.parseAttributes()
         self.mode = str(self.attrs['mode'], encoding = "utf8")
-        coordinate = str(self.attrs['coordinate_transformation_mode'], encoding = "utf8")
+        coordinate = str(self.attrs.get('coordinate_transformation_mode', b''), encoding = "utf8")
         if self.mode == 'nearest':
             if scale_factor % 1 == 0:
                 self.convolution_param = dict()
@@ -80,10 +83,5 @@ class Resize(Operator):
             raise NotImplementedError
 
         self.setConverted()
+
         return [layer]
-
-    def propagatableTensors(self):
-        return list()
-
-    def transform(self):
-        pass

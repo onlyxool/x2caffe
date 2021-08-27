@@ -34,6 +34,18 @@ class Operator(Base):
         return '[%s](%s)' % (self.name, self.type)
 
 
+    def inputBuf_byName(self, name):
+        for index, input in enumerate(self.inputs):
+            if input.find(name) > 0 or input.find(name.lower()) > 0 or input.find(name.upper()) > 0:
+                return self.inputs_buf[index]
+
+
+    def input_byName(self, name):
+        for index, input in enumerate(self.inputs):
+            if input.find(name) > 0 or input.find(name.lower()) > 0 or input.find(name.upper()) > 0:
+                return input
+
+
     def str(self):
         return '[' + self.name + '] (' + self.type + ')'
 
