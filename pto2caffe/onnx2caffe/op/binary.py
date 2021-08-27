@@ -58,10 +58,16 @@ class Binary(Operator):
                 self.attrs = self.eltwise_param
             else:
                 self.weight = np.ones(self.inputs_shape[0][1], dtype=None, order='C')
-                self.bias = self.inputs_buf[1]
+                if self.inputs_buf[0] is not None:
+                    bias_index = 0
+                    input_index = 1
+                else:
+                    bias_index = 1
+                    input_index = 0
+                self.bias = self.inputs_buf[bias_index]
                 self.scale_param = dict()
                 self.scale_param['bias_term'] = True
-                self.scale_param['axis'] = self.inputs_shape[0].index(self.inputs_shape[1][0])
+                self.scale_param['axis'] = self.inputs_shape[input_index].index(self.bias.shape[0])
                 self.scale_param['num_axes'] = len(self.bias.shape)
                 self.attrs = self.scale_param
         elif self.op_code == 'Sum':
