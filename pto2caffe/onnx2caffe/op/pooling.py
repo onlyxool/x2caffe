@@ -37,7 +37,7 @@ class Pooling(Operator):
             self.pooling_param['kernel_h'] = self.inputs_shape[0][2]
             self.pooling_param['kernel_w'] = self.inputs_shape[0][3]
         else:
-            raise NotImplementedError 
+            raise NotImplementedError(self.op_code)
 
         strides = self.attrs.get('strides', [1, 1])
         self.pooling_param['stride_h'] = strides[0]
@@ -74,14 +74,10 @@ class Pooling(Operator):
 
         self.setParsed()
 
-    def propagatableTensors(self):
-        pass
-
-    def transform(self):
-        pass
 
     def convert(self):
         layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, pooling_param=self.pooling_param)
 
         self.setConverted()
+
         return [layer]

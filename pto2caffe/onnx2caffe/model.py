@@ -10,6 +10,8 @@ from onnx2caffe.op.pad import Pad
 from onnx2caffe.op.lrn import LRN
 #from onnx2caffe.op.slice import Cut
 from onnx2caffe.op.tanh import TanH
+from onnx2caffe.op.split import Slice
+from onnx2caffe.op.reduce import Reduce
 from onnx2caffe.op.binary import Binary
 from onnx2caffe.op.concat import Concat
 from onnx2caffe.op.resize import Resize
@@ -46,6 +48,7 @@ OpMap = {
     'Mul': Binary,
     'Div': Binary,
     'MatMul': Binary,
+    'Split': Slice,
     'Concat': Concat,
     'Resize': Resize,
     'Dropout': Dropout,
@@ -60,6 +63,7 @@ OpMap = {
     'Constant': Constant,
     'Unsqueeze': Reshape,
     'Transpose': Permute,
+    'ReduceMean': Reduce,
     'Sigmoid': Activation,
     'Softmax': Activation,
     'AveragePool': Pooling,
