@@ -37,9 +37,11 @@ class Dump(object):
 
 
     def blob(self, blob, layer_name, blob_name, index, io):
-        blob_name = blob_name.replace('/', '-')
+#        if isinstance(blob_name, str):
+#            blob_name = blob_name.replace('/', '-')
+#        file_name = self.dump_path + '/l' + '%03d'%self.layer_no + io + str(index) + '_' + layer_name + '_'+ str(blob_name) +'_'+ file_size + '.txt'
         file_size = str(blob.size)
-        file_name = self.dump_path + '/l' + '%03d'%self.layer_no + io + str(index) + '_' + layer_name + '_'+ str(blob_name) +'_'+ file_size + '.txt'
+        file_name = self.dump_path + '/l' + '%03d'%self.layer_no + io + str(index) + '_' + layer_name + '_'+ file_size + '.txt'
         np.savetxt(file_name, blob.reshape(-1), fmt='%-10.6f')
 
 
