@@ -90,6 +90,9 @@ class Model(Base):
         super().__init__(onnx_model, onnx_model.graph)
         self.model_version = onnx_model.model_version
         self.producer = onnx_model.producer_name +' '+ onnx_model.producer_version
+        self.opset = []
+        for i in range(len(onnx_model.opset_import)):
+            self.opset.append(onnx_model.opset_import[i].version)
         self.param = param
         self.operators = []
         self.layers = []

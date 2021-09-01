@@ -35,6 +35,12 @@ class Resize(Operator):
         self.parseOutput()
 
         scale = self.inputBuf_byName('scales')
+        if scale is None:
+            if max(self.model.opset) <= 10:
+                scale = self.inputs_buf[1]
+            else:
+                scale = self.inputs_buf[2]
+
         if scale[2] == scale[3]:
             scale_factor = scale[2]
         else:
