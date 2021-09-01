@@ -49,11 +49,13 @@ def set_shape(param, np_tensor, ext):
 
 def get_input_data(param, path, ext):
     if ext in ['jpg', 'bmp', 'png', 'jpeg']:
-        input_data = cv2.imread(path).transpose(2, 0, 1)
+        input_data = cv2.imread(path)
         assert(input_data is not None)
 
         if param['color_format'] == 'RGB':
-            input_data = cv2.cvtColor(input_data, cv2.COLOR_BGR2RGB)
+            input_data = cv2.cvtColor(input_data, cv2.COLOR_RGB2BGR)
+
+        input_data = input_data.transpose(2, 0, 1)
     elif ext == 'bin':
         input_data = np.fromfile(path, trans_dtype[param['dtype']])
         input_data = np.array(input_data, dtype=np.float32)
