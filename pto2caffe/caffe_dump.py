@@ -53,7 +53,7 @@ def dump_caffe_model(caffe_name, caffe_path, input_tensor, input_file_name):
     text_format.Merge(open(proto_file).read(), param_net)
 
 #    load_input_from_input_proto(caffe_net, param_net)
-    load_input_from_input_tensor(caffe_net, param_net, input_tensor)
+#    load_input_from_input_tensor(caffe_net, param_net, input_tensor)
 
     dump_path = envroot + '/dump/' + caffe_name +'/caffe/' + input_file_name
     if not os.path.exists(dump_path):

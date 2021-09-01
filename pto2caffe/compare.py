@@ -53,8 +53,8 @@ def dump_caffe_model(caffe_name, caffe_path, input_tensor, level):
     param_net = caffe_pb2.NetParameter()
     text_format.Merge(open(proto_file).read(), param_net)
 
-    for i, input_name in enumerate(caffe_net.inputs):
-        caffe_net.blobs[input_name].data[0, ...] = input_tensor
+#    for i, input_name in enumerate(caffe_net.inputs):
+#        caffe_net.blobs[input_name].data[0, ...] = input_tensor
 
     caffe_output_dict = dict()
     blob2layer_map = dict()
@@ -104,7 +104,7 @@ def compare(platform, target_model, caffe_model, caffe_path, input_tensor, level
         max_ratio = calc_max_ratio(caffe_output_dict[blob_name], target_output)
         size_diff = calc_size(caffe_output_dict[blob_name], target_output)
 
-        print(blob2layer_map[blob_name], ':')
+        print(blob2layer_map[blob_name], '[', blob_name, ']:')
         if size_diff is not None:
             print('  Size compare error:', size_diff)
         print('  cosin_simi: %8f'% cosin_simi)
