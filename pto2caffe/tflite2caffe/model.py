@@ -1,32 +1,31 @@
 import tflite
 import logging
 from dump import Dump
-
 from base import Base
 
 from tflite2caffe.op.pad import Pad
+from tflite2caffe.op.swish import Swish
 from tflite2caffe.op.split import Slice #TODO
 from tflite2caffe.op.binary import Binary
-from tflite2caffe.op.resize import Resize 
+from tflite2caffe.op.resize import Resize
 from tflite2caffe.op.concat import Concat
 from tflite2caffe.op.reshape import Reshape
 from tflite2caffe.op.pooling import Pooling
 from tflite2caffe.op.softmax import Softmax
 from tflite2caffe.op.conv import Convolution
+from tflite2caffe.op.quantize import Quantize
 from tflite2caffe.op.transpose import Permute
 from tflite2caffe.op.activation import Activation
 from tflite2caffe.op.fullyconnected import InnerProduct
 from tflite2caffe.op.activation import handleFusedActivation
 
-
-
 from caffe_transform import save_caffe_model
 from caffe_transform import make_caffe_input_layer
 
 
-logger = logging.getLogger('TFlite2caffe')
+logger = logging.getLogger('TFLite2Caffe')
 
-OpMap = { 
+OpMap = {
     'PAD': Pad,
     'ADD': Binary,
     'MUL': Binary,
@@ -37,10 +36,12 @@ OpMap = {
     'SOFTMAX': Softmax,
     'RELU': Activation,
     'PRELU': Activation,
+    'HARD_SWISH': Swish,
+    'QUANTIZE': Quantize,
     'TRANSPOSE': Permute,
     'CONV_2D': Convolution,
+    'DEQUANTIZE': Quantize,
     'MAX_POOL_2D': Pooling,
-#    'STRIDED_SLICE': Slice,
     'CONCATENATION': Concat,
     'LEAKY_RELU': Activation,
     'RESIZE_BILINEAR': Resize,
@@ -50,10 +51,12 @@ OpMap = {
     'RESIZE_NEAREST_NEIGHBOR': Resize,
 #    'DIV': Binary,
 #    'MIRROR_PAD': Pad,
+#    'STRIDED_SLICE': Slice,
 }
 
 
 class Model(Base):
+
     def __init__(self, model:tflite.Model, param):
         super().__init__(model, model.Subgraphs(0))
         self.version = model.Version()
@@ -68,9 +71,11 @@ class Model(Base):
         logger.debug("Parsing the TFLite Model...")
 
         if self.model.SubgraphsLength() > 1:
-            raise ValueError('TFlite model include ' + str(self.model.SubgraphsLength()) + ' graphs.')
+            raise ValueError('TFLite model include ' + str(self.model.SubgraphsLength()) + ' graphs.')
 
-        print('TFlite Model Input size:', list(self.graph.Tensors(self.graph.Inputs(0)).ShapeAsNumpy()))
+        print('TFlite Model Input size:')
+        for i in range(self.graph.InputsLength()):
+            print(list(self.graph.Tensors(self.graph.Inputs(i)).ShapeAsNumpy()))
 
         for index in range(self.graph.OperatorsLength()):
             tf_op = self.graph.Operators(index)
@@ -95,6 +100,7 @@ class Model(Base):
 
         for i in range(self.graph.InputsLength()):
             self.layers.append(make_caffe_input_layer(self.graph.Inputs(i), self.param))
+
         for op in self.operators:
             logger.debug(op)
             layers = op.convert()
@@ -109,9 +115,9 @@ class Model(Base):
 
 
     def dump(self, model_byte, model_name, input_tensor, dump_level=-1):
-        dump = Dump('tflite', model_byte, model_name, input_tensor, self.param, dump_level)
+        dump = Dump('TFLite', model_byte, model_name, input_tensor, self.param, dump_level)
         from progress_bar import ProgressBar
-        progressBar = ProgressBar(len(self.operators), 0, "TFlite dump processing")
+        progressBar = ProgressBar(len(self.operators), 0, "TFLite dump processing")
         for i, op in enumerate(self.operators):
             dump.operator(op)
             progressBar.setValue(i)
