@@ -65,10 +65,11 @@ class Pooling(Operator):
             # Padding
             legacy_pad = {'left': 0, 'right': 0, 'top': 0, 'bottom': 0}
             for legacy in self.model.legacys:
-                if legacy.outputs[0] == self.inputs[0]:
-                    legacy_pad = legacy.pad
-                    self.inputs[0] = legacy.inputs[0]
-                    self.inputs_shape[0] = legacy.inputs_shape[0]
+                if legacy.op_code == tflite.BuiltinOperator.PAD:
+                    if legacy.outputs[0] == self.inputs[0]:
+                        legacy_pad = legacy.pad
+                        self.inputs[0] = legacy.inputs[0]
+                        self.inputs_shape[0] = legacy.inputs_shape[0]
             padding = computePaddingSize(opt.Padding(), self.inputs_shape[0], self.outputs_shape[0], self.pooling_param, legacy_pad)
             if len(padding) == 2:
                 self.pooling_param['pad_w'] = padding[0]

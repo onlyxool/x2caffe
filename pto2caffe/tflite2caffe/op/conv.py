@@ -36,6 +36,12 @@ class Convolution(Operator):
 
         self.parseInput()
         self.parseOutput()
+        for legacy in self.model.legacys:
+            if legacy.op_code == tflite.BuiltinOperator.DEQUANTIZE:
+                if legacy.outputs[0] == self.inputs[1]:
+                    self.inputs_buf[1] = legacy.inputs_buf[0]
+                if legacy.outputs[0] == self.inputs[2]:
+                    self.inputs_buf[2] = legacy.inputs_buf[0]
 
         # Weight
         self.weight = self.inputs_buf[1].transpose(3, 0, 1, 2) if self.isDepthwise else self.inputs_buf[1].transpose(0, 3, 1, 2)
@@ -61,15 +67,16 @@ class Convolution(Operator):
         self.convolution_param['kernel_h'] = self.weight.shape[2]
         self.convolution_param['kernel_w'] = self.weight.shape[3]
         self.convolution_param['bias_term'] = True if self.bias is not None else False
-        if self.isDepthwise is True:
-            self.convolution_param['engine'] = 1
+#if self.isDepthwise is True:
+#self.convolution_param['engine'] = 1
 
         legacy_pad = {'left': 0, 'right': 0, 'top': 0, 'bottom': 0}
         for legacy in self.model.legacys:
-            if legacy.outputs[0] == self.inputs[0]:
-                legacy_pad = legacy.pad
-                self.inputs[0] = legacy.inputs[0]
-                self.inputs_shape[0] = legacy.inputs_shape[0]
+            if legacy.op_code == tflite.BuiltinOperator.PAD:
+                if legacy.outputs[0] == self.inputs[0]:
+                    legacy_pad = legacy.pad
+                    self.inputs[0] = legacy.inputs[0]
+                    self.inputs_shape[0] = legacy.inputs_shape[0]
 
         padding = computePaddingSize(opt.Padding(), self.inputs_shape[0], self.outputs_shape[0], self.convolution_param, legacy_pad)
         if len(padding) == 2:
@@ -80,9 +87,8 @@ class Convolution(Operator):
             self.convolution_param['pad_r'] = padding[1]
             self.convolution_param['pad_t'] = padding[2]
             self.convolution_param['pad_b'] = padding[3]
-            if self.isDepthwise is True:
-                print(self)
-                raise NotImplementedError("Depthwise Convolution could not support asymmetric padding")
+#if self.isDepthwise is True:
+#raise NotImplementedError("Depthwise Convolution could not support asymmetric padding")
 
         activ_type_code = opt.FusedActivationFunction()
         if activ_type_code is not tflite.ActivationFunctionType.NONE:
