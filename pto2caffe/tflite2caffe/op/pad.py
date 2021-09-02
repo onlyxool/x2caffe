@@ -7,7 +7,7 @@ from tflite2caffe.op.operator import Operator
 
 logger = logging.getLogger('tflite2caffe')
 
-PaddingMapping = { 
+PaddingMapping = {
     tflite.Padding.SAME: 'SAME_UPPER',
     tflite.Padding.VALID: 'VALID',
 }
@@ -15,14 +15,14 @@ PaddingMapping = {
 
 class Pad(Operator):
 
-    TypeMapping = { 
+    TypeMapping = {
         tflite.BuiltinOperator.PAD: 'Pad',
         tflite.BuiltinOperator.MIRROR_PAD: 'Pad',
-    }   
+    }
 
 
-    def __init__(self, model, tf_op, tf_op_code, index,):
-        super().__init__(model, tf_op, tf_op_code, index,)
+    def __init__(self, model, tf_op, tf_op_code, index):
+        super().__init__(model, tf_op, tf_op_code, index)
         self.pad = dict()
         self.attrs = self.pad
         self.setInited()

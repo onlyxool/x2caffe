@@ -49,19 +49,22 @@ class Operator(Base):
 
     def getBuffer(self, tensor_id):
         type_id = self.graph.Tensors(tensor_id).Type()
-        tensor_type = ['float32', 'float16', 'int32', 'uint8', 'int64', 'string', 'bool', 'int16', 'COMPLEX64', 'int8', 'float64']
-        if (tensor_type[type_id] not in ['int32', 'float32', 'uint8']):
+        tensor_type = ['float32', 'float16', 'int32', 'uint8', 'int64', 'string', 'bool', 'int16', 'COMPLEX64', 'int8', 'float64', 'COMPLEX128']
+        if (tensor_type[type_id] not in ['int32', 'float32', 'uint8', 'int8', 'float16']):
             logger.warning("Data type {} not supported/tested yet, "
                        "the generated model may contain error".format(tensor_type[type_id]))
-        assert(tensor_id < self.graph.TensorsLength())
-        t = self.graph.Tensors(tensor_id)
-        bi = t.Buffer()
-        shape = t.ShapeAsNumpy()
-        assert(bi < self.model.model.BuffersLength())
 
-        raw = self.model.model.Buffers(bi).DataAsNumpy()
+        assert(tensor_id < self.graph.TensorsLength())
+
+        tensor = self.graph.Tensors(tensor_id)
+        tensor_buf = tensor.Buffer()
+        shape = tensor.ShapeAsNumpy()
+        assert(tensor_buf < self.model.model.BuffersLength())
+
+        raw = self.model.model.Buffers(tensor_buf).DataAsNumpy()
         if isinstance(raw, int) and raw == 0:
             return None
+
         data = np.frombuffer(raw, dtype=tensor_type[type_id])
 
         if isinstance(shape, np.ndarray) and len(shape) > 0:

@@ -66,7 +66,7 @@ class caffe_layer(object):
         self.params = params
         self.weight = weight
         self.bias = bias
-    
+
     def _to_proto(self):
         layer = caffe_pb2.LayerParameter()
         layer.type = self.type
@@ -82,7 +82,7 @@ class caffe_layer(object):
 
         # Top
         top_names = []
-        for top in self.outputs: 
+        for top in self.outputs:
             top_names.append(str(top))
         layer.top.extend(top_names)
 
@@ -161,11 +161,11 @@ def make_caffe_input_layer(input, param):
         raise NotImplementedError('Do not support file format: '+ ext)
 
     if param['color_format'] == 'BGR':
-        image_data_param['color_format'] = 0 
+        image_data_param['color_format'] = 0
     elif param['color_format'] == 'RGB':
-        image_data_param['color_format'] = 1 
+        image_data_param['color_format'] = 1
     elif  param['color_format'] == 'GRAY':
-        image_data_param['color_format'] = 2 
+        image_data_param['color_format'] = 2
         image_data_param['is_color'] = False
 
     if param['new_height'] is not None and param['new_width'] is not None :

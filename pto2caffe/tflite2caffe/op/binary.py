@@ -29,21 +29,29 @@ class Binary(Operator):
 
     @property
     def type(self):
-        if self.op_code == tflite.BuiltinOperator.ADD:
-            if hasattr(self, 'eltwise_param'):
-                return 'Eltwise'
-            elif hasattr(self, 'scale_param'):
-                return 'Scale'
-        elif self.op_code == tflite.BuiltinOperator.SUB:
-            return 'TODO:SUB'
-        elif self.op_code == tflite.BuiltinOperator.MUL:
+        if hasattr(self, 'eltwise_param'):
+            return 'Eltwise'
+        elif hasattr(self, 'scale_param'):
             return 'Scale'
-        elif self.op_code == tflite.BuiltinOperator.DIV:
-            return 'TODO:DIV'
-        elif self.op_code == tflite.BuiltinOperator.POW:
-            return 'TODO:POW'
+        elif hasattr(self, 'axpy_param'):
+            return 'Axpy'
         else:
-            raise NotImplementedError
+            return self.op_code
+#        if self.op_code == tflite.BuiltinOperator.ADD:
+#            if hasattr(self, 'eltwise_param'):
+#                return 'Eltwise'
+#            elif hasattr(self, 'scale_param'):
+#                return 'Scale'
+#        elif self.op_code == tflite.BuiltinOperator.SUB:
+#            return 'TODO:SUB'
+#        elif self.op_code == tflite.BuiltinOperator.MUL:
+#            return 'Scale'
+#        elif self.op_code == tflite.BuiltinOperator.DIV:
+#            return 'TODO:DIV'
+#        elif self.op_code == tflite.BuiltinOperator.POW:
+#            return 'TODO:POW'
+#        else:
+#            raise NotImplementedError
 
     def parse(self):
         logger.debug("Parsing %s...", self.type)
@@ -64,7 +72,8 @@ class Binary(Operator):
                 self.scale_param = dict()
                 self.weight = np.ones(self.inputs_shape[1], dtype=int, order='C')
                 self.bias = self.inputs_buf[1]
-                self.scale_param['axis'] = self.inputs_shape[0].index(self.inputs_shape[1][0])
+                if self.inputs_shape[1] != []:
+                    self.scale_param['axis'] = self.inputs_shape[0].index(self.inputs_shape[1][0])
                 self.scale_param['bias_term'] = True
                 self.attrs = self.scale_param
             else:
@@ -78,14 +87,37 @@ class Binary(Operator):
         elif self.op_code == tflite.BuiltinOperator.MUL:
             opt = tflite.MulOptions()
             opt.Init(op_opt.Bytes, op_opt.Pos)
-            if self.inputs_buf[1] is not None:
+            if self.inputs_buf[0] is None and self.inputs_buf[1] is None:
+                if self.inputs_shape[0] == self.inputs_shape[1]:
+                    self.eltwise_param = dict()
+                    self.eltwise_param['operation'] = 0
+                    self.attrs = self.eltwise_param
+                else:
+                    self.scale_param = dict()
+                    self.weight = self.inputs_buf[1]
+                    if self.inputs_shape[1] != []:
+                        self.scale_param['axis'] = self.inputs_shape[0].index(self.inputs_shape[1][0])
+                    i = self.scale_param['axis']
+                    for i in range(len(self.inputs_shape[0])):
+                        if self.inputs_shape[0][i] != self.inputs_shape[1][i]:
+                            break;
+
+                    self.scale_param['num_axes'] = i
+                    self.scale_param['bias_term'] = False
+                    self.bias = None
+                    self.attrs = self.scale_param
+                    print(self)
+                    print(self.inputs_shape)
+                    #TODO: inputs has different shape
+#raise NotImplementedError('MulOptions: Inputs has different shape')
+            else:
                 self.scale_param = dict()
                 self.weight = self.inputs_buf[1]
-                self.scale_param['axis'] = self.inputs_shape[0].index(self.inputs_shape[1][0])
+                if self.inputs_shape[1] != []:
+                    self.scale_param['axis'] = self.inputs_shape[0].index(self.inputs_shape[1][0])
                 self.scale_param['bias_term'] = False
+                self.bias = None
                 self.attrs = self.scale_param
-            else:
-                raise NotImplementedError
         elif self.op_code == tflite.BuiltinOperator.DIV:
             opt = tflite.DivOptions()
             opt.Init(op_opt.Bytes, op_opt.Pos)
@@ -103,13 +135,20 @@ class Binary(Operator):
 
 
     def convert(self):
-        if self.op_code == tflite.BuiltinOperator.ADD:
-            if hasattr(self, 'eltwise_param'):
-                layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param)
-            elif hasattr(self, 'scale_param'):
-                layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, scale_param=self.scale_param)
-        elif self.op_code == tflite.BuiltinOperator.MUL:
-            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, scale_param=self.scale_param)
+        if hasattr(self, 'eltwise_param'):
+            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param)
+        elif hasattr(self, 'scale_param'):
+            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, scale_param=self.scale_param)
+        elif hasattr(self, 'axpy_param'):
+            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, axpy_param=self.axpy_param)
+
+#        if self.op_code == tflite.BuiltinOperator.ADD:
+#            if hasattr(self, 'eltwise_param'):
+#                layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param)
+#            elif hasattr(self, 'scale_param'):
+#                layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, scale_param=self.scale_param)
+#        elif self.op_code == tflite.BuiltinOperator.MUL:
+#            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, scale_param=self.scale_param)
 
         self.setConverted()
 

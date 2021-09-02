@@ -38,29 +38,14 @@ class Reshape(Operator):
         self.parseOutput()
 
         # Option
+        op_opt = self.op.BuiltinOptions()
         if self.op_code == tflite.BuiltinOperator.RESHAPE:
-            op_opt = self.op.BuiltinOptions()
             opt = tflite.ReshapeOptions()
-            opt.Init(op_opt.Bytes, op_opt.Pos)
-
-#            print('Reshape', opt.NewShapeAsNumpy())
-#            print('Reshape', opt.NewShape(1))
-            self.reshape_param = dict(shape=dict(dim=list(opt.NewShapeAsNumpy())))
-    #       for i in range(opt.NewShapeLength()):
-
-#            print('Reshape', self.inputs_shape)
-#            print('Reshape', self.outputs_shape)
-            #self.reshape_param['axis'] = 
+            self.reshape_param = dict(shape=dict(dim=self.outputs_shape[0]))
         elif self.op_code == tflite.BuiltinOperator.SQUEEZE:
-            op_opt = self.op.BuiltinOptions()
             opt = tflite.SqueezeOptions()
             opt.Init(op_opt.Bytes, op_opt.Pos)
-
             self.reshape_param = dict(shape=dict(dim=self.outputs_shape[0]))
-
-#            print('Squeeze', self.inputs_shape)
-#            print('Squeeze', opt.SqueezeDimsAsNumpy())
-#            print('Squeeze', self.outputs_shape)
         else:
             raise NotImplementedError
 
