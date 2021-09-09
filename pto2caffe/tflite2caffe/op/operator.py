@@ -6,6 +6,15 @@ from util import *
 
 logger = logging.getLogger('tflite2caffe')
 
+
+def dequantize(tensor, scale, zero_point): #TODO
+    tensor_int32 = tensor.astype('int32')
+    tensor_shiftted = np.subtract(tensor_int32, zero_point)
+    tensor_fp32 = np.multiply(tensor_shiftted.astype('float32'), scale)
+
+    return tensor_fp32
+
+
 class Operator(Base):
 
     def __init__(self, model, tf_op:tflite.Operator, tf_op_code, index):
@@ -69,6 +78,13 @@ class Operator(Base):
 
         if isinstance(shape, np.ndarray) and len(shape) > 0:
             data = data.reshape(shape)
+
+        quant = tensor.Quantization()
+        if quant is not None:
+            scale = quant.Scale(0) if quant.ScaleLength() != 0 else 0
+            zero_point = quant.ZeroPoint(0) if quant.ZeroPointLength() != 0 else 0
+            if scale != 0 or zero_point != 0:
+                data = dequantize(data, scale, zero_point)
 
         return data.copy()
 
