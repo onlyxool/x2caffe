@@ -38,7 +38,7 @@ class Concat(Operator):
         opt.Init(op_opt.Bytes, op_opt.Pos)
 
         self.concat_param = dict()
-        self.concat_param['axis'] = dim_map_nhwc2nchw[opt.Axis()]
+        self.concat_param['axis'] = dim_map_nhwc2nchw[opt.Axis()] if len(self.outputs_shape[0]) == 4 else opt.Axis()
         self.attrs = self.concat_param
 
         self.setParsed()
