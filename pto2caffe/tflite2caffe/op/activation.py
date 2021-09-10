@@ -61,7 +61,8 @@ class Activation(Operator):
             self.relu_param['negative_slope'] = opt.Alpha()
             self.attrs = self.relu_param
         elif self.op_code == tflite.BuiltinOperator.LOGISTIC:
-            print('sigmoid')
+            self.sigmoid_param = dict()
+            self.attrs = self.sigmoid_param
         elif self.op_code == tflite.BuiltinOperator.PRELU:
             self.slope = self.inputs_buf[1].transpose(2, 0, 1)
             self.prelux_param = dict()
@@ -85,14 +86,6 @@ class Activation(Operator):
         self.setParsed()
 
 
-    def propagatableTensors(self):
-        return self.inputs + self.outputs
-
-
-    def transform(self):
-        pass
-
-
     def convert(self):
         if self.op_code == tflite.BuiltinOperator.LEAKY_RELU:
             layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, relu_param=self.relu_param)
@@ -108,7 +101,9 @@ class Activation(Operator):
             raise NotImplementedError
 
         self.setConverted()
+
         return [layer]
+
 
 def handleFusedActivation(preop:Operator):
     if preop.activ_type_code == tflite.ActivationFunctionType.RELU:
