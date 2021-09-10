@@ -5,18 +5,23 @@ import numpy as np
 from caffe_transform import caffe_layer
 from tflite2caffe.op.operator import Operator
 
+
 logger = logging.getLogger('tflite2caffe')
 
+
 class Resize(Operator):
+
     TypeMapping = {
         tflite.BuiltinOperator.RESIZE_NEAREST_NEIGHBOR: 'Resize',
         tflite.BuiltinOperator.RESIZE_BILINEAR: 'Resize',
     }
 
+
     def __init__(self, model, tf_op, tf_op_code, index):
         super().__init__(model, tf_op, tf_op_code, index)
 
         self.setInited()
+
 
     @property
     def type(self):
@@ -31,6 +36,7 @@ class Resize(Operator):
             return 'Interp'
         else:
             raise NotImplementedError
+
 
     def parse(self):
         logger.debug("Parsing %s...", self.type)
@@ -51,20 +57,21 @@ class Resize(Operator):
         input_w = self.inputs_shape[0][3]
 
         # Option
-        scale_factor = int(output_h/input_h)
+        scale_factor = output_h/input_h
         if self.op_code == tflite.BuiltinOperator.RESIZE_NEAREST_NEIGHBOR:
-            if output_h/input_h == output_h//input_h and output_w/input_w == output_w//input_w:
+#            if output_h/input_h == output_h//input_h and output_w/input_w == output_w//input_w:
+            if scale_factor % 1 == 0:
                 self.convolution_param = dict()
                 self.convolution_param['bias_term'] = False
                 self.convolution_param['num_output'] = self.outputs_shape[0][1]
-                self.convolution_param['kernel_h'] = scale_factor
-                self.convolution_param['kernel_w'] = scale_factor
-                self.convolution_param['stride_h'] = scale_factor
-                self.convolution_param['stride_w'] = scale_factor
+                self.convolution_param['kernel_h'] = int(scale_factor)
+                self.convolution_param['kernel_w'] = int(scale_factor)
+                self.convolution_param['stride_h'] = int(scale_factor)
+                self.convolution_param['stride_w'] = int(scale_factor)
                 self.convolution_param['group'] = self.inputs_shape[0][1]
                 self.attrs = self.convolution_param
                 # TODO: self.convolution_param['pads']
-                self.weight = np.ones((self.outputs_shape[0][1], 1, scale_factor, scale_factor), dtype=int)
+                self.weight = np.ones((self.outputs_shape[0][1], 1, int(scale_factor), int(scale_factor)), dtype=int)
                 self.inputs_buf[1] = self.weight
                 self.inputs_shape[1] = self.inputs_buf[1].shape
             else:
