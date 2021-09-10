@@ -3,7 +3,7 @@ import logging
 
 from caffe_transform import caffe_layer
 from tflite2caffe.op.operator import Operator
-from tflite2caffe.op.pad import computePaddingSize
+from tflite2caffe.op.pad import handleLegacyPad
 
 logger = logging.getLogger('tflite2caffe')
 
@@ -70,7 +70,7 @@ class Pooling(Operator):
                         legacy_pad = legacy.pad
                         self.inputs[0] = legacy.inputs[0]
                         self.inputs_shape[0] = legacy.inputs_shape[0]
-            padding = computePaddingSize(opt.Padding(), self.inputs_shape[0], self.outputs_shape[0], self.pooling_param, legacy_pad)
+            padding = handleLegacyPad(opt.Padding(), self.inputs_shape[0], self.outputs_shape[0], self.pooling_param, legacy_pad, self.type)
             if len(padding) == 2:
                 self.pooling_param['pad_w'] = padding[0]
                 self.pooling_param['pad_h'] = padding[1]

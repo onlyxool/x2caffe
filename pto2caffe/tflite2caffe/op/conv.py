@@ -3,7 +3,7 @@ import logging
 
 from caffe_transform import caffe_layer
 from tflite2caffe.op.operator import Operator
-from tflite2caffe.op.pad import computePaddingSize
+from tflite2caffe.op.pad import handleLegacyPad
 
 logger = logging.getLogger('tflite2caffe')
 
@@ -67,8 +67,6 @@ class Convolution(Operator):
         self.convolution_param['kernel_h'] = self.weight.shape[2]
         self.convolution_param['kernel_w'] = self.weight.shape[3]
         self.convolution_param['bias_term'] = True if self.bias is not None else False
-#if self.isDepthwise is True:
-#self.convolution_param['engine'] = 1
 
         legacy_pad = {'left': 0, 'right': 0, 'top': 0, 'bottom': 0}
         for legacy in self.model.legacys:
@@ -78,7 +76,7 @@ class Convolution(Operator):
                     self.inputs[0] = legacy.inputs[0]
                     self.inputs_shape[0] = legacy.inputs_shape[0]
 
-        padding = computePaddingSize(opt.Padding(), self.inputs_shape[0], self.outputs_shape[0], self.convolution_param, legacy_pad)
+        padding = handleLegacyPad(opt.Padding(), self.inputs_shape[0], self.outputs_shape[0], self.convolution_param, legacy_pad, self.type)
         if len(padding) == 2:
             self.convolution_param['pad_w'] = padding[0]
             self.convolution_param['pad_h'] = padding[1]
@@ -87,8 +85,6 @@ class Convolution(Operator):
             self.convolution_param['pad_r'] = padding[1]
             self.convolution_param['pad_t'] = padding[2]
             self.convolution_param['pad_b'] = padding[3]
-#if self.isDepthwise is True:
-#raise NotImplementedError("Depthwise Convolution could not support asymmetric padding")
 
         activ_type_code = opt.FusedActivationFunction()
         if activ_type_code is not tflite.ActivationFunctionType.NONE:
