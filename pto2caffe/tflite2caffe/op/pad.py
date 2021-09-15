@@ -53,7 +53,7 @@ class Pad(Operator):
     def convert(self):
         pass
 
-def computePaddingSize(input, output, stride, kernel, dilation, layer_type):
+def computePaddingSize(input, output, stride, kernel, dilation, proto_param, layer_type):
     pad = 0
     if layer_type == 'Convolution' or layer_type == 'ConvolutionDepthwise':
         pad = (output - 1) * stride - input + (dilation * (kernel - 1) + 1)
@@ -71,7 +71,7 @@ def computePaddingSize(input, output, stride, kernel, dilation, layer_type):
             else:
                 pad = output * stride - input
 
-    return pad
+    return pad if pad >= 0 else 0
 
 
 def asymmetric_pad(pad):
@@ -99,7 +99,7 @@ def handleLegacyPad(padding_mode, input_size, output_size, proto_param:dict, leg
     stride_h = proto_param['stride_h']
     dilation_h = proto_param.get('dilation', [1,1])[0]
 
-    pad_h = computePaddingSize(input_h, output_h, stride_h, kernel_h, dilation_h, layer_type)
+    pad_h = computePaddingSize(input_h, output_h, stride_h, kernel_h, dilation_h, proto_param, layer_type)
     pad_t, pad_b = asymmetric_pad(pad_h)
 
     # Vertical
@@ -109,7 +109,7 @@ def handleLegacyPad(padding_mode, input_size, output_size, proto_param:dict, leg
     stride_w = proto_param['stride_w']
     dilation_w = proto_param.get('dilation', [1,1])[1]
 
-    pad_w = computePaddingSize(input_w, output_w, stride_w, kernel_w, dilation_w, layer_type)
+    pad_w = computePaddingSize(input_w, output_w, stride_w, kernel_w, dilation_w, proto_param, layer_type)
     pad_l, pad_r = asymmetric_pad(pad_w)
 
     # Asymmetric Pad
