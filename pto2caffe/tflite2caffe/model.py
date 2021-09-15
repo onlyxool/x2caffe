@@ -7,12 +7,14 @@ from tflite2caffe.op.pad import Pad
 from tflite2caffe.op.swish import Swish
 from tflite2caffe.op.split import Slice #TODO
 from tflite2caffe.op.binary import Binary
+from tflite2caffe.op.reduce import Reduce
 from tflite2caffe.op.resize import Resize
 from tflite2caffe.op.concat import Concat
 from tflite2caffe.op.reshape import Reshape
 from tflite2caffe.op.pooling import Pooling
 from tflite2caffe.op.softmax import Softmax
 from tflite2caffe.op.conv import Convolution
+from tflite2caffe.op.deconv import Deconvolution
 from tflite2caffe.op.quantize import Quantize
 from tflite2caffe.op.transpose import Permute
 from tflite2caffe.op.activation import Activation
@@ -29,8 +31,9 @@ OpMap = {
     'PAD': Pad,
     'ADD': Binary,
     'MUL': Binary,
+    'SUB': Binary,
     'SPLIT': Slice,
-    'MEAN': Pooling,
+    'MEAN': Reduce,
     'RESHAPE': Reshape,
     'SQUEEZE': Reshape,
     'SOFTMAX': Softmax,
@@ -40,20 +43,24 @@ OpMap = {
     'QUANTIZE': Quantize,
     'TRANSPOSE': Permute,
     'CONV_2D': Convolution,
+    'LOGISTIC': Activation,
     'DEQUANTIZE': Quantize,
     'MAX_POOL_2D': Pooling,
+    'STRIDED_SLICE': Slice,
     'CONCATENATION': Concat,
+    'REDUCE_MAX': Reduce,
     'LEAKY_RELU': Activation,
     'RESIZE_BILINEAR': Resize,
     'AVERAGE_POOL_2D': Pooling,
+    'TRANSPOSE_CONV': Deconvolution,
     'FULLY_CONNECTED': InnerProduct,
     'DEPTHWISE_CONV_2D': Convolution,
     'RESIZE_NEAREST_NEIGHBOR': Resize,
 #    'DIV': Binary,
 #    'MIRROR_PAD': Pad,
-#    'STRIDED_SLICE': Slice,
 }
 
+ignore_op = ['CUSTOM']
 
 class Model(Base):
 
@@ -75,15 +82,19 @@ class Model(Base):
 
         print('TFlite Model Input size:')
         for i in range(self.graph.InputsLength()):
-            print(list(self.graph.Tensors(self.graph.Inputs(i)).ShapeAsNumpy()))
+            print(self.graph.Inputs(i), ':', list(self.graph.Tensors(self.graph.Inputs(i)).ShapeAsNumpy()))
 
         for index in range(self.graph.OperatorsLength()):
             tf_op = self.graph.Operators(index)
             tf_op_code = self.model.OperatorCodes(tf_op.OpcodeIndex())
             tf_op_name = tflite.opcode2name(tf_op_code.BuiltinCode())
 
+            if tf_op_name in ignore_op:
+                continue
             op = OpMap[tf_op_name](self, tf_op, tf_op_code.BuiltinCode(), index)
             op.parse()
+#            print(op)
+            logger.debug(op)
             if op.status.parsed:
                 self.operators.append(op)
                 if hasattr(op, 'activ_type_code'):

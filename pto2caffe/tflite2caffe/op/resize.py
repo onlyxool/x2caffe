@@ -108,9 +108,3 @@ class Resize(Operator):
 
         self.setConverted()
         return [layer]
-
-    def propagatableTensors(self):
-        return list()
-
-    def transform(self):
-        pass

@@ -89,6 +89,7 @@ class Binary(Operator):
             return 'Axpy'
         else:
             return self.op_code
+
 #        if self.op_code == tflite.BuiltinOperator.ADD:
 #            if hasattr(self, 'eltwise_param'):
 #                return 'Eltwise'
@@ -135,7 +136,27 @@ class Binary(Operator):
         elif self.op_code == tflite.BuiltinOperator.SUB:
             opt = tflite.SubOptions()
             opt.Init(op_opt.Bytes, op_opt.Pos)
-            raise NotImplementedError('SubOptions')
+            if self.inputs_shape[0] != self.inputs_shape[1] or self.inputs_buf[1] is not None:
+                self.scale_param = dict()
+
+                org_shape = copy.deepcopy(self.inputs_shape[1])
+                trim = trim_one(org_shape)
+                if trim != self.inputs_shape[1]:
+                    self.pre.append('Reshape')
+                    self.inputs_shape[1] = trim
+                    if self.inputs_buf[1] is not None:
+                        self.inputs_buf[1] = self.inputs_buf[1].reshape(tuple(trim))
+
+                axis = compute_scale_axis(self.inputs_shape[0], trim)
+                if axis is not None:
+                    self.scale_param['axis'] = axis
+
+                self.weight = np.ones([1], dtype=int, order='C')
+                self.scale_param['bias_term'] = True
+                self.bias = np.multiply(-1, self.inputs_buf[1])
+                self.attrs = self.scale_param
+            else:
+                raise NotImplementedError('SubOptions')
         elif self.op_code == tflite.BuiltinOperator.MUL:
             opt = tflite.MulOptions()
             opt.Init(op_opt.Bytes, op_opt.Pos)

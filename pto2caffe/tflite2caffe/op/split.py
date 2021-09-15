@@ -1,5 +1,7 @@
 import tflite
 import logging
+import numpy as np
+from util import dim_map_nhwc2nchw
 
 from caffe_transform import caffe_layer
 from tflite2caffe.op.operator import Operator
@@ -10,6 +12,7 @@ class Slice(Operator):
 
     TypeMapping = {
             tflite.BuiltinOperator.SPLIT: 'Slice',
+            tflite.BuiltinOperator.STRIDED_SLICE: 'Slice',
     }
 
     def __init__(self, model, tf_op, tf_op_code, index):
@@ -27,13 +30,45 @@ class Slice(Operator):
     def parse(self):
         logger.debug("Parsing %s...", self.type)
 
-        assert(self.op.InputsLength() == 2)
+        assert(self.op.InputsLength() == 2 or self.op.InputsLength() == 4)
         assert(self.op.OutputsLength() == 1)
 
         self.parseInput()
         self.parseOutput()
-#        print('Slice', self.inputs_shape)
-#        print('Slice', self.outputs_shape)
+
+        if self.op_code == tflite.BuiltinOperator.STRIDED_SLICE:
+            op_opt = self.op.BuiltinOptions()
+            opt = tflite.StridedSliceOptions()
+            opt.Init(op_opt.Bytes, op_opt.Pos)
+            m_begin = opt.BeginMask()
+            m_end = opt.EndMask()
+
+            assert(opt.EllipsisMask() == 0), "EllipsisMask not supported!"
+            assert(opt.NewAxisMask() == 0), "NewAxisMask not supported!"
+            assert(opt.ShrinkAxisMask() == 0), "ShrinkAxisMask not supported!"
+#            print(opt.BeginMask(), opt.EndMask())
+
+            assert(len(self.inputs_buf[1]) == len(self.inputs_shape[0]))
+
+            raise NotImplementedError('STRIDED_SLICE', self.op_code)
+        elif self.op_code == tflite.BuiltinOperator.SPLIT:
+            op_opt = self.op.BuiltinOptions()
+            opt = tflite.SplitOptions()
+            opt.Init(op_opt.Bytes, op_opt.Pos)
+
+            if isinstance(self.inputs_buf[0], np.ndarray):
+                self.slice_param['axis'] = dim_map_nhwc2nchw[self.inputs_buf[0][0]]
+            elif isinstance(self.inputs_buf[0], int):
+                self.slice_param['axis'] = dim_map_nhwc2nchw[self.inputs_buf[0]]
+
+            assert((self.inputs_shape[1][self.slice_param['axis']] / opt.NumSplits()) == (self.outputs_shape[0][self.slice_param['axis']]))
+
+            slice_points = []
+            for i in range(opt.NumSplits()):
+                slice_points.append(self.outputs_shape[i][self.slice_param['axis']])
+
+            self.slice_param['slice_point'] = slice_points
+            self.attrs = self.slice_param
 
         self.setParsed()
 

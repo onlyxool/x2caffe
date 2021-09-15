@@ -8,7 +8,7 @@ logger = logging.getLogger('tflite2caffe')
 
 class Swish(Operator):
 
-    TypeMapping = { 
+    TypeMapping = {
             tflite.BuiltinOperator.HARD_SWISH: 'HardSwish',
     }
 
