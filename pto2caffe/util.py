@@ -29,6 +29,8 @@ def shape_map_nhwc2nchw(shape):
             return [shape[0], shape[1]]
         elif len(shape) == 1:
             return [shape[0]]
+        elif len(shape) == 0:
+            return []
         else:
             print(shape, shape.size, len(shape))
             raise NotImplementedError(shape)
