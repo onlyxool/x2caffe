@@ -4,7 +4,7 @@ import cv2
 import argparse
 import numpy as np
 from util import *
-
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = '3' # 1:All level log 2:Warning & Erro 3:Only Error
 
 def get_batch_size_from_model(param):
     framework = param['platform'].lower()
@@ -166,8 +166,9 @@ def preprocess(param):
 
     framework = param['platform'].lower()
     if framework == 'tensorflow' or framework == 'tflite':
-        import tensorflow as tf
-        input_tensor = tf.convert_to_tensor(np_tensor)
+#        import tensorflow as tf
+#input_tensor = tf.convert_to_tensor(np_tensor)
+        input_tensor = np_tensor
     elif framework == 'pytorch':
         import torch
         input_tensor = torch.from_numpy(np_tensor)#.to(device)
