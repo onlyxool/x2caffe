@@ -3,7 +3,7 @@ import logging
 
 from caffe_transform import caffe_layer
 from tflite2caffe.op.operator import Operator
-from tflite2caffe.op.pad import handleLegacyPad
+from util import handleLegacyPad
 
 logger = logging.getLogger('tflite2caffe')
 
@@ -34,6 +34,7 @@ class Convolution(Operator):
         assert(self.op.InputsLength() == 3), "TFLite Conv always has bias"
         assert(self.op.OutputsLength() == 1)
 
+        # Input & OutPut
         self.parseInput()
         self.parseOutput()
         for legacy in self.model.legacys:
@@ -68,6 +69,7 @@ class Convolution(Operator):
         self.convolution_param['kernel_w'] = self.weight.shape[3]
         self.convolution_param['bias_term'] = True if self.bias is not None else False
 
+        # Padding
         legacy_pad = {'left': 0, 'right': 0, 'top': 0, 'bottom': 0}
         for legacy in self.model.legacys:
             if legacy.op_code == tflite.BuiltinOperator.PAD:
@@ -76,7 +78,12 @@ class Convolution(Operator):
                     self.inputs[0] = legacy.inputs[0]
                     self.inputs_shape[0] = legacy.inputs_shape[0]
 
-        padding = handleLegacyPad(opt.Padding(), self.inputs_shape[0], self.outputs_shape[0], self.convolution_param, legacy_pad, self.type)
+        if opt.Padding() == tflite.Padding.VALID:
+            padding_mode == 'VALID'
+        elif opt.Padding() == tflite.Padding.SAME:
+            padding_mode == 'SAME'
+
+        padding = handleLegacyPad(padding_mode, self.inputs_shape[0], self.outputs_shape[0], self.convolution_param, legacy_pad, self.type)
         if len(padding) == 2:
             self.convolution_param['pad_w'] = padding[0]
             self.convolution_param['pad_h'] = padding[1]
@@ -86,6 +93,7 @@ class Convolution(Operator):
             self.convolution_param['pad_t'] = padding[2]
             self.convolution_param['pad_b'] = padding[3]
 
+        # Fused Activation
         activ_type_code = opt.FusedActivationFunction()
         if activ_type_code is not tflite.ActivationFunctionType.NONE:
             self.activ_type_code = activ_type_code
