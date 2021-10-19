@@ -1,7 +1,7 @@
 import os
 import numpy as np
-from tflite2caffe.tflite_run import get_output as tflite_get_output
-from onnx2caffe.onnx_run import get_output as onnx_get_output
+from tflite2caffe.tflite import get_output as tflite_get_output
+from onnx2caffe.onnx import get_output as onnx_get_output
 
 
 class Dump(object):
