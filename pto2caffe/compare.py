@@ -85,9 +85,11 @@ def compare(platform, target_model, caffe_model, caffe_path, input_tensor, level
     caffe_output_dict, blob2layer_map = dump_caffe_model(caffe_model, caffe_path, input_tensor, level)
 
     if platform == 'tflite':
-        from tflite2caffe.tflite_run import get_output
+        from tflite2caffe.tflite import get_output
     elif platform == 'onnx':
-        from onnx2caffe.onnx_run import get_output
+        from onnx2caffe.onnx import get_output
+    elif platform == 'tensorflow':
+        from tensorflow2caffe.tensorflow import get_output
     else:
         raise NotImplementedError(paltform)
 
