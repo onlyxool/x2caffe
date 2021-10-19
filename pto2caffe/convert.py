@@ -9,8 +9,8 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = '3' # 1:All level log 2:Warning & Erro 3:On
 def get_batch_size_from_model(param):
     framework = param['platform'].lower()
     if framework == 'pytorch':
-        raise NotImplementedError
-    elif framework == 'tensorflow' or framework == 'tflite':
+        param['batch_size'] = 1
+    elif framework == 'tflite':
         from tflite.Model import Model
         with open(param['model'], 'rb') as f:
             buf = f.read()
@@ -18,6 +18,8 @@ def get_batch_size_from_model(param):
         graph = model.Subgraphs(0)
         param['batch_size'] = graph.Tensors(graph.Inputs(0)).Shape(0)
         param['input_shape'] = list(graph.Tensors(graph.Inputs(0)).ShapeAsNumpy())
+    elif framework == 'tensorflow':
+        pass
     elif framework == 'onnx':
         import onnx
         model = onnx.load(param['model'])
@@ -166,12 +168,9 @@ def preprocess(param):
 
     framework = param['platform'].lower()
     if framework == 'tensorflow' or framework == 'tflite':
-#        import tensorflow as tf
-#input_tensor = tf.convert_to_tensor(np_tensor)
         input_tensor = np_tensor
     elif framework == 'pytorch':
-        import torch
-        input_tensor = torch.from_numpy(np_tensor)#.to(device)
+        input_tensor = np_tensor
     elif framework == 'onnx':
         input_tensor = np_tensor
     else:
@@ -192,11 +191,14 @@ def Convert(model_file, caffe_model_name, caffe_model_path=None, dump_level=-1, 
 
     framework = param['platform'].lower()
     if framework == 'pytorch':
-        raise NotImplementedError
+        from pytorch2caffe.convert import convert as PytorchConvert
         PytorchConvert(model_file, input_tensor, caffe_model_name, caffe_model_path, dump_level, param)
-    elif framework == 'tensorflow' or framework == 'tflite':
-        from tflite2caffe.convert import convert as TensorflowConvert
+    elif framework == 'tensorflow':
+        from tensorflow2caffe.convert import convert as TensorflowConvert
         TensorflowConvert(model_file, input_tensor, caffe_model_name, caffe_model_path, dump_level, param)
+    elif framework == 'tflite':
+        from tflite2caffe.convert import convert as TensorLiteConvert
+        TensorLiteConvert(model_file, input_tensor, caffe_model_name, caffe_model_path, dump_level, param)
     elif framework == 'onnx':
         from onnx2caffe.convert import convert as OnnxConvert
         OnnxConvert(model_file, input_tensor, caffe_model_name, caffe_model_path, dump_level, param)
@@ -260,7 +262,7 @@ def main():
     os.environ['GLOG_minloglevel'] = str(param.get('caffe_log', 2))
 
     if not os.path.isfile(model_file):
-        print('Model File not exist!')
+        print('Model File not exist!!')
         return
     else:
         opt_path, opt_file_name = os.path.split(model_file)
