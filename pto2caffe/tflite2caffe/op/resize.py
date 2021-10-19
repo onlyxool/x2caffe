@@ -28,10 +28,8 @@ class Resize(Operator):
         if self.op_code == tflite.BuiltinOperator.RESIZE_NEAREST_NEIGHBOR:
             if hasattr(self, 'convolution_param'):
                 return 'Deconvolution'
-            elif hasattr(self, 'upsample_param'):
-                return 'Upsample'
             else:
-                return 'nearest'
+                return 'Upsample'
         elif self.op_code == tflite.BuiltinOperator.RESIZE_BILINEAR:
             return 'Interp'
         else:
