@@ -53,7 +53,11 @@ def assign_proto(proto, name, val):
         for key, value in val.items():
             assign_proto(getattr(proto, name), key, value)
     else:
-        setattr(proto, name, val)
+        try:
+            setattr(proto, name, val)
+        except:
+            print(proto, name, val)
+            raise ValueError
 
 
 class caffe_layer(object):
@@ -74,8 +78,7 @@ class caffe_layer(object):
 
         # Bottom
         bottom_names = []
-        for input_id in self.inputs:
-            index = self.inputs.index(input_id)
+        for index, input_id in enumerate(self.inputs):
             if self.inputs_buf[index] is None:
                 bottom_names.append(str(input_id))
         layer.bottom.extend(bottom_names)
@@ -112,8 +115,9 @@ def save_caffe_model(caffe_name, caffe_path, layers):
     with open(prototxt_save_path, 'w') as f:
         print(proto, file=f)
 
-    caffe.set_device(1)
-    caffe.set_mode_gpu()
+    caffe.set_device(2)
+    caffe.set_mode_cpu()
+
     model = caffe.Net(prototxt_save_path, caffe.TEST)
     for id, layer in enumerate(layers):
         try:
