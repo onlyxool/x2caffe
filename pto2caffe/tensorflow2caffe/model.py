@@ -13,6 +13,7 @@ from tensorflow2caffe.op.placeholder import Input
 from tensorflow2caffe.op.conv2d import Convolution
 from tensorflow2caffe.op.batchnorm import BatchNorm
 from tensorflow2caffe.op.leakyrelu import LeakyRelu
+from tensorflow2caffe.op.spacetodepth import SpaceToDepth
 
 from caffe_transform import save_caffe_model
 
@@ -32,6 +33,7 @@ OpMap = {
     'LeakyRelu': LeakyRelu,
     'FusedBatchNormV3': BatchNorm,
     'ResizeNearestNeighbor': Resize,
+    'SpaceToDepth': SpaceToDepth,
 }
 
 
