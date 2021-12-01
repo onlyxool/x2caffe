@@ -53,8 +53,8 @@ def dump_caffe_model(caffe_name, caffe_path, input_tensor, level):
     param_net = caffe_pb2.NetParameter()
     text_format.Merge(open(proto_file).read(), param_net)
 
-#    for i, input_name in enumerate(caffe_net.inputs):
-#        caffe_net.blobs[input_name].data[0, ...] = input_tensor
+    for i, input_name in enumerate(caffe_net.inputs):
+        caffe_net.blobs[input_name].data[0, ...] = input_tensor
 
     caffe_output_dict = dict()
     blob2layer_map = dict()
