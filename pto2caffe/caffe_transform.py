@@ -1,7 +1,9 @@
 import os
 import sys
-sys.path.append(os.getenv('MCHOME') + 'toolchain/caffe/python')
-sys.path.append(os.getenv('MCHOME') + 'toolchain/caffe/python/caffe')
+
+envroot = os.environ.get('MCHOME', os.environ['PWD'])
+sys.path.append(envroot + 'toolchain/caffe/python')
+sys.path.append(envroot + 'toolchain/caffe/python/caffe')
 import caffe
 from util import *
 import numpy as np
@@ -47,8 +49,8 @@ def assign_proto(proto, name, val):
             try:
                 getattr(proto, name).extend(val)
             except:
-                print('Value Error: Check Attribute ', name , '\'s data type in caffe.proto')
-                raise ValueError('Value Error: Check Attribute ', name , '\'s data type in caffe.proto')
+                print('Value Error: Check Attribute data type, name:', name, '   value:', val)
+                raise ValueError
     elif isinstance(val, dict):
         for key, value in val.items():
             assign_proto(getattr(proto, name), key, value)
@@ -115,7 +117,7 @@ def save_caffe_model(caffe_name, caffe_path, layers):
     with open(prototxt_save_path, 'w') as f:
         print(proto, file=f)
 
-    caffe.set_device(2)
+#caffe.set_device(2)
     caffe.set_mode_cpu()
 
     model = caffe.Net(prototxt_save_path, caffe.TEST)

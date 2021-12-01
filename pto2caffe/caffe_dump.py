@@ -13,7 +13,6 @@ from npu_load_input import Input
 
 
 def _get_proto_layer(param_net, layer_name):
-    index = -1
     proto_layers = param_net.layer
     for i in range(len(proto_layers)):
         if len(proto_layers[i].include) != 0 and proto_layers[i].include[0].phase != caffe_pb2.TEST:
