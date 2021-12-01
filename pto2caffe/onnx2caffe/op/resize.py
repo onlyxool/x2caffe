@@ -15,17 +15,14 @@ class Resize(Operator):
 
     @property
     def type(self):
-        if self.op_code == 'Resize':
-            if hasattr(self, 'convolution_param'):
-                return 'Deconvolution'
-            elif hasattr(self, 'upsample_param'):
-                return 'Upsample'
-            else:
-                return 'nearest'
-        elif self.op_code == 'Upsample':
+        if hasattr(self, 'convolution_param'):
+            return 'Deconvolution'
+        elif hasattr(self, 'upsample_param'):
+            return 'Upsample'
+        elif hasattr(self, 'interp_param'):
             return 'Interp'
         else:
-            raise NotImplementedError
+            return 'Resize'
 
 
     def parse(self):
@@ -41,10 +38,18 @@ class Resize(Operator):
             else:
                 scale = self.inputs_buf[2]
 
-        if scale[2] == scale[3]:
-            scale_factor = scale[2]
+        if len(scale) >= 4:
+            scale_factor = scale[2] if scale[2] == scale[3] else 0
         else:
-            raise NotImplementedError
+            input_h = self.inputs_shape[0][2]
+            input_w = self.inputs_shape[0][3]
+            output_h = self.outputs_shape[0][2]
+            output_w = self.outputs_shape[0][3]
+            scale_factor_h = output_h / input_h
+            scale_factor_w = output_w / input_w
+            scale_factor = scale_factor_h if scale_factor_h == scale_factor_w else 0
+
+        assert(scale_factor != 0)
 
         # Option
         self.parseAttributes()
@@ -70,6 +75,8 @@ class Resize(Operator):
         elif self.mode == 'linear':
             self.interp_param = dict()
             self.interp_param['align_corners'] = True if coordinate == 'align_corners' else False
+            self.interp_param['height'] = self.outputs_shape[0][2]
+            self.interp_param['width'] = self.outputs_shape[0][3]
             self.attrs = self.interp_param
 
         self.setParsed()
