@@ -79,9 +79,9 @@ class Convolution(Operator):
                     self.inputs_shape[0] = legacy.inputs_shape[0]
 
         if opt.Padding() == tflite.Padding.VALID:
-            padding_mode == 'VALID'
+            padding_mode = 'VALID'
         elif opt.Padding() == tflite.Padding.SAME:
-            padding_mode == 'SAME'
+            padding_mode = 'SAME'
 
         padding = handleLegacyPad(padding_mode, self.inputs_shape[0], self.outputs_shape[0], self.convolution_param, legacy_pad, self.type)
         if len(padding) == 2:

@@ -7,12 +7,6 @@ from util import *
 logger = logging.getLogger('tflite2caffe')
 
 
-def dequantize(tensor, scale, zero_point): #TODO
-    tensor_int32 = tensor.astype('int32')
-    tensor_shiftted = np.subtract(tensor_int32, zero_point)
-    tensor_fp32 = np.multiply(tensor_shiftted.astype('float32'), scale)
-
-    return tensor_fp32
 
 
 class Operator(Base):
@@ -54,6 +48,15 @@ class Operator(Base):
         inames = str([t for t in self.inputs])
         onames = str([t for t in self.outputs])
         return '%s attr%s: %s -> %s' % (self.shorty, self.attrs, inames, onames)
+
+
+    @staticmethod
+    def dequantize(tensor, scale, zero_point): #TODO
+        tensor_int32 = tensor.astype('int32')
+        tensor_shiftted = np.subtract(tensor_int32, zero_point)
+        tensor_fp32 = np.multiply(tensor_shiftted.astype('float32'), scale)
+
+        return tensor_fp32
 
 
     def getBuffer(self, tensor_id):

@@ -9,7 +9,7 @@ class LeakyRelu(Operator):
 
     def __init__(self, model, tf_op, tf_op_code, index):
         super().__init__(model, tf_op, tf_op_code, index)
-        self.relu_param = dict()        
+        self.relu_param = dict()
         self.setInited()
 
 
