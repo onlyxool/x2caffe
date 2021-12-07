@@ -27,19 +27,23 @@ class Pad(Operator):
 
         # Option
         self.parseAttributes()
-
         if self.attrs.get('value', 0.0) != 0.0 or self.attrs['mode'].decode() != 'constant':
             print('Warning: Caffe support constant Pad mode only.')
 #            raise NotImplementedError('Caffe support constant Pad mode only.')
 
-        pad = np.array(self.attrs['pads']).reshape(-1, len(self.inputs_shape[0]))
+        if self.model.opset[0] >= 11:
+            pad = self.inputs_buf[1].reshape(-1, len(self.inputs_shape[0]))
+        else:
+            pad = np.array(self.attrs['pads']).reshape(-1, len(self.inputs_shape[0]))
+
         if len(self.inputs_shape[0]) == 4:
             self.pad['left'] = pad[0][3]
             self.pad['right'] = pad[1][3]
             self.pad['top'] = pad[0][2]
             self.pad['bottom'] = pad[1][2]
         else:
-            raise NotImplementedError('Input tensor has %i dimentions'% len(self.inputs_shape[0]))
+            errorMsg = 'Input tensor has' + len(self.inputs_shape[0]) + 'dimentions'
+            raise NotImplementedError(errorMsg)
 
 
     def convert(self):
