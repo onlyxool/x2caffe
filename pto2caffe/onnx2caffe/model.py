@@ -23,6 +23,7 @@ from onnx2caffe.op.flatten import Flatten
 from onnx2caffe.op.conv import Convolution
 from onnx2caffe.op.gemm import InnerProduct
 from onnx2caffe.op.constant import Constant
+from onnx2caffe.op.softplus import Softplus
 from onnx2caffe.op.transpose import Permute
 from onnx2caffe.op.batchnorm import BatchNorm
 from onnx2caffe.op.activation import Activation
@@ -64,6 +65,7 @@ OpMap = {
     'Unsqueeze': Reshape,
     'Transpose': Permute,
     'ReduceMean': Reduce,
+    'Softplus': Softplus,
     'Sigmoid': Activation,
     'Softmax': Activation,
     'AveragePool': Pooling,
@@ -142,7 +144,7 @@ class Model(Base):
     def parse(self):
         logger.debug("Parsing the ONNX Model...")
 
-        self.preprocess()
+#        self.preprocess()
 
         # Get Shape
         for value_info in self.graph.value_info:
@@ -158,7 +160,7 @@ class Model(Base):
         for tensor in self.model.graph.sparse_initializer:
             self.input_tensor[tensor.name] =  numpy_helper.to_array(tensor)
 
-        print('ONNX Model Input size: ', end='')
+        print('ONNX Model Input size: (opset=%d)' %self.opset[0])
         for input in self.graph.input:
             if input.name not in self.input_tensor:
                 self.inputs.append(input.name)
@@ -179,8 +181,8 @@ class Model(Base):
     def convert(self):
         logger.debug("Converting the Model...")
 
-        for input in self.inputs:
-            self.layers.append(make_caffe_input_layer(input, self.param))
+        for index, input in enumerate(self.inputs):
+            self.layers.append(make_caffe_input_layer(input, self.shape[input], index, self.param))
         for op in self.operators:
             logger.debug(op)
             layers = op.convert()

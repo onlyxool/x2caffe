@@ -136,8 +136,8 @@ def save_caffe_model(caffe_name, caffe_path, layers):
     model.save(model_save_path)
 
 
-def make_caffe_input_layer(input, param):
-    layer_name = 'input.1'
+def make_caffe_input_layer(input, input_shape, index, param):
+    layer_name = 'input' + str(index)
     output = input
     output = [output]
 
@@ -162,7 +162,7 @@ def make_caffe_input_layer(input, param):
         bin_data_param['source'] = param['source']
         bin_data_param['root_folder'] = param['root_folder']
         bin_data_param['data_format'] = dtype_map[param['dtype']]
-        bin_data_param['shape'] = dict(dim=param['inshape'])
+        bin_data_param['shape'] = dict(dim=param['source_shape'])
     else:
         raise NotImplementedError('Do not support file format: '+ ext)
 
@@ -174,13 +174,10 @@ def make_caffe_input_layer(input, param):
         image_data_param['color_format'] = 2
         image_data_param['is_color'] = False
 
-    if param['new_height'] is not None and param['new_width'] is not None :
-        image_data_param['new_height'] = param['new_height']
-        image_data_param['new_width'] = param['new_width']
-
     if param['mean'] is not None:
         caffe_mean = np.array(param['scale']) * np.array(param['mean'])
         transform_param['mean_value'] = caffe_mean.tolist()
+
     if param['std'] is not None:
         caffe_scale = 1/(np.array(param['scale']) * np.array(param['std']))
         transform_param['scale'] = caffe_scale.tolist()
@@ -193,4 +190,4 @@ def make_caffe_input_layer(input, param):
     if ext in ['jpg', 'bmp', 'png', 'jpeg']:
         return caffe_layer("ImageData", layer_name, [], [], output, transform_param=transform_param, image_data_param=image_data_param, include=include)
     elif ext == 'bin':
-        return caffe_layer("Input", layer_name, [], [], output, transform_param=transform_param, bin_data_param=bin_data_param, input_param=dict(shape=dict(dim=param['outshape'])), include=include)
+        return caffe_layer("Input", layer_name, [], [], output, transform_param=transform_param, bin_data_param=bin_data_param, input_param=dict(shape=dict(dim=input_shape)), include=include)

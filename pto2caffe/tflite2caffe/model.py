@@ -2,6 +2,7 @@ import tflite
 import logging
 from dump import Dump
 from base import Base
+from util import *
 
 from tflite2caffe.op.pad import Pad
 from tflite2caffe.op.swish import Swish
@@ -110,7 +111,8 @@ class Model(Base):
         logger.debug("Converting the Model...")
 
         for i in range(self.graph.InputsLength()):
-            self.layers.append(make_caffe_input_layer(self.graph.Inputs(i), self.param))
+            input_shape = self.graph.Tensors(self.graph.Inputs(i)).ShapeAsNumpy()
+            self.layers.append(make_caffe_input_layer(self.graph.Inputs(i), shape_map_nhwc2nchw(input_shape), i, self.param))
 
         for op in self.operators:
             logger.debug(op)

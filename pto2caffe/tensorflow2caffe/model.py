@@ -16,7 +16,7 @@ from tensorflow2caffe.op.leakyrelu import LeakyRelu
 from tensorflow2caffe.op.spacetodepth import SpaceToDepth
 
 from caffe_transform import save_caffe_model
-
+from caffe_transform import make_caffe_input_layer
 
 logger = logging.getLogger('TensorFlow2Caffe')
 
@@ -72,6 +72,7 @@ class Model(Base):
                         input_shape.append(dim.size)
                     self.inputs_shape.append(input_shape)
                     self.inputs.append(op.outputs[0].name)
+                    self.layers.append(make_caffe_input_layer(op.outputs[0], input_shape, len(self.inputs), self.param))
 
             print('Tensorflow Frozen Graph Input size: ')
             for i, shape in enumerate(self.inputs_shape):
