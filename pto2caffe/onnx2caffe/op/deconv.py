@@ -5,7 +5,7 @@ from onnx2caffe.op.operator import Operator
 
 logger = logging.getLogger('onnx2caffe')
 
-class Convolution(Operator):
+class Deconvolution(Operator):
 
     def __init__(self, model, node, index):
         super().__init__(model, node, index)
@@ -15,7 +15,7 @@ class Convolution(Operator):
 
     @property
     def type(self):
-        return 'Convolution'
+        return 'Deconvolution'
 
 
     def parse(self):
@@ -26,15 +26,15 @@ class Convolution(Operator):
 
         # Weight
         self.weight = self.inputs_buf[1]
-
+        print(self.name, self.inputs_shape, self.outputs_shape)
         # Bias
         self.bias = self.inputs_buf[2] if len(self.inputs_buf) == 3 else None
 
         # Option
         self.parseAttributes()
-        self.convolution_param['num_output'] = self.weight.shape[0]
-        self.convolution_param['stride'] = self.attrs.get('strides', [1, 1])
-        self.convolution_param['dilation'] = self.attrs.get('dilations', [1, 1])
+        self.convolution_param['num_output'] = self.outputs_shape[0][1]
+        self.convolution_param['stride'] = self.attrs.get('strides', [1, 1]) 
+        self.convolution_param['dilation'] = self.attrs.get('dilations', [1, 1]) 
         self.convolution_param['group'] = self.attrs.get('group', 1)
         self.convolution_param['kernel_size'] = self.attrs['kernel_shape']
         self.convolution_param['bias_term'] = True if self.bias is not None else False

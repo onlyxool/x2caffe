@@ -5,17 +5,16 @@ from onnx2caffe.op.operator import Operator
 
 logger = logging.getLogger('onnx2caffe')
 
-class Reshape(Operator):
 
+class Softplus(Operator):
     def __init__(self, model, node, index):
         super().__init__(model, node, index)
-        self.reshape_param = dict()
         self.setInited()
 
 
     @property
     def type(self):
-        return 'Reshape'
+        return 'Softplus'
 
 
     def parse(self):
@@ -26,19 +25,13 @@ class Reshape(Operator):
 
         # Option
         self.parseAttributes()
+        self.softplus_param = dict()
 
-        if 'shape' in self.attrs:
-            self.reshape_param = dict(shape=dict(dim=self.attrs['shape']))
-        else:
-            self.reshape_param = dict(shape=dict(dim=self.outputs_shape[0]))
-
-        self.attrs = self.reshape_param
         self.setParsed()
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, reshape_param=self.reshape_param)
+        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs)
 
         self.setConverted()
-
         return [layer]

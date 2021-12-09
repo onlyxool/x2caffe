@@ -26,6 +26,7 @@ from onnx2caffe.op.constant import Constant
 from onnx2caffe.op.softplus import Softplus
 from onnx2caffe.op.transpose import Permute
 from onnx2caffe.op.batchnorm import BatchNorm
+from onnx2caffe.op.deconv import Deconvolution
 from onnx2caffe.op.activation import Activation
 from onnx2caffe.op.upsample import Upsample #Deprecated
 
@@ -59,6 +60,7 @@ OpMap = {
     'MaxPool': Pooling,
     'Relu': Activation,
     'Clip': Activation,
+    'Identity': Reshape,
     'Conv': Convolution,
     'Gemm': InnerProduct,
     'Constant': Constant,
@@ -70,7 +72,7 @@ OpMap = {
     'Softmax': Activation,
     'AveragePool': Pooling,
     'LeakyRelu': Activation,
-    'ConvTranspose': Convolution,
+    'ConvTranspose': Deconvolution,
     'GlobalAveragePool': Pooling,
     'BatchNormalization': BatchNorm,
     'Upsample': Upsample, #Deprecated
