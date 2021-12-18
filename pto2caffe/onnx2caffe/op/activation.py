@@ -7,9 +7,11 @@ logger = logging.getLogger('onnx2caffe')
 
 
 class Activation(Operator):
+
     def __init__(self, model, node, index):
         super().__init__(model, node, index)
         self.setInited()
+
 
     @property
     def type(self):
@@ -27,6 +29,7 @@ class Activation(Operator):
             return 'ReLUX'
         else:
             raise NotImplementedError
+
 
     def parse(self):
         logger.debug("Parsing %s...", self.type)
@@ -54,8 +57,20 @@ class Activation(Operator):
             else:
                 self.relux_param['x'] = self.inputs_buf[2]
             self.attrs = self.relux_param
-        elif self.op_code == 'prelu':
-            raise NotImplementedError(self.op_code)
+        elif self.op_code == 'PRelu':
+            for legacy in self.model.legacys:
+                for i, input in enumerate(self.inputs):
+                    if input == legacy.outputs[0]:
+                        self.inputs_buf[i] = legacy.inputs_buf[0]
+
+            self.slope = self.inputs_buf[1]
+#            print(self.slope.shape)
+            self.prelu_param = dict()
+            if self.slope.shape[0] == 1:
+                self.prelu_param['channel_shared'] = False
+            else:
+                self.prelu_param['channel_shared'] = False
+            self.attrs = self.prelu_param
         elif self.op_code == 'Relu':
             self.relu_param = dict()
             self.relu_param['negative_slope'] = 0
@@ -66,14 +81,6 @@ class Activation(Operator):
         self.setParsed()
 
 
-    def propagatableTensors(self):
-        return self.inputs + self.outputs
-
-
-    def transform(self):
-        pass
-
-
     def convert(self):
         if self.op_code == 'LeakyRelu':
             layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, relu_param=self.relu_param)
@@ -82,7 +89,7 @@ class Activation(Operator):
         elif self.op_code == 'Softmax':
             layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, softmax_param=self.softmax_param)
         elif self.op_code == 'PRelu':
-            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, prelu_param=self.prelu_param)
+            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.slope, prelu_param=self.prelu_param)
         elif self.op_code == 'Relu':
             layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, relu_param=self.relu_param)
         elif self.op_code == 'Clip':
