@@ -17,6 +17,7 @@ class Operator(Base):
         self.pre = []  # ops that before this op which to enable TFLite op
         self.post = []  # ops that after this op which to enable TFLite op
         self.attrs = dict()
+        self.isLegacy = False
 
 
     @property

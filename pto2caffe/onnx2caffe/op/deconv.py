@@ -42,7 +42,7 @@ class Deconvolution(Operator):
         # Padding
         attr_padding = self.attrs.get('pads', [0,0,0,0])
         for legacy in self.model.legacys:
-            if legacy.outputs[0] == self.inputs[0]:
+            if legacy.outputs[0] == self.inputs[0] and legacy.op_code == 'Pad':
                 legacy_pad = legacy.pad
                 pad_l = attr_padding[1] + legacy.pad['left']
                 pad_r = attr_padding[3] + legacy.pad['right']

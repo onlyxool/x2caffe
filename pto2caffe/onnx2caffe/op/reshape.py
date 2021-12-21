@@ -5,17 +5,21 @@ from onnx2caffe.op.operator import Operator
 
 logger = logging.getLogger('onnx2caffe')
 
+
+
 class Reshape(Operator):
 
     def __init__(self, model, node, index):
         super().__init__(model, node, index)
-        self.reshape_param = dict()
         self.setInited()
 
 
     @property
     def type(self):
-        return 'Reshape'
+        if hasattr(self, 'reshape_param'):
+            return 'Reshape'
+        else:
+            return 'Constant'
 
 
     def parse(self):
@@ -27,18 +31,21 @@ class Reshape(Operator):
         # Option
         self.parseAttributes()
 
-        if 'shape' in self.attrs:
-            self.reshape_param = dict(shape=dict(dim=self.attrs['shape']))
+        if self.inputs_buf[0] is not None:
+            self.isLegacy = True
+#            print(self.outputs_shape[0], self.inputs_shape)
+            self.inputs_buf[0] = self.inputs_buf[0].reshape(self.outputs_shape[0])
         else:
-            self.reshape_param = dict(shape=dict(dim=self.outputs_shape[0]))
-
-        self.attrs = self.reshape_param
-        self.setParsed()
+            if 'shape' in self.attrs:
+                self.reshape_param = dict(shape=dict(dim=self.attrs['shape']))
+            else:
+                self.reshape_param = dict(shape=dict(dim=self.outputs_shape[0]))
+            self.attrs = self.reshape_param
+            self.setParsed()
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, reshape_param=self.reshape_param)
-
-        self.setConverted()
-
-        return [layer]
+        if hasattr(self, 'reshape_param'):
+            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, reshape_param=self.reshape_param)
+            self.setConverted()
+            return [layer]

@@ -37,4 +37,4 @@ class Permute(Operator):
 
         self.setConverted()
 
-        return [layer]        
+        return [layer]

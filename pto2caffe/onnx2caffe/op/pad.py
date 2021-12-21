@@ -45,6 +45,7 @@ class Pad(Operator):
             errorMsg = 'Input tensor has' + len(self.inputs_shape[0]) + 'dimentions'
             raise NotImplementedError(errorMsg)
 
+        self.isLegacy = True
 
     def convert(self):
         pass

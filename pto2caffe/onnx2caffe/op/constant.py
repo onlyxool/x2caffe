@@ -20,9 +20,14 @@ class Constant(Operator):
     def parse(self):
         logger.debug("Parsing %s...", self.type)
 
+        self.parseInput()
+        self.parseOutput()
+
         # Option
         self.parseAttributes()
         self.model.input_tensor[self.node.output[0]] = self.attrs['value']
+
+        self.isLegacy = True
 
 
     def convert(self):
