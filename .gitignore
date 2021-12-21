@@ -1,0 +1,4 @@
+assets/
+*.bak
+.dbg_log.txt
+release/
