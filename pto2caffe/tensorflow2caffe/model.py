@@ -17,6 +17,7 @@ from tensorflow2caffe.op.spacetodepth import SpaceToDepth
 
 from caffe_transform import save_caffe_model
 from caffe_transform import make_caffe_input_layer
+from util import shape_map_nhwc2nchw
 
 logger = logging.getLogger('TensorFlow2Caffe')
 
@@ -69,10 +70,10 @@ class Model(Base):
                 if op.type == 'Placeholder':
                     input_shape = []
                     for dim in op.get_attr('shape').dim:
-                        input_shape.append(dim.size)
+                        input_shape.append(dim.size if dim.size != -1 else 1)
                     self.inputs_shape.append(input_shape)
                     self.inputs.append(op.outputs[0].name)
-                    self.layers.append(make_caffe_input_layer(op.outputs[0], input_shape, len(self.inputs), self.param))
+                    self.layers.append(make_caffe_input_layer(op.outputs[0].name, shape_map_nhwc2nchw(input_shape), len(self.inputs), self.param))
 
             print('Tensorflow Frozen Graph Input size: ')
             for i, shape in enumerate(self.inputs_shape):
@@ -107,6 +108,8 @@ class Model(Base):
         for op in self.operators:
             logger.debug(op)
             layers = op.convert()
+            if layers is None:
+                continue
             for layer in layers:
                 self.layers.append(layer)
 

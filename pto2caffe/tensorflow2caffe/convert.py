@@ -1,4 +1,3 @@
-import os
 import tensorflow as tf
 
 from tensorflow2caffe.model import Model
