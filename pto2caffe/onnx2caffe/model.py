@@ -8,6 +8,9 @@ from onnx2caffe.op.log import Log
 from onnx2caffe.op.exp import Exp
 from onnx2caffe.op.pad import Pad
 from onnx2caffe.op.lrn import LRN
+from onnx2caffe.op.mul import Mul
+from onnx2caffe.op.add import Add
+from onnx2caffe.op.sub import Sub
 #from onnx2caffe.op.slice import Cut
 from onnx2caffe.op.tanh import TanH
 from onnx2caffe.op.split import Slice
@@ -42,15 +45,15 @@ OpMap = {
     'Log': Log,
     'Pad': Pad,
     'LRN': LRN,
+    'Add': Add,
+    'Sub': Sub,
+    'Mul': Mul,
     'Tanh': TanH,
 #    'Slice': Cut,
-    'Add': Binary,
     'Sum': Binary,
-    'Sub': Binary,
-    'Mul': Binary,
     'Div': Binary,
-    'MatMul': Binary,
     'Split': Slice,
+    'MatMul': Binary,
     'Concat': Concat,
     'Resize': Resize,
     'Dropout': Dropout,
@@ -60,14 +63,15 @@ OpMap = {
     'MaxPool': Pooling,
     'Relu': Activation,
     'Clip': Activation,
-    'Identity': Reshape,
     'Conv': Convolution,
+    'PRelu': Activation,
+    'Identity': Reshape,
     'Gemm': InnerProduct,
     'Constant': Constant,
+    'Softplus': Softplus,
     'Unsqueeze': Reshape,
     'Transpose': Permute,
     'ReduceMean': Reduce,
-    'Softplus': Softplus,
     'Sigmoid': Activation,
     'Softmax': Activation,
     'AveragePool': Pooling,
@@ -114,7 +118,8 @@ class Model(Base):
 
 
     def ReplaceActivation(self, node, op_list, activation):
-        skip_op = ['Constant', 'Reshape']
+#        skip_op = ['Constant', 'Reshape']
+        skip_op = []
         for i in range(len(node)):
             if i >= len(node):
                 break
@@ -174,7 +179,7 @@ class Model(Base):
             if op.status.parsed:
                 self.operators.append(op)
             else:
-                if hasattr(op, 'pad'):
+                if op.isLegacy:
                     self.legacys.append(op)
 
         self.setParsed()
