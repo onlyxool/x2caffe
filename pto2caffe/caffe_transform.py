@@ -1,13 +1,14 @@
 import os
 import sys
+import numpy as np
 
 envroot = os.environ.get('MCHOME', os.environ['PWD'])
 sys.path.append(envroot + 'toolchain/caffe/python')
 sys.path.append(envroot + 'toolchain/caffe/python/caffe')
 import caffe
-from util import *
-import numpy as np
 from caffe.proto import caffe_pb2
+
+from util import *
 
 
 def param_name_dict():
@@ -73,6 +74,7 @@ class caffe_layer(object):
         self.weight = weight
         self.bias = bias
 
+
     def _to_proto(self):
         layer = caffe_pb2.LayerParameter()
         layer.type = self.type
@@ -104,7 +106,9 @@ class caffe_layer(object):
 
         return layer
 
+
 _param_names = param_name_dict()
+
 
 def save_caffe_model(caffe_name, caffe_path, layers):
     proto = caffe_pb2.NetParameter()
@@ -117,7 +121,7 @@ def save_caffe_model(caffe_name, caffe_path, layers):
     with open(prototxt_save_path, 'w') as f:
         print(proto, file=f)
 
-#caffe.set_device(2)
+#    caffe.set_device(2)
     caffe.set_mode_cpu()
 
     model = caffe.Net(prototxt_save_path, caffe.TEST)
@@ -157,10 +161,10 @@ def make_caffe_input_layer(input, input_shape, index, param):
 
     if ext in ['jpg', 'bmp', 'png', 'jpeg']:
         image_data_param['source'] = param['source']
-        image_data_param['root_folder'] = param['root_folder']
+        image_data_param['root_folder'] = param['root_folder'] + '/'
     elif ext == 'bin':
         bin_data_param['source'] = param['source']
-        bin_data_param['root_folder'] = param['root_folder']
+        bin_data_param['root_folder'] = param['root_folder'] + '/'
         bin_data_param['data_format'] = dtype_map[param['dtype']]
         bin_data_param['shape'] = dict(dim=param['source_shape'])
     else:

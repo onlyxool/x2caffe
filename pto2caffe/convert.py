@@ -1,31 +1,27 @@
 import os
 import sys
-import cv2
 import argparse
-import numpy as np
-from util import *
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = '3' # 1:All level log 2:Warning & Erro 3:Only Error
 
-def get_batch_size_from_model(param):
-    framework = param['platform'].lower()
-    if framework == 'pytorch':
-        param['batch_size'] = 1
-    elif framework == 'tflite':
-        from tflite.Model import Model
-        with open(param['model'], 'rb') as f:
-            buf = f.read()
-            model = Model.GetRootAsModel(buf, 0)
-        graph = model.Subgraphs(0)
-        param['batch_size'] = graph.Tensors(graph.Inputs(0)).Shape(0)
-        param['input_shape'] = list(graph.Tensors(graph.Inputs(0)).ShapeAsNumpy())
-    elif framework == 'tensorflow':
-        pass
-    elif framework == 'onnx':
-        import onnx
-        model = onnx.load(param['model'])
-        param['batch_size'] = model.graph.input[0].type.tensor_type.shape.dim[0].dim_value
-    else:
-        raise NotImplementedError
+from preprocess import get_input_tensor
+from preprocess import preprocess
+
+
+
+def set_bin_shape(source_tensor, input_tensor, param):
+    param['source_shape'] = [1] + list(source_tensor.shape)
+
+
+def isContainFile(path, ext_list):
+    if not os.path.isdir(path):
+        return False
+
+    datas = os.walk(path)
+    for path_list, dir_list, file_list in datas:
+        for file_name in file_list:
+            if file_name.split('.')[-1].lower() in ext_list:
+                return True
+
+    return False
 
 
 def RGB2BGR(param):
@@ -39,255 +35,164 @@ def RGB2BGR(param):
         return param
 
 
-def set_shape(param, np_tensor, ext):
-    framework = param['platform'].lower()
-    if ext == 'bin':
-        param['inshape'] = [param['batch_size'], param['bin_shape'][0], param['bin_shape'][1], param['bin_shape'][2]]
-        if framework == 'tflite' or framework == 'tensorflow':
-            param['outshape'] = [np_tensor.shape[0], np_tensor.shape[3], np_tensor.shape[1], np_tensor.shape[2]]
-        else:
-            param['outshape'] = [np_tensor.shape[0], np_tensor.shape[1], np_tensor.shape[2], np_tensor.shape[3]]
+def make_source_list(data_path):
+    exts = ['jpg', 'jpeg', 'png', 'bmp', 'bin']
+
+    source = os.path.abspath(data_path) + '/list.txt'
+    source_file = open(source, 'w')
+
+    for file_name in os.listdir(data_path):
+        if file_name.split('.')[-1].lower() in exts:
+            source_file.writelines('%s\n'%file_name)
+
+    source_file.close()
+    return source
 
 
-def get_input_data(param, path, ext):
-    if ext in ['jpg', 'bmp', 'png', 'jpeg']:
-        input_data = cv2.imread(path)
-        assert(input_data is not None)
+def CheckParam(param):
+    # platform
+    errorMsg = '\nArgument Check Failed: '
+    param['platform'] = param['platform'].lower()
+    if param['platform'] not in ['tensorflow', 'onnx', 'pytorch', 'tflite']:
+        errorMsg = errorMsg + 'argument -platform: invalid choice: ' + param['platform'] + ' (choose from TensorFlow, ONNX, TFLite)'
+        sys.exit(errorMsg)
 
-        if param['color_format'] == 'RGB':
-            input_data = cv2.cvtColor(input_data, cv2.COLOR_RGB2BGR)
+    # model
+    param['model'] = os.path.abspath(os.path.normpath(param['model']))
+    if not os.path.isfile(param['model']):
+        sys.exit(errorMsg + 'Model File not exist  ' + param['model'])
 
-        input_data = input_data.transpose(2, 0, 1)
-    elif ext == 'bin':
-        input_data = np.fromfile(path, trans_dtype[param['dtype']])
-        input_data = np.array(input_data, dtype=np.float32)
+    # root_folder
+    param['root_folder'] = os.path.abspath(os.path.normpath(param['root_folder']))
+    if not os.path.isdir(param['root_folder']):
+        sys.exit(errorMsg + 'Illegal root_folder  ' + param['root_folder'])
 
-        shape = param['bin_shape']
-        input_data = np.reshape(input_data, shape)
-    else:
-        raise NotImplementedError('Do not support file format '+ ext)
+    param['source'] = make_source_list(param['root_folder'])
 
-    if param['new_height'] is not None and param['new_width'] is not None:
-        new_h = param['new_height']
-        new_w = param['new_width']
-        input_data = cv2.resize(input_data, (new_h, new_w), interpolation = cv2.INTER_CUBIC)
+    # bin_shape & dtype
+    if isContainFile(param['root_folder'], ['bin']):
+        param['file_type'] = 'raw'
+        if param['dtype'] is None:
+            sys.exit(errorMsg + 'argument dtype can\'t be None')
+        if param['bin_shape'] is None:
+            sys.exit(errorMsg + 'argument bin_shape can\'t be None')
+        elif len(param['bin_shape']) != 3:
+            sys.exit(errorMsg + 'Bin file shape should be 3 dimension')
+    elif isContainFile(param['root_folder'], ['jpg', 'bmp', 'png', 'jpeg']):
+        param['file_type'] = 'img'
 
-    if param['crop_h'] is not None and param['crop_w'] is not None:
-        crop_h = param['crop_h']
-        crop_w = param['crop_w']
-        if input_data.shape[1] < crop_h or input_data.shape[2] < crop_w:
-            raise ValueError('crop size > image size, image:', input_data.shape, 'crop:', [crop_h, crop_w])
-        else:
-            offset_h = (input_data.shape[1] - crop_h) // 2
-            offset_w = (input_data.shape[2] - crop_w) // 2
-            input_data = input_data[:,offset_h:crop_h+offset_h, offset_w:crop_w+offset_w]
-
-    return input_data
-
-
-def mean_std_scale(param, image):
-    if param['scale'] is not None:
-        if len(param['scale']) == 3:
-            for i in range(len(param['scale'])):
-                image[i,:,:] = image[i,:,:] / param['scale'][i]
-        elif len(param['scale']) == 1:
-            image = image / param['scale']
-        else:
-            raise NotImplementedError
-
-    if param['mean'] is not None:
-        if len(param['mean']) == 3:
-            for i in range(len(param['mean'])):
-                image[i,:,:] = image[i,:,:] - param['mean'][i]
-        elif len(param['mean']) == 1:
-            image = image * param['mean']
-        else:
-            raise NotImplementedError
-
-    if param['std'] is not None:
-        if len(param['std']) == 3:
-            for i in range(len(param['std'])):
-                image[i,:,:] = image[i,:,:] / param['std'][i]
-        elif len(param['std']) == 1:
-            image = image * param['std']
-        else:
-            raise NotImplementedError
-
-    return image
-
-
-def hwc2chw_unsqueeze(param, image):
-    framework = param['platform'].lower()
-    if framework == 'tflite' or framework == 'tensorflow':
-        return np.expand_dims(image, axis=0).transpose(0, 2, 3, 1)
-    else: 
-        return np.expand_dims(image, axis=0)
-
-
-def preprocess(param):
-    param['source'] = os.path.abspath(param['source'])
-    source_path = param['source']
-    source_path = os.path.dirname(source_path) + '/'
-    if param['root_folder'] is None:
-        param['root_folder'] = source_path
-    else:
-        param['root_folder'] = os.path.abspath(param['root_folder']) + '/'
-
+    # BGR -> RGB
     if param['color_format'] == 'BGR':
         param['mean'] = RGB2BGR(param['mean'])
         param['std'] = RGB2BGR(param['std'])
         param['scale'] = RGB2BGR(param['scale'])
 
-    input_files = np.loadtxt(param['source'], dtype=str).tolist()
-    if isinstance(input_files, list):
-        ext = input_files[0].split('.')[-1].lower()
-        np_tensor = None
-        i = 0
-        for input_file in input_files:
-            input_data = get_input_data(param, source_path + input_file, ext)
-            input_data = mean_std_scale(param, input_data)
-            if param['dump'] >= 0:
-                param['input_file'] = param.get('input_file', input_file.split('/')[-1])
-            if np_tensor is None:
-                np_tensor = hwc2chw_unsqueeze(param, input_data)
-            else:
-                np_tensor = np.concatenate((np_tensor, hwc2chw_unsqueeze(param, input_data)), axis=0)
-            i = i + 1
-            if param['batch_size'] is not None and i >= param['batch_size']:
-                break
-    elif isinstance(input_files, str):
-        ext = input_files.split('.')[-1].lower()
-        input_data = get_input_data(param, source_path + input_files, ext)
-        input_data = mean_std_scale(param, input_data)
-        np_tensor = hwc2chw_unsqueeze(param, input_data)
-        param['input_file'] = param.get('input_file', input_files.split('/')[-1])
+    if hasattr(param, 'aut_crop') and param['auto_crop'] == 1:
+        if param['platform'] == 'tensorflow':
+            pass
+            from tensorflow2caffe.preload import get_input_shape
+        elif param['platform'] == 'tflite':
+            pass
+            from tflite2caffe.preload import get_input_shape
+        elif param['platform'] == 'onnx':
+            from onnx2caffe.preload import get_input_shape
 
-    set_shape(param, np_tensor, ext)
+        param['input_shape'] = get_input_shape(param['model'])
 
-    np_tensor = np.ascontiguousarray(np_tensor).astype(np.float32)
-
-    framework = param['platform'].lower()
-    if framework == 'tensorflow' or framework == 'tflite':
-        input_tensor = np_tensor
-    elif framework == 'pytorch':
-        input_tensor = np_tensor
-    elif framework == 'onnx':
-        input_tensor = np_tensor
-    else:
-        raise NotImplementedError
-    return input_tensor
+    if param['crop_h'] is None and param['crop_w'] is None:
+        if hasattr(param, 'input_shape') and len(param['input_shape']) > 0:
+            param['crop_h'] = param['input_shape'][0][-2]
+            param['crop_w'] = param['input_shape'][0][-1]
+        else:
+            errorMsg = errorMsg + 'Model input shape parse failed, auto_crop can\'t apply.'
 
 
-def dummy_input(param):
-    return np.random.rand(param['input_shape'][0], param['input_shape'][1], param['input_shape'][2], param['input_shape'][3])
+def Convert(param=None):
+    # Set Log level
+    os.environ['GLOG_minloglevel'] = str(param.get('log', 2)) # 0:DEBUG 1:INFO 2:WARNING 3:ERROR
+    os.environ["TF_CPP_MIN_LOG_LEVEL"] = str(param.get('log', 2)) # 0:INFO 1:WARNING 2:ERROR 3:FATAL
+    print(param)
+    # Check Param
+    CheckParam(param)
 
+    framework = param['platform']
+    model_path = param['model']
+    print(model_path)
+    model_name = os.path.basename(model_path)
+    caffe_model_name = os.path.splitext(model_name)[0]
+    caffe_model_path = model_path.split(caffe_model_name)[0]
+    dump_level = param.get('dump', -1)
 
-def Convert(model_file, caffe_model_name, caffe_model_path=None, dump_level=-1, param=None):
-    get_batch_size_from_model(param)
-    if param.get('dummy', None) is True:
-        input_tensor = dummy_input(param)
-    else:
-        input_tensor = preprocess(param)
+# how many inputs
+    tensor = get_input_tensor(param['root_folder'], param)
+    input_tensor = preprocess(tensor, param)
 
-    framework = param['platform'].lower()
+    if param['file_type'] == 'raw':
+        set_bin_shape(tensor, input_tensor, param)
+
     if framework == 'pytorch':
         from pytorch2caffe.convert import convert as PytorchConvert
-        PytorchConvert(model_file, input_tensor, caffe_model_name, caffe_model_path, dump_level, param)
+        PytorchConvert(model_path, input_tensor, caffe_model_name, caffe_model_path, dump_level, param)
     elif framework == 'tensorflow':
         from tensorflow2caffe.convert import convert as TensorflowConvert
-        TensorflowConvert(model_file, input_tensor, caffe_model_name, caffe_model_path, dump_level, param)
+        TensorflowConvert(model_path, input_tensor, caffe_model_name, caffe_model_path, dump_level, param)
     elif framework == 'tflite':
         from tflite2caffe.convert import convert as TensorLiteConvert
-        TensorLiteConvert(model_file, input_tensor, caffe_model_name, caffe_model_path, dump_level, param)
+        TensorLiteConvert(model_path, input_tensor, caffe_model_name, caffe_model_path, dump_level, param)
     elif framework == 'onnx':
         from onnx2caffe.convert import convert as OnnxConvert
-        OnnxConvert(model_file, input_tensor, caffe_model_name, caffe_model_path, dump_level, param)
+        OnnxConvert(model_path, input_tensor, caffe_model_name, caffe_model_path, dump_level, param)
     else:
         raise NotImplementedError
 
 
 def args_():
-    args = argparse.ArgumentParser(description = 'Pytorch/Tensorflow lite/ONNX to Caffe converter usage', epilog = '')
-    args.add_argument('-platform',      type = str,     required = True, choices=['Tensorflow', 'Onnx', 'Pytorch', 'Tflite', 'tensorflow', 'ONNX', 'pytorch', 'onnx'],
-            help = 'Pytorch/Tensorflow/ONNX')
+    args = argparse.ArgumentParser(description='Tensorflow/Tensorflow lite/ONNX/Pytorch to Caffe Conversion Usage', epilog='')
+    args.add_argument('-platform',      type = str,     required = True,
+            help = 'Pytorch/Tensorflow/ONNX/TFLite')
     args.add_argument('-model',         type = str,     required = True,
             help = 'Orginal Model File')
-    args.add_argument('-output',        type = str,     required = False,
-            help = 'Caffe Model path')
-    args.add_argument('-name',          type = str,     required = False,
-            help = 'output model name')
-    args.add_argument('-source',        type = str,     required = True,
-            help = 'Specify the data source')
-    args.add_argument('-root_folder',   type = str,     required = False,
-            help = 'Specify the root folder')
-    args.add_argument('-batch_size',    type = int,     required = False,
-            help = 'Specify batch_size')
-    args.add_argument('-dtype',         type = str,     required = False,   choices=['u8', 's16', 'f32'],   default = 'u8',
+    args.add_argument('-root_folder',   type = str,     required = True,
+            help = 'Specify the Data root folder')
+    args.add_argument('-dtype',         type = str,     required = False,   choices=['u8', 's16', 'f32'],   default='u8',
             help = 'Specify the Data type, 0:u8 1:s16 2:f32')
     args.add_argument('-bin_shape',     type = int,     required = False,   nargs='+',
-            help = 'Specify the Data shape when input data is bin file')
+            help = 'Specify the Data shape when input data is bin file, default layout is [C,H,W]')
     args.add_argument('-color_format',  type = str,     required = False,   choices=['BGR', 'RGB', 'GRAY'],
             help = 'Specify the images color format, 0:BGR 1:RGB 2:GRAY')
-    args.add_argument('-scale',         type = float,   required = False,   nargs='+', default = [1, 1, 1],
+    args.add_argument('-scale',         type = float,   required = False,   nargs='+',  default = [1, 1, 1],
             help = 'scale value')
     args.add_argument('-mean',          type = float,   required = False,   nargs='+',
             help = 'mean value')
     args.add_argument('-std',           type = float,   required = False,   nargs='+',
             help = 'std value')
-    args.add_argument('-new_height',    type = int,     required = False,
-            help = 'Resize images if new_height or new_width are not zero')
-    args.add_argument("-new_width",     type = int,     required = False,
-            help = 'Resize images if new_height or new_width are not zero')
     args.add_argument('-crop_h',        type = int,     required = False,
             help = 'Specify if we would like to randomly crop input image')
     args.add_argument('-crop_w',        type = int,     required = False,
             help = 'Specify if we would like to randomly crop input image')
-    args.add_argument('-dump',          type = int,     required = False,   default = -1,   choices=[0, 1, 2, 3],
+    args.add_argument('-auto_crop',     type = int,     required = False,   default=0,      choices=[0, 1],
+            help = 'Crop the input data automaticaly')
+    args.add_argument('-dump',          type = int,     required = False,   default=-1,     choices=[0, 1, 2, 3],
             help = 'dump blob  1:print output.  2:print input & ouput')
-    args.add_argument('-dummy',        type = bool,     required = False,
-            help = 'dummy input data')
-    args.add_argument('-compare',       type = int,     required = False,   default = -1,   choices=[0, 1, 2],
+    args.add_argument('-compare',       type = int,     required = False,   default=-1,     choices=[0, 1, 2],
             help = '')
-    args.add_argument('-caffe_log',     type = int,     required = False,   default = 2,   choices=[0, 1, 2],
+    args.add_argument('-log',     type = int,     required = False,   default = 2,   choices=[0, 1, 2],
             help = '')
     args = args.parse_args()
     return args
 
 
 def main():
+    print('\nModel Convertor:', end=' ')
     args = args_()
-    param = args.__dict__
-    param['model'] = os.path.abspath(param['model'])
-    model_file = param['model']
-    os.environ['GLOG_minloglevel'] = str(param.get('caffe_log', 2))
-
-    if not os.path.isfile(model_file):
-        print('Model File not exist!!')
-        return
-    else:
-        opt_path, opt_file_name = os.path.split(model_file)
-        file_name = opt_file_name.split('.')
-        ext = file_name[-1]
-        opt_model_name = ''
-        for piece in file_name:
-            if piece == ext:
-                break
-            opt_model_name += ('.'+piece)
-        opt_model_name = opt_model_name[1:]
-
-    caffe_model_name = param['name'] if param['name'] is not None else opt_model_name
-    caffe_model_path = os.path.abspath(param['output']) if param['output'] is not None else opt_path
-    dump_level = param['dump']
-
-    Convert(model_file, caffe_model_name, caffe_model_path, dump_level, param)
+    Convert(args.__dict__)
 
     # Delete all argmuments
     for i in range(1, len(sys.argv)):
         sys.argv.pop()
 
-    print('Conversion Done')
+    print('Conversion Done.\n')
 
 
 if __name__ == "__main__":
     sys.exit(main())
-

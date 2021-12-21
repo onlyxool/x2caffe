@@ -36,7 +36,7 @@ def np_nhwc2nchw(array):
 
 
 def shape_map_nhwc2nchw(shape):
-    if isinstance(shape, np.ndarray): #TFLite
+    if isinstance(shape, np.ndarray) or isinstance(shape, list): #TFLite
         if len(shape) == 4:
             return [shape[0], shape[3], shape[1], shape[2]]
         elif len(shape) == 3:
