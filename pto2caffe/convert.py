@@ -35,17 +35,23 @@ def RGB2BGR(param):
         return param
 
 
-def make_source_list(data_path):
+def make_source_list(data_path, errorMsg):
     exts = ['jpg', 'jpeg', 'png', 'bmp', 'bin']
 
     source = os.path.abspath(data_path) + '/list.txt'
     source_file = open(source, 'w')
 
+    found = False
     for file_name in os.listdir(data_path):
         if file_name.split('.')[-1].lower() in exts:
             source_file.writelines('%s\n'%file_name)
+            found = True
 
     source_file.close()
+
+    if not found:
+        sys.exit(errorMsg + 'Can\'t find any data file or image file in ' + data_path)
+
     return source
 
 
@@ -58,16 +64,23 @@ def CheckParam(param):
         sys.exit(errorMsg)
 
     # model
-    param['model'] = os.path.abspath(os.path.normpath(param['model']))
     if not os.path.isfile(param['model']):
         sys.exit(errorMsg + 'Model File not exist  ' + param['model'])
+    param['model'] = os.path.abspath(os.path.normpath(param['model']))
 
     # root_folder
-    param['root_folder'] = os.path.abspath(os.path.normpath(param['root_folder']))
     if not os.path.isdir(param['root_folder']):
         sys.exit(errorMsg + 'Illegal root_folder  ' + param['root_folder'])
+    param['root_folder'] = os.path.abspath(os.path.normpath(param['root_folder']))
 
-    param['source'] = make_source_list(param['root_folder'])
+    # source
+    if param.get('source', None) is not None:
+        if os.path.isfile(param['source']):
+            param['source'] = os.path.abspath(os.path.normpath(param['source']))
+        else:
+            param['source'] = make_source_list(param['root_folder'], errorMsg)
+    else:
+        param['source'] = make_source_list(param['root_folder'], errorMsg)
 
     # bin_shape & dtype
     if isContainFile(param['root_folder'], ['bin']):
@@ -80,6 +93,8 @@ def CheckParam(param):
             sys.exit(errorMsg + 'Bin file shape should be 3 dimension')
     elif isContainFile(param['root_folder'], ['jpg', 'bmp', 'png', 'jpeg']):
         param['file_type'] = 'img'
+    else:
+        sys.exit(errorMsg + 'Can\'t find any data file or image file in ' + param['root_folder'])
 
     # BGR -> RGB
     if param['color_format'] == 'BGR':
@@ -87,7 +102,7 @@ def CheckParam(param):
         param['std'] = RGB2BGR(param['std'])
         param['scale'] = RGB2BGR(param['scale'])
 
-    if hasattr(param, 'aut_crop') and param['auto_crop'] == 1:
+    if 'auto_crop' in param and param['auto_crop'] == 1:
         if param['platform'] == 'tensorflow':
             pass
             from tensorflow2caffe.preload import get_input_shape
@@ -100,7 +115,7 @@ def CheckParam(param):
         param['input_shape'] = get_input_shape(param['model'])
 
     if param['crop_h'] is None and param['crop_w'] is None:
-        if hasattr(param, 'input_shape') and len(param['input_shape']) > 0:
+        if 'input_shape' in param and len(param['input_shape']) > 0:
             param['crop_h'] = param['input_shape'][0][-2]
             param['crop_w'] = param['input_shape'][0][-1]
         else:
@@ -111,16 +126,16 @@ def Convert(param=None):
     # Set Log level
     os.environ['GLOG_minloglevel'] = str(param.get('log', 2)) # 0:DEBUG 1:INFO 2:WARNING 3:ERROR
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = str(param.get('log', 2)) # 0:INFO 1:WARNING 2:ERROR 3:FATAL
-    print(param)
+
     # Check Param
     CheckParam(param)
 
     framework = param['platform']
     model_path = param['model']
     print(model_path)
-    model_name = os.path.basename(model_path)
-    caffe_model_name = os.path.splitext(model_name)[0]
-    caffe_model_path = model_path.split(caffe_model_name)[0]
+
+    param['model_name'] = os.path.basename(model_path)
+    caffe_model_path = os.path.splitext(model_path)[0]
     dump_level = param.get('dump', -1)
 
 # how many inputs
@@ -132,16 +147,16 @@ def Convert(param=None):
 
     if framework == 'pytorch':
         from pytorch2caffe.convert import convert as PytorchConvert
-        PytorchConvert(model_path, input_tensor, caffe_model_name, caffe_model_path, dump_level, param)
+        PytorchConvert(model_path, input_tensor, caffe_model_path, dump_level, param)
     elif framework == 'tensorflow':
         from tensorflow2caffe.convert import convert as TensorflowConvert
-        TensorflowConvert(model_path, input_tensor, caffe_model_name, caffe_model_path, dump_level, param)
+        TensorflowConvert(model_path, input_tensor, caffe_model_path, dump_level, param)
     elif framework == 'tflite':
         from tflite2caffe.convert import convert as TensorLiteConvert
-        TensorLiteConvert(model_path, input_tensor, caffe_model_name, caffe_model_path, dump_level, param)
+        TensorLiteConvert(model_path, input_tensor, caffe_model_path, dump_level, param)
     elif framework == 'onnx':
         from onnx2caffe.convert import convert as OnnxConvert
-        OnnxConvert(model_path, input_tensor, caffe_model_name, caffe_model_path, dump_level, param)
+        OnnxConvert(model_path, input_tensor, caffe_model_path, dump_level, param)
     else:
         raise NotImplementedError
 
@@ -154,6 +169,8 @@ def args_():
             help = 'Orginal Model File')
     args.add_argument('-root_folder',   type = str,     required = True,
             help = 'Specify the Data root folder')
+    args.add_argument('-source',        type = str,     required = False,
+            help = 'Specify the data source')
     args.add_argument('-dtype',         type = str,     required = False,   choices=['u8', 's16', 'f32'],   default='u8',
             help = 'Specify the Data type, 0:u8 1:s16 2:f32')
     args.add_argument('-bin_shape',     type = int,     required = False,   nargs='+',

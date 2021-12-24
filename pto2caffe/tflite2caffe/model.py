@@ -123,8 +123,8 @@ class Model(Base):
         self.setConverted()
 
 
-    def save(self, caffe_name, caffe_path):
-        save_caffe_model(caffe_name, caffe_path, self.layers)
+    def save(self, caffe_path):
+        save_caffe_model(caffe_path, self.layers)
 
 
     def dump(self, model_byte, model_name, input_tensor, dump_level=-1):

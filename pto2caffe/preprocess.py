@@ -16,7 +16,7 @@ def load_file2tensor(path, param):
     '''
     Load image or raw data as tensor[C, H, W]
     '''
-    ext = os.path.basename(path).split('.')[-1]
+    ext = os.path.basename(path).split('.')[-1].lower()
     if ext in ['bin']:
         tensor = np.fromfile(path, numpy_dtype[param['dtype']])
         tensor = np.array(tensor, dtype=np.float32)
@@ -42,7 +42,8 @@ def get_input_tensor(path, param):
     if os.path.isfile(path):
         return load_file2tensor(path, param)
     elif os.path.isdir(path):
-        return load_file2tensor(get_one_file(path), param)
+        param['input_file'] = get_one_file(path)
+        return load_file2tensor(param['input_file'], param)
     else:
         return None
 

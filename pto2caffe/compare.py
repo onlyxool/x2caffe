@@ -45,9 +45,9 @@ def calc_max_ratio(array1, array2):
     return max_ratio
 
 
-def dump_caffe_model(caffe_name, caffe_path, input_tensor, level):
-    proto_file = caffe_path + '/' + caffe_name + '.prototxt'
-    model_file = caffe_path + '/' + caffe_name + '.caffemodel'
+def dump_caffe_model(caffe_path, input_tensor, level):
+    proto_file = caffe_path + '.prototxt'
+    model_file = caffe_path + '.caffemodel'
     caffe_net = caffe.Net(proto_file, caffe.TEST, weights=model_file)
 
     param_net = caffe_pb2.NetParameter()
@@ -76,13 +76,13 @@ def dump_caffe_model(caffe_name, caffe_path, input_tensor, level):
     return caffe_output_dict, blob2layer_map
 
 
-def compare(platform, target_model, caffe_model, caffe_path, input_tensor, level=-1):
+def compare(platform, target_model, caffe_path, input_tensor, level=-1):
     if level <= 0:
         return
     else:
         print('Comparing...')
 
-    caffe_output_dict, blob2layer_map = dump_caffe_model(caffe_model, caffe_path, input_tensor, level)
+    caffe_output_dict, blob2layer_map = dump_caffe_model(caffe_path, input_tensor, level)
 
     if platform == 'tflite':
         input_tensor = input_tensor.transpose(0, 2, 3, 1)

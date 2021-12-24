@@ -13,7 +13,12 @@ def shape_proto2list(proto_shape):
 
 
 def onnx_run(model, input_tensor):
-    onnx_session = onnxruntime.InferenceSession(model.SerializeToString())
+    onnxruntime.set_default_logger_severity(4)
+    if onnxruntime.get_device() == 'GPU':
+        onnx_session = onnxruntime.InferenceSession(model.SerializeToString(), providers=['CUDAExecutionProvider', 'CPUExecutionProvider'])
+    if onnxruntime.get_device() == 'CPU':
+        onnx_session = onnxruntime.InferenceSession(model.SerializeToString(), providers=['CPUExecutionProvider'])
+
 
     input_name = []
     for node in onnx_session.get_inputs():
@@ -28,6 +33,7 @@ def onnx_run(model, input_tensor):
         input_feed[name] = input_tensor
 
     return onnx_session.run(output_name, input_feed=input_feed)
+
 
 def get_output(model, input_tensor, blob_name):
     for value_info in model.graph.value_info:
