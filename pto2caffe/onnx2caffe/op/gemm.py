@@ -5,6 +5,7 @@ from onnx2caffe.op.operator import Operator
 
 logger = logging.getLogger('onnx2caffe')
 
+
 class InnerProduct(Operator):
 
     def __init__(self, model, node, index):
@@ -12,9 +13,11 @@ class InnerProduct(Operator):
         self.inner_product_param = dict()
         self.setInited()
 
+
     @property
     def type(self):
         return 'InnerProduct'
+
 
     def parse(self):
         logger.debug("Parsing %s...", self.type)

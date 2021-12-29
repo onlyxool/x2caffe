@@ -18,6 +18,7 @@ from onnx2caffe.op.reduce import Reduce
 from onnx2caffe.op.binary import Binary
 from onnx2caffe.op.concat import Concat
 from onnx2caffe.op.resize import Resize
+from onnx2caffe.op.matmul import MatMul
 from onnx2caffe.op.customop import Mish
 from onnx2caffe.op.reshape import Reshape #Not Finish yet
 from onnx2caffe.op.pooling import Pooling
@@ -53,7 +54,7 @@ OpMap = {
     'Sum': Binary,
     'Div': Binary,
     'Split': Slice,
-    'MatMul': Binary,
+    'MatMul': MatMul,
     'Concat': Concat,
     'Resize': Resize,
     'Dropout': Dropout,

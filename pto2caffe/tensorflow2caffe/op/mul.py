@@ -30,7 +30,7 @@ class Scale(Operator):
 
         if self.op_code == 'BiasAdd':
             self.bias = self.inputs_buf[1]
-            if self.inputs_shape[1] != []: 
+            if self.inputs_shape[1] != []:
                 self.scale_param['axis'] = self.inputs_shape[0].index(self.inputs_shape[1][0])
             self.scale_param['bias_term'] = True
             self.attrs = self.scale_param
@@ -59,7 +59,7 @@ class Scale(Operator):
                 self.setParsed()
             else:
                 self.eltwise_param = dict()
-                self.eltwise_param['operation'] = 0 
+                self.eltwise_param['operation'] = 0
                 self.attrs = self.eltwise_param
                 self.setParsed()
         else:
