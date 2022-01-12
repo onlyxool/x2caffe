@@ -50,17 +50,23 @@ class Sub(Operator):
             else:
                 bias_index = 1
                 input_index = 0
+
+            if self.inputs_buf[1].shape == () or self.inputs_buf[1].shape == []:
+                self.inputs_buf[1] = np.ones(self.inputs_shape[0]) * self.inputs_buf[1]
+                self.inputs_shape[1] = self.inputs_shape[0]
+
             self.bias = -self.inputs_buf[bias_index]
             self.weight = np.ones(self.bias.shape, dtype=None, order='C')
 
+            # Attribute
             self.scale_param = dict()
-            self.scale_param['bias_term'] = True
-            # Axis
+
             if self.model.opset[0] >= 7:
                 self.scale_param['axis'] = self.inputs_shape[input_index].index(self.bias.shape[0])
             else:
                 self.scale_param['axis'] = self.attrs['axis']
 
+            self.scale_param['bias_term'] = True
             self.scale_param['num_axes'] = len(self.bias.shape)
             self.attrs = self.scale_param
 

@@ -1,4 +1,5 @@
 import logging
+import numpy as np
 
 from caffe_transform import caffe_layer
 from onnx2caffe.op.operator import Operator
@@ -47,6 +48,10 @@ class Mul(Operator):
             # Axis
             if self.model.opset[0] >= 7:
                 for i in range(len(self.inputs_shape[0])):
+                    if self.inputs_buf[1].shape == () or self.inputs_buf[1].shape == []:
+                        self.inputs_buf[1] = np.ones(self.inputs_shape[0]) * self.inputs_buf[1]
+                        self.inputs_shape[1] = self.inputs_shape[0]
+
                     if self.inputs_shape[0][i] == self.inputs_shape[1][0]:
                         self.scale_param['axis'] = i
                         break
