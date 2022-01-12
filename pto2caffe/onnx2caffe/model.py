@@ -1,6 +1,7 @@
 import logging
 from dump import Dump
 from onnx import numpy_helper
+from collections import Iterable
 
 from base import Base
 
@@ -11,14 +12,16 @@ from onnx2caffe.op.lrn import LRN
 from onnx2caffe.op.mul import Mul
 from onnx2caffe.op.add import Add
 from onnx2caffe.op.sub import Sub
-#from onnx2caffe.op.slice import Cut
 from onnx2caffe.op.tanh import TanH
-from onnx2caffe.op.split import Slice
+from onnx2caffe.op.power import Pow
+from onnx2caffe.op.slice import Slice
+from onnx2caffe.op.split import Split
 from onnx2caffe.op.reduce import Reduce
 from onnx2caffe.op.binary import Binary
 from onnx2caffe.op.concat import Concat
 from onnx2caffe.op.resize import Resize
 from onnx2caffe.op.matmul import MatMul
+#from onnx2caffe.op.expand import Expand
 from onnx2caffe.op.customop import Mish
 from onnx2caffe.op.reshape import Reshape #Not Finish yet
 from onnx2caffe.op.pooling import Pooling
@@ -33,6 +36,7 @@ from onnx2caffe.op.batchnorm import BatchNorm
 from onnx2caffe.op.deconv import Deconvolution
 from onnx2caffe.op.activation import Activation
 from onnx2caffe.op.upsample import Upsample #Deprecated
+from onnx2caffe.op.instancenormalization import InstanceNormalization # Not test yet
 
 from caffe_transform import save_caffe_model
 from caffe_transform import make_caffe_input_layer
@@ -49,12 +53,14 @@ OpMap = {
     'Add': Add,
     'Sub': Sub,
     'Mul': Mul,
+    'Pow': Pow,
     'Tanh': TanH,
-#    'Slice': Cut,
     'Sum': Binary,
     'Div': Binary,
-    'Split': Slice,
+    'Slice': Slice,
+    'Split': Split,
     'MatMul': MatMul,
+#    'Expand': Expand,
     'Concat': Concat,
     'Resize': Resize,
     'Dropout': Dropout,
@@ -77,9 +83,10 @@ OpMap = {
     'Softmax': Activation,
     'AveragePool': Pooling,
     'LeakyRelu': Activation,
-    'ConvTranspose': Deconvolution,
     'GlobalAveragePool': Pooling,
+    'ConvTranspose': Deconvolution,
     'BatchNormalization': BatchNorm,
+    'InstanceNormalization': InstanceNormalization,
     'Upsample': Upsample, #Deprecated
     'Mish': Mish, # Yolov4
 #    'PAD': Pad,
@@ -168,6 +175,10 @@ class Model(Base):
         for tensor in self.model.graph.sparse_initializer:
             self.input_tensor[tensor.name] =  numpy_helper.to_array(tensor)
 
+        if len(self.graph.input) == 0 or self.graph.input is None:
+            import sys
+            sys.exit('Model input can\'t be None')
+
         print('ONNX Model Input size: (opset=%d)' %self.opset[0])
         for input in self.graph.input:
             if input.name not in self.input_tensor:
@@ -175,6 +186,11 @@ class Model(Base):
                 print(input.name, self.shape[input.name])
 
         for index, node in enumerate(self.graph.node):
+            if node.op_type not in OpMap:
+                import sys
+                errorMsg = 'Error: Operator [' + node.op_type + '] does not Support.\n'
+                sys.exit(errorMsg)
+
             op = OpMap[node.op_type](self, node, index)
             op.parse()
             if op.status.parsed:

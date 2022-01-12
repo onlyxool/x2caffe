@@ -37,10 +37,10 @@ class Pad(Operator):
             pad = np.array(self.attrs['pads']).reshape(-1, len(self.inputs_shape[0]))
 
         if len(self.inputs_shape[0]) == 4:
-            self.pad['left'] = pad[0][3]
-            self.pad['right'] = pad[1][3]
-            self.pad['top'] = pad[0][2]
-            self.pad['bottom'] = pad[1][2]
+            self.pad['left']    = pad[0][3]
+            self.pad['right']   = pad[1][3]
+            self.pad['top']     = pad[0][2]
+            self.pad['bottom']  = pad[1][2]
         else:
             errorMsg = 'Input tensor has' + len(self.inputs_shape[0]) + 'dimentions'
             raise NotImplementedError(errorMsg)
