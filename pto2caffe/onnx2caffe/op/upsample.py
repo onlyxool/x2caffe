@@ -1,4 +1,4 @@
-# This operator is deprecated in latest version of ONNX
+# This operator is deprecated in opset version 10
 # Ref: https://github.com/onnx/onnx/blob/master/docs/Operators.md#Upsample
 
 import logging
@@ -30,7 +30,21 @@ class Upsample(Operator):
         # Option
         self.parseAttributes()
         self.mode = str(self.attrs['mode'], encoding = "utf8")
-        scale_factor = int(self.attrs.get('height_scale', self.inputs_buf[1][2]))
+
+        if self.model.opset[0] < 7:
+            scale_factor_height = int(self.attrs.get('height_scale'))
+            scale_factor_width = int(self.attrs.get('width_scale'))
+        elif self.model.opset[0] >= 7 and self.model.opset[0] < 9:
+            scale_factor_height = int(self.attrs['scales'][2])
+            scale_factor_width = int(self.attrs['scales'][3])
+        elif self.model.opset[0] >= 9:
+            scale_factor_height = int(self.inputs_buf[1][2])
+            scale_factor_width = int(self.inputs_buf[1][3])
+
+        if scale_factor_height == scale_factor_width:
+            scale_factor = scale_factor_width
+        else:
+            raise NotImplementedError
 
         self.convolution_param = dict()
         self.convolution_param['stride'] = scale_factor
@@ -47,8 +61,12 @@ class Upsample(Operator):
             raise NotImplementedError
 
         self.weight = np.ones((self.outputs_shape[0][1], 1, int(self.convolution_param['kernel_size']), int(self.convolution_param['kernel_size'])), dtype=int)
-        self.inputs_buf[1] = self.weight
-        self.inputs_shape[1] = self.inputs_buf[1].shape
+        if self.model.opset[0] < 9:
+            self.inputs_buf.append(self.weight)
+            self.inputs_shape.append(self.inputs_buf[1].shape)
+        else:
+            self.inputs_buf[1] = self.weight
+            self.inputs_shape[1] = self.inputs_buf[1].shape
         # TODO: self.convolution_param['pads']
 
         self.attrs = self.convolution_param
