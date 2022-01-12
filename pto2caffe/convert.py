@@ -184,16 +184,18 @@ def args_():
     args.add_argument('-std',           type = float,   required = False,   nargs='+',
             help = 'std value')
     args.add_argument('-crop_h',        type = int,     required = False,
-            help = 'Specify if we would like to randomly crop input image')
+            help = 'Specify if we would like to centrally crop input image')
     args.add_argument('-crop_w',        type = int,     required = False,
-            help = 'Specify if we would like to randomly crop input image')
+            help = 'Specify if we would like to centrally crop input image')
     args.add_argument('-auto_crop',     type = int,     required = False,   default=0,      choices=[0, 1],
-            help = 'Crop the input data automaticaly')
+            help = 'Crop the input data according to the model inputs size')
     args.add_argument('-dump',          type = int,     required = False,   default=-1,     choices=[0, 1, 2, 3],
             help = 'dump blob  1:print output.  2:print input & ouput')
     args.add_argument('-compare',       type = int,     required = False,   default=-1,     choices=[0, 1, 2],
             help = '')
-    args.add_argument('-log',     type = int,     required = False,   default = 2,   choices=[0, 1, 2],
+    args.add_argument('-log',           type = int,     required = False,   default = 2,   choices=[0, 1, 2],
+            help = '')
+    args.add_argument('-simplifier',    type = int,     required = False,   default = 0,   choices=[0, 1],
             help = '')
     args = args.parse_args()
     return args

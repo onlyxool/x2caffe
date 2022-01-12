@@ -55,7 +55,7 @@ def shape_map_nhwc2nchw(shape):
             return None
         elif shape.rank == 4:
             return [shape.as_list()[0], shape.as_list()[3], shape.as_list()[1], shape.as_list()[2]]
-        elif shape.rank >= 0 and shape.rank <= 3: 
+        elif shape.rank >= 0 and shape.rank <= 3:
             return shape.as_list()
         else:
             print('Shape Error:', shape)
@@ -181,7 +181,8 @@ def compute_scale_axis(bottom_shape, scale_shape):
 
     for i in range(len(shapeA)):
         shape_map = (shapeA[i:(len(shapeB)+i)] == shapeB)
-        if isinstance(shape_map, list) and shape_map.count(True) == len(shapeB):
+        shape_map = list(shape_map)
+        if isinstance(shape_map, type(np.array)) and shape_map.count(True) == len(shapeB):
             return i
 
     return None

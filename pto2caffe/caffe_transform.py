@@ -3,8 +3,8 @@ import sys
 import numpy as np
 
 envroot = os.environ.get('MCHOME', os.environ['PWD'])
-sys.path.append(envroot + 'toolchain/caffe/python')
-sys.path.append(envroot + 'toolchain/caffe/python/caffe')
+sys.path.append(envroot + '/toolchain/caffe/python')
+sys.path.append(envroot + '/toolchain/caffe/python/caffe')
 import caffe
 from caffe.proto import caffe_pb2
 
