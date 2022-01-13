@@ -40,7 +40,7 @@ class Convolution(Operator):
         self.convolution_param['bias_term'] = True if self.bias is not None else False
 
         # Padding
-        pad_l,pad_r,pad_t,pad_b = self.attrs.get('pads', [0,0,0,0])
+        pad_t,pad_l,pad_b,pad_r = self.attrs.get('pads', [0,0,0,0])
         for legacy in self.model.legacys:
             if legacy.outputs[0] == self.inputs[0] and legacy.op_code == 'Pad':
                 legacy_pad = legacy.pad
