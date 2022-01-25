@@ -24,28 +24,51 @@ class Pooling(Operator):
 
         # Options
         self.parseAttributes()
+
         if self.op_code == 'MaxPool':
             self.pooling_param['pool'] = 0
-            self.pooling_param['kernel_h'] = self.attrs['kernel_shape'][0]
-            self.pooling_param['kernel_w'] = self.attrs['kernel_shape'][1]
+            self.pooling_param['kernel_h'] = kernel_h = self.attrs['kernel_shape'][0]
+            self.pooling_param['kernel_w'] = kernel_w = self.attrs['kernel_shape'][1]
         elif self.op_code == 'AveragePool':
             self.pooling_param['pool'] = 1
-            self.pooling_param['kernel_h'] = self.attrs['kernel_shape'][0]
-            self.pooling_param['kernel_w'] = self.attrs['kernel_shape'][1]
+            self.pooling_param['kernel_h'] = kernel_h = self.attrs['kernel_shape'][0]
+            self.pooling_param['kernel_w'] = kernel_w = self.attrs['kernel_shape'][1]
         elif self.op_code == 'GlobalAveragePool':
             self.pooling_param['pool'] = 1
-            self.pooling_param['kernel_h'] = self.inputs_shape[0][2]
-            self.pooling_param['kernel_w'] = self.inputs_shape[0][3]
+            self.pooling_param['global_pooling'] = True
         else:
             raise NotImplementedError(self.op_code)
+
+        if 'dilations' in self.attrs and self.attrs['dilations'] != [1, 1]:
+            raise NotImplementedError('Caffe Pooling don\'t support dilation')
 
         strides = self.attrs.get('strides', [1, 1])
         self.pooling_param['stride_h'] = strides[0]
         self.pooling_param['stride_w'] = strides[1]
-        self.pooling_param['ceil_mode'] = self.attrs.get('ceil_mode', False)
+        self.pooling_param['ceil_mode'] = True if self.attrs.get('ceil_mode', False) else False
 
         # Padding
         pad_t,pad_l,pad_b,pad_r = self.attrs.get('pads', [0,0,0,0])
+
+        auto_pad_mode = self.attrs.get('auto_pad', b'NOTSET').decode('utf-8')
+        if auto_pad_mode != 'NOTSET' and auto_pad_mode != 'VALID':
+            pad_h = (self.outputs_shape[0][2] - 1) * strides[0] + ((kernel_h - 1)+1) - self.inputs_shape[0][2]
+            pad_w = (self.outputs_shape[0][3] - 1) * strides[1] + ((kernel_w - 1)+1) - self.inputs_shape[0][3]
+
+            pad_t = pad_b = int(pad_h / 2)
+            if (pad_h % 2) != 0:
+                if auto_pad_mode == 'SAME_UPPER':
+                    pad_b += 1
+                elif auto_pad_mode == 'SAME_LOWER':
+                    pad_t += 1
+
+            pad_l = pad_r = int(pad_w / 2)
+            if (pad_w % 2) != 0:
+                if auto_pad_mode == 'SAME_UPPER':
+                    pad_r += 1
+                elif auto_pad_mode == 'SAME_LOWER':
+                    pad_l += 1
+
         for legacy in self.model.legacys:
             if legacy.outputs[0] == self.inputs[0] and legacy.op_code == 'Pad':
                 legacy_pad = legacy.pad

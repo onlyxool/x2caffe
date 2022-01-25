@@ -33,14 +33,38 @@ class Deconvolution(Operator):
         # Option
         self.parseAttributes()
         self.convolution_param['num_output'] = self.outputs_shape[0][1]
-        self.convolution_param['stride'] = self.attrs.get('strides', [1, 1]) 
-        self.convolution_param['dilation'] = self.attrs.get('dilations', [1, 1]) 
+        self.convolution_param['stride'] = stride = self.attrs.get('strides', [1, 1])
+        self.convolution_param['dilation'] = self.attrs.get('dilations', [1, 1])
         self.convolution_param['group'] = self.attrs.get('group', 1)
-        self.convolution_param['kernel_size'] = self.attrs['kernel_shape']
+        self.convolution_param['kernel_size'] = kernel_size = self.attrs['kernel_shape']
         self.convolution_param['bias_term'] = True if self.bias is not None else False
 
         # Padding
         pad_t,pad_l,pad_b,pad_r = self.attrs.get('pads', [0,0,0,0])
+
+        auto_pad_mode = self.attrs.get('auto_pad', b'NOTSET').decode('utf-8')
+        if auto_pad_mode != 'NOTSET' and auto_pad_mode != 'VALID':
+            output_h = stride[0] * (self.inputs_shape[0][2] - 1) + kernel_size[0]
+            output_h = stride[1] * (self.inputs_shape[0][3] - 1) + kernel_size[1]
+
+            pad_h = self.outputs_shape[0][2] - output_h
+            pad_w = self.outputs_shape[0][3] - output_w
+
+            from math import ceil
+            pad_t = pad_b = ceil(pad_h / 2)
+            if (pad_h % 2) != 0:
+                if auto_pad_mode == 'SAME_UPPER':
+                    pad_b += 1
+                elif auto_pad_mode == 'SAME_LOWER':
+                    pad_t += 1
+
+            pad_l = pad_r = ceil(pad_w / 2)
+            if (pad_w % 2) != 0:
+                if auto_pad_mode == 'SAME_UPPER':
+                    pad_r += 1
+                elif auto_pad_mode == 'SAME_LOWER':
+                    pad_l += 1
+
         for legacy in self.model.legacys:
             if legacy.outputs[0] == self.inputs[0] and legacy.op_code == 'Pad':
                 legacy_pad = legacy.pad
