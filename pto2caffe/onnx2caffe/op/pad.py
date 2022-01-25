@@ -6,6 +6,7 @@ from onnx2caffe.op.operator import Operator
 
 logger = logging.getLogger('onnx2caffe')
 
+
 class Pad(Operator):
 
     def __init__(self, model, node, index):
