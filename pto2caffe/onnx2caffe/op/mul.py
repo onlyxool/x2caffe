@@ -7,7 +7,6 @@ from onnx2caffe.op.operator import Operator
 logger = logging.getLogger('onnx2caffe')
 
 
-
 class Mul(Operator):
 
     def __init__(self, model, node, index):
@@ -33,10 +32,6 @@ class Mul(Operator):
 
         # Option
         self.parseAttributes()
-
-        for legacy in self.model.legacys:
-            if legacy.outputs[0] == self.inputs[1] and legacy.type == 'Constant':
-                self.inputs_buf[1] = legacy.inputs_buf[0]
 
         if self.inputs_buf[0] is None and self.inputs_buf[1] is None:
             self.eltwise_param = dict()

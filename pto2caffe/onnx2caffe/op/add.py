@@ -7,7 +7,6 @@ from onnx2caffe.op.operator import Operator
 logger = logging.getLogger('onnx2caffe')
 
 
-
 class Add(Operator):
 
     def __init__(self, model, node, index):
@@ -34,35 +33,31 @@ class Add(Operator):
         # Option
         self.parseAttributes()
 
-        for legacy in self.model.legacys:
-            for i, input in enumerate(self.inputs):
-                if input == legacy.outputs[0] and legacy.type == 'Constant':
-                    self.inputs_buf[i] = legacy.inputs_buf[0]
-
         if self.inputs_buf[0] is None and self.inputs_buf[1] is None:
             self.eltwise_param = dict()
             self.eltwise_param['operation'] = 1 # Caffe Eltwise SUM
             self.attrs = self.eltwise_param
         else:
-            self.weight = np.ones(self.inputs_shape[0], dtype=None, order='C')
-
             if self.inputs_buf[0] is not None:
                 bias_index = 0
                 input_index = 1
             else:
                 bias_index = 1
                 input_index = 0
+
+            self.weight = np.ones(self.inputs_shape[bias_index], dtype=float, order='C')
             self.bias = self.inputs_buf[bias_index]
 
             self.scale_param = dict()
             self.scale_param['bias_term'] = True
-            # Axis
-            if self.model.opset[0] >= 7:
-                self.scale_param['axis'] = self.inputs_shape[input_index].index(self.bias.shape[0])
-            else:
-                self.scale_param['axis'] = self.attrs['axis']
 
-            self.scale_param['num_axes'] = len(self.bias.shape)
+            # Axis
+            if self.bias.shape != () and self.bias.shape != []:
+                self.scale_param['axis'] = self.inputs_shape[input_index].index(self.bias.shape[0])
+                self.scale_param['num_axes'] = len(self.bias.shape)
+            else:
+                self.scale_param['num_axes'] = 0
+
             self.attrs = self.scale_param
 
         self.setParsed()

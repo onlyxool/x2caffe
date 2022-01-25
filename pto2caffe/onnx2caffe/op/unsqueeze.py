@@ -31,8 +31,7 @@ class Unsqueeze(Operator):
         self.parseAttributes()
 
         if self.inputs_buf[0] is not None:
-            self.isLegacy = True
-            self.inputs_buf[0] = self.inputs_buf[0].reshape(self.outputs_shape[0])
+            self.model.input_tensor[self.outputs[0]] = self.inputs_buf[0].reshape(self.outputs_shape[0])
         else:
             self.reshape_param = dict(shape=dict(dim=self.outputs_shape[0]))
             self.attrs = self.reshape_param
@@ -44,4 +43,3 @@ class Unsqueeze(Operator):
             layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, reshape_param=self.reshape_param)
             self.setConverted()
             return [layer]
-

@@ -27,8 +27,6 @@ class Constant(Operator):
         self.parseAttributes()
         self.model.input_tensor[self.node.output[0]] = self.attrs['value']
 
-        self.isLegacy = True
-
 
     def convert(self):
         pass

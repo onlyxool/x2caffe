@@ -58,13 +58,7 @@ class Activation(Operator):
                 self.relux_param['x'] = self.inputs_buf[2]
             self.attrs = self.relux_param
         elif self.op_code == 'PRelu':
-            for legacy in self.model.legacys:
-                for i, input in enumerate(self.inputs):
-                    if input == legacy.outputs[0]:
-                        self.inputs_buf[i] = legacy.inputs_buf[0]
-
             self.slope = self.inputs_buf[1]
-#            print(self.slope.shape)
             self.prelu_param = dict()
             if self.slope.shape[0] == 1:
                 self.prelu_param['channel_shared'] = False

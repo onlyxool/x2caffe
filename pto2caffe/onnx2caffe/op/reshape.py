@@ -6,7 +6,6 @@ from onnx2caffe.op.operator import Operator
 logger = logging.getLogger('onnx2caffe')
 
 
-
 class Reshape(Operator):
 
     def __init__(self, model, node, index):
@@ -32,8 +31,7 @@ class Reshape(Operator):
         self.parseAttributes()
 
         if self.inputs_buf[0] is not None:
-            self.isLegacy = True
-            self.inputs_buf[0] = self.inputs_buf[0].reshape(self.outputs_shape[0])
+            self.model.input_tensor[self.outputs[0]] = self.inputs_buf[0].reshape(self.outputs_shape[0])
         else:
             if 'shape' in self.attrs:
                 self.reshape_param = dict(shape=dict(dim=self.attrs['shape']))
