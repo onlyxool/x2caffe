@@ -5,6 +5,7 @@ from onnx2caffe.op.operator import Operator
 
 logger = logging.getLogger('onnx2caffe')
 
+
 class Slice(Operator):
 
     def __init__(self, model, node, index):
@@ -28,20 +29,23 @@ class Slice(Operator):
         self.parseAttributes()
 
         if self.model.opset[0] < 10:
-            num_slices = len(self.attr['starts'])
-            starts = self.attr['starts']
-            axes = self.attr['axes']
-            ends = self.attr['ends']
+            num_slices = len(self.attrs['starts'])
+            starts = self.attrs['starts']
+            ends = self.attrs['ends']
+            axes = self.attrs.get('axes', [None, None])
             steps = [1]*num_slices
         else:
             num_slices = len(self.inputs_buf[1])
             starts = list(self.inputs_buf[1])
             ends = list(self.inputs_buf[2])
-            axes = list(self.inputs_buf[3])
+            axes = list(self.inputs_buf[3]) if len(self.inputs_buf) >= 4 else None
             steps = list(self.inputs_buf[4]) if len(self.inputs_buf) >= 5 else [1]*num_slices
 
-        if num_slices > 1:
+        if len(starts) > 1 or len(ends) > 1 or len(axes) > 1 or num_slices > 1:
             raise NotImplementedError
+
+        if ends[0] == 9223372036854775807: # int max
+            ends[0] = self.inputs_shape[0][axes[0]]
 
         if max(steps) == 1:
             axis_length = self.inputs_shape[0][axes[0]]
@@ -66,12 +70,9 @@ class Slice(Operator):
 
 
     def convert(self):
-        layers = []
-
         layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, slice_param=self.slice_param)
-        layers.append(layer)
 
         self.setConverted()
 
-        return layers
+        return [layer]
 
