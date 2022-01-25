@@ -1,3 +1,4 @@
+import sys
 import logging
 from dump import Dump
 from onnx import numpy_helper
@@ -89,14 +90,6 @@ OpMap = {
     'InstanceNormalization': InstanceNormalization,
     'Upsample': Upsample, #Deprecated
     'Mish': Mish, # Yolov4
-#    'PAD': Pad,
-#    'RESHAPE': Reshape,
-#    'SOFTMAX': Softmax,
-#    'ConstantOfShape': Constant,
-#    'AVERAGE_POOL_2D': AvgPool2d,
-#    'FULLY_CONNECTED': InnerProduct,
-#    'DEPTHWISE_CONV_2D': Convolution,
-#    'RESIZE_NEAREST_NEIGHBOR': Resize,
 }
 
 
@@ -110,10 +103,10 @@ class Model(Base):
         self.opset = []
         for i in range(len(onnx_model.opset_import)):
             opset_version = onnx_model.opset_import[i].version
-            if opset_version <= 13:
+            if opset_version <= 13 and opset_version > 3:
                 self.opset.append(opset_version)
             else:
-                raise NotImplementedError('Model opset > 13, it may cause incompatiblility issue.')
+                sys.exit('Error: Model opset > 13 or <= 3, it may cause incompatiblility issue. (opset:{})\n'.format(opset_version))
 
         self.param = param
         self.operators = []
@@ -149,17 +142,19 @@ class Model(Base):
 
 
     def preprocess(self):
-        nodes = self.graph.node
+#        nodes = self.graph.node
+#        self.ReplaceActivation(nodes, ['Exp', 'Add' , 'Log', 'Tanh', 'Mul'], 'Mish')
+#        self.ReplaceActivation(nodes, ['Add', 'Clip' , 'Div', 'Mul'], 'Hardswish')
+#        self.ReplaceActivation(nodes, ['Sigmoid', 'Mul'], 'Swish')
 
-        self.ReplaceActivation(nodes, ['Exp', 'Add' , 'Log', 'Tanh', 'Mul'], 'Mish')
-        self.ReplaceActivation(nodes, ['Add', 'Clip' , 'Div', 'Mul'], 'Hardswish')
-        self.ReplaceActivation(nodes, ['Sigmoid', 'Mul'], 'Swish')
+        for index, node in enumerate(self.graph.node):
+            if node.op_type == 'Pad':
+                print(node.name)
+        pass
 
 
     def parse(self):
         logger.debug("Parsing the ONNX Model...")
-
-#        self.preprocess()
 
         # Get Shape
         for value_info in self.graph.value_info:
@@ -176,8 +171,7 @@ class Model(Base):
             self.input_tensor[tensor.name] =  numpy_helper.to_array(tensor)
 
         if len(self.graph.input) == 0 or self.graph.input is None:
-            import sys
-            sys.exit('Model input can\'t be None')
+            sys.exit('model input can\'t be none')
 
         print('ONNX Model Input size: (opset=%d)' %self.opset[0])
         for input in self.graph.input:
@@ -187,7 +181,6 @@ class Model(Base):
 
         for index, node in enumerate(self.graph.node):
             if node.op_type not in OpMap:
-                import sys
                 errorMsg = 'Error: Operator [' + node.op_type + '] does not Support.\n'
                 sys.exit(errorMsg)
 
