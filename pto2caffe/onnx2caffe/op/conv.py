@@ -34,7 +34,10 @@ class Convolution(Operator):
         self.parseAttributes()
 
         self.convolution_param['num_output'] = self.weight.shape[0]
-        self.convolution_param['stride'] = stride = self.attrs.get('strides', [1, 1])
+
+        self.convolution_param['stride_h'] = stride_h = self.attrs.get('strides', [1, 1])[0]
+        self.convolution_param['stride_w'] = stride_w = self.attrs.get('strides', [1, 1])[1]
+
         self.convolution_param['dilation'] = self.attrs.get('dilations', [1, 1])
         self.convolution_param['group'] = self.attrs.get('group', 1)
         self.convolution_param['kernel_size'] = self.attrs['kernel_shape']
@@ -45,8 +48,8 @@ class Convolution(Operator):
 
         auto_pad_mode = self.attrs.get('auto_pad', b'NOTSET').decode('utf-8')
         if auto_pad_mode != 'NOTSET' and auto_pad_mode != 'VALID':
-            output_h = (self.inputs_shape[0][2]-self.inputs_shape[1][2]) / stride[0] + 1
-            output_w = (self.inputs_shape[0][3]-self.inputs_shape[1][3]) / stride[1] + 1
+            output_h = (self.inputs_shape[0][2]-self.inputs_shape[1][2]) / stride_h + 1
+            output_w = (self.inputs_shape[0][3]-self.inputs_shape[1][3]) / stride_w + 1
 
             pad_h = self.outputs_shape[0][2] - output_h
             pad_w = self.outputs_shape[0][3] - output_w

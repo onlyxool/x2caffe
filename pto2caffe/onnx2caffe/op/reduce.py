@@ -33,7 +33,8 @@ class Reduce(Operator):
             self.pooling_param['pool'] = 1 # Pooling.AVE
             self.pooling_param['kernel_h'] = self.inputs_shape[0][2]
             self.pooling_param['kernel_w'] = self.inputs_shape[0][3]
-            self.pooling_param['stride'] = 1
+            self.pooling_param['stride_h'] = 1
+            self.pooling_param['stride_w'] = 1
             self.pooling_param['ceil_mode'] = False
         else:
             raise NotImplementedError(self.op_code)

@@ -47,7 +47,8 @@ class Upsample(Operator):
             raise NotImplementedError
 
         self.convolution_param = dict()
-        self.convolution_param['stride'] = scale_factor
+        self.convolution_param['stride_h'] = scale_factor
+        self.convolution_param['stride_w'] = scale_factor
         self.convolution_param['group'] = self.inputs_shape[0][1]
         self.convolution_param['num_output'] = self.outputs_shape[0][1]
         self.convolution_param['bias_term'] = False

@@ -61,7 +61,8 @@ class Resize(Operator):
                 self.convolution_param['bias_term'] = False
                 self.convolution_param['num_output'] = self.outputs_shape[0][1]
                 self.convolution_param['kernel_size'] = int(scale_factor)
-                self.convolution_param['stride'] = int(scale_factor)
+                self.convolution_param['stride_h'] = int(scale_factor)
+                self.convolution_param['stride_w'] = int(scale_factor)
                 self.convolution_param['group'] = self.inputs_shape[0][1]
                 self.attrs = self.convolution_param
                 # TODO: self.convolution_param['pads']

@@ -33,7 +33,10 @@ class Deconvolution(Operator):
         # Option
         self.parseAttributes()
         self.convolution_param['num_output'] = self.outputs_shape[0][1]
-        self.convolution_param['stride'] = stride = self.attrs.get('strides', [1, 1])
+
+        self.convolution_param['stride_h'] = stride_h = self.attrs.get('strides', [1, 1])[0]
+        self.convolution_param['stride_w'] = stride_w = self.attrs.get('strides', [1, 1])[1]
+
         self.convolution_param['dilation'] = self.attrs.get('dilations', [1, 1])
         self.convolution_param['group'] = self.attrs.get('group', 1)
         self.convolution_param['kernel_size'] = kernel_size = self.attrs['kernel_shape']
@@ -44,8 +47,8 @@ class Deconvolution(Operator):
 
         auto_pad_mode = self.attrs.get('auto_pad', b'NOTSET').decode('utf-8')
         if auto_pad_mode != 'NOTSET' and auto_pad_mode != 'VALID':
-            output_h = stride[0] * (self.inputs_shape[0][2] - 1) + kernel_size[0]
-            output_h = stride[1] * (self.inputs_shape[0][3] - 1) + kernel_size[1]
+            output_h = stride_h * (self.inputs_shape[0][2] - 1) + kernel_size[0]
+            output_w = stride_w * (self.inputs_shape[0][3] - 1) + kernel_size[1]
 
             pad_h = self.outputs_shape[0][2] - output_h
             pad_w = self.outputs_shape[0][3] - output_w

@@ -50,7 +50,8 @@ class MatMul(Operator):
 
             # Options
             self.convolution_param['num_output'] = self.weight.shape[0]
-            self.convolution_param['stride'] = [weight_size, weight_size]
+            self.convolution_param['stride_h'] = weight_size
+            self.convolution_param['stride_w'] = weight_size
             self.convolution_param['dilation'] = [1, 1]
             self.convolution_param['group'] = 1
             self.convolution_param['kernel_size'] = [weight_size, weight_size]
