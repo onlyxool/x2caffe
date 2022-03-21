@@ -12,27 +12,25 @@ class Reduce(Operator):
         self.pooling_param = dict()
         self.setInited()
 
+
     @property
     def type(self):
         return 'Pooling'
-        
+
+
     def parse(self):
         logger.debug("Parsing %s...", self.type)
-
-
 
         self.parseInput()
         self.parseOutput()
 
         # Options
         self.parseAttributes()
-        assert(self.attrs['keepdims'] == 0), 'Do Not Support keepdims == 1'
-        assert(self.attrs['axes'] == [2, 3]), 'Do Not Support reduce on axis 0 or 1'
 
         if self.op_code == 'ReduceMean':
             self.pooling_param['pool'] = 1 # Pooling.AVE
             self.pooling_param['kernel_h'] = self.inputs_shape[0][2]
-            self.pooling_param['kernel_w'] = self.inputs_shape[0][3]
+            self.pooling_param['kernel_w'] = self.inputs_shape[0][3] if len(self.inputs_shape[0]) == 4 else 1
             self.pooling_param['stride_h'] = 1
             self.pooling_param['stride_w'] = 1
             self.pooling_param['ceil_mode'] = False
