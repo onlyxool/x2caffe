@@ -28,7 +28,7 @@ class Pad(Operator):
 
         # Option
         self.parseAttributes()
-        if self.attrs.get('value', 0.0) != 0.0 or self.attrs['mode'].decode() != 'constant':
+        if self.attrs.get('value', 0.0) != 0.0 or self.attrs.get('mode', b'constant').decode() != 'constant':
             print('Warning: Caffe support constant Pad mode only.')
 #            raise NotImplementedError('Caffe support constant Pad mode only.')
 
