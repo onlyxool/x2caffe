@@ -15,6 +15,7 @@ from onnx2caffe.op.add import Add
 from onnx2caffe.op.sub import Sub
 from onnx2caffe.op.tanh import TanH
 from onnx2caffe.op.power import Pow
+from onnx2caffe.op.sqrt import Sqrt
 from onnx2caffe.op.slice import Slice
 from onnx2caffe.op.split import Split
 from onnx2caffe.op.reduce import Reduce
@@ -56,6 +57,7 @@ OpMap = {
     'Mul': Mul,
     'Pow': Pow,
     'Tanh': TanH,
+    'Sqrt': Sqrt,
     'Sum': Binary,
     'Div': Binary,
     'Slice': Slice,
@@ -147,11 +149,15 @@ class Model(Base):
 #        self.ReplaceActivation(nodes, ['Add', 'Clip' , 'Div', 'Mul'], 'Hardswish')
 #        self.ReplaceActivation(nodes, ['Sigmoid', 'Mul'], 'Swish')
 
-        for index, node in enumerate(self.graph.node):
-            if node.op_type == 'Pad':
-                print(node.name)
-        pass
+        if self.graph.node[0].op_type == 'Transpose' and self.model.producer_name == 'tf2onnx':
+            print(self.model.producer_name)
+            for attr in self.graph.node[0].attribute:
+                if attr.name == 'perm' and list(attr.ints) == [0, 3, 1, 2]:
+                    if self.graph.node[1].input[0] == self.graph.node[0].output[0]:
+                        self.graph.node[1].input[0] = self.graph.node[0].input[0]
 
+                    self.graph.node.remove(self.graph.node[0])
+                    self.layout = 'NHWC'
 
     def parse(self):
         logger.debug("Parsing the ONNX Model...")
@@ -199,6 +205,7 @@ class Model(Base):
         logger.debug("Converting the Model...")
 
         for index, input in enumerate(self.inputs):
+#self.layers.append(make_caffe_input_layer(input, [self.shape[input][0], self.shape[input][3], self.shape[input][1], self.shape[input][2],], index, self.param)) For tf2onnx
             self.layers.append(make_caffe_input_layer(input, self.shape[input], index, self.param))
         for op in self.operators:
             logger.debug(op)
