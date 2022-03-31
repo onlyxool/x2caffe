@@ -145,6 +145,7 @@ static void show_usage()
     fprintf(stderr, "              pnnx yolov5s.pt inputshape=[1,3,640,640] inputshape2=[1,3,320,320] device=gpu moduleop=models.common.Focus,models.yolo.Detect\n");
 }
 
+static std::vector<std::string> ops_name_vec;
 int main(int argc, char** argv)
 {
     if (argc < 2)
@@ -300,7 +301,7 @@ int main(int argc, char** argv)
 
     fprintf(stderr, "############# pass_level0\n");
 
-    pnnx::pass_level0(mod, g, input_tensors, input_tensors2, module_operators);
+    pnnx::pass_level0(mod, g, input_tensors, input_tensors2, module_operators, ops_name_vec);
 
     //     g->dump();
 
@@ -357,3 +358,325 @@ int main(int argc, char** argv)
 
     return 0;
 }
+
+
+static pnnx::Graph pnnx_graph;
+static torch::jit::Module model;
+static std::map<std::string, at::Tensor> layer_output;
+extern "C" {
+void SplitString(const std::string& s, std::vector<std::string>& v, const std::string& c)
+{
+    std::string::size_type pos1, pos2;
+    pos2 = s.find(c);
+    pos1 = 0;
+    while(std::string::npos != pos2) {
+        v.push_back(s.substr(pos1, pos2-pos1));
+
+        pos1 = pos2 + c.size();
+        pos2 = s.find(c, pos1);
+    }
+
+    if(pos1 != s.length())
+        v.push_back(s.substr(pos1));
+}
+
+// Model
+int parse(char *ptPath, char *inputs_shape)
+{
+    std::string ptPathStr = std::string(ptPath);
+    std::string device = "cpu";
+
+    std::cout << "Parsing model: " << ptPathStr << std::endl;
+
+    model = torch::jit::load(ptPathStr);
+    model.eval();
+
+    auto graph = model.get_method("forward").graph();
+
+    std::string inputs_shape_str = inputs_shape;
+
+    std::vector<std::string> shape_vec;
+    SplitString(inputs_shape_str, shape_vec, "|");
+
+    std::vector<at::Tensor> input_tensors;
+    std::vector<std::vector<int64_t> > input_shapes = parse_comma_int_array_list(const_cast<char*>(shape_vec[0].data()));
+    for (auto shape : input_shapes) {
+        at::Tensor t = torch::ones(shape);
+        if (device == "gpu")
+            t = t.cuda();
+
+        input_tensors.push_back(t);
+    }
+
+    std::vector<at::Tensor> input_tensors2;
+    std::vector<std::vector<int64_t> > input_shapes2;
+    if (shape_vec.size() >= 2) {
+        input_shapes2 = parse_comma_int_array_list(const_cast<char*>(shape_vec[1].data()));
+    }
+    for (auto shape : input_shapes2) {
+        at::Tensor t = torch::ones(shape);
+        if (device == "gpu")
+            t = t.cuda();
+
+        input_tensors2.push_back(t);
+    }
+
+    std::vector<std::string> module_operators;
+
+    pnnx::pass_level0(model, graph, input_tensors, input_tensors2, module_operators, ops_name_vec);
+    pnnx::pass_level1(model, graph, pnnx_graph);
+    pnnx::pass_level2(pnnx_graph);
+    pnnx::pass_level3(pnnx_graph);
+    pnnx::pass_level4(pnnx_graph);
+    pnnx::pass_level5(pnnx_graph);
+
+    std::cout << "Parsing Done" << std::endl;
+    return 0;
+}
+
+int model_forward(char *input_buf, char *inputs_shape)
+{
+    std::string device = "cpu";
+
+    auto graph = model.get_method("forward").graph();
+
+    std::string inputs_shape_str = inputs_shape;
+    std::vector<std::string> shape_vec;
+    SplitString(inputs_shape_str, shape_vec, "|");
+
+    std::vector<at::Tensor> input_tensors;
+    std::vector<std::vector<int64_t> > input_shapes = parse_comma_int_array_list(const_cast<char*>(shape_vec[0].data()));
+    for (auto shape : input_shapes) {
+        at::Tensor t = torch::ones(shape);
+        memcpy(t.cpu().data_ptr(), input_buf, 4 * sizeof(torch::kU8) * t.numel());
+        if (device == "gpu")
+            t = t.cuda();
+
+        input_tensors.push_back(t);
+    }
+
+    std::vector<torch::jit::IValue> inputs;
+    for (size_t i = 0; i < input_tensors.size(); i++) {
+        const at::Tensor& it = input_tensors[i];
+
+        inputs.push_back(it);
+        graph->inputs()[1 + i]->setType(c10::TensorType::create(it));
+    }
+
+    auto outputs = model.forward(inputs).toTuple();
+    int index = 0;
+    for (auto e : outputs->elements()) {
+        layer_output[ops_name_vec[index]] = e.toTensor();
+        index++;
+    }
+
+    return index;
+}
+
+//Get Output
+int get_ops_output(char* op_name, char* buf)
+{
+    if (layer_output[op_name].numel() > 0) {
+        memcpy(buf, layer_output[op_name].data_ptr(), layer_output[op_name].data().numel() * layer_output[op_name].data().itemsize());
+    }
+
+    return layer_output[op_name].numel();
+}
+
+// Operator
+unsigned int get_ops_len()
+{
+    return (int)pnnx_graph.ops.size();
+}
+
+const char *get_ops_type(unsigned int ops_no)
+{
+    return pnnx_graph.ops[ops_no]->type.c_str();
+}
+
+const char *get_ops_name(unsigned int ops_no)
+{
+    return pnnx_graph.ops[ops_no]->name.c_str();
+}
+
+// Input Operand
+unsigned int get_inputs_len(unsigned int ops_no)
+{
+    return pnnx_graph.ops[ops_no]->inputs.size();
+}
+
+const char *get_input_name(unsigned int ops_no, unsigned int input_no)
+{
+    return pnnx_graph.ops[ops_no]->inputs[input_no]->name.c_str();
+}
+
+const char *get_ops_input_shape(unsigned int ops_no, unsigned int input_no)
+{
+    std::string input_shape;
+
+    if (input_no > pnnx_graph.ops[ops_no]->inputs.size() - 1)
+        return input_shape.c_str();
+
+    for (auto dim : pnnx_graph.ops[ops_no]->inputs[input_no]->shape) {
+        input_shape = input_shape + std::to_string(dim) + ",";
+    }
+    if (input_shape.length() > 0)
+        input_shape.pop_back();
+
+    return input_shape.c_str();
+}
+
+// Output Operand
+unsigned int get_outputs_len(unsigned int ops_no)
+{
+    return pnnx_graph.ops[ops_no]->outputs.size();
+}
+
+const char *get_output_name(unsigned int ops_no, unsigned int output_no)
+{
+    return pnnx_graph.ops[ops_no]->outputs[output_no]->name.c_str();
+}
+
+const char *get_ops_output_shape(unsigned int ops_no, unsigned int output_no)
+{
+    std::string output_shape;
+
+    if (output_no > pnnx_graph.ops[ops_no]->outputs.size() - 1)
+        return output_shape.c_str();
+
+    for (auto dim : pnnx_graph.ops[ops_no]->outputs[output_no]->shape) {
+        output_shape = output_shape + std::to_string(dim) + ",";
+    }
+    if (output_shape.length() > 0)
+        output_shape.pop_back();
+
+    return output_shape.c_str();
+}
+
+
+// Attribute
+unsigned int get_ops_attrs_len(unsigned int ops_no)
+{
+    return pnnx_graph.ops[ops_no]->attrs.size();
+}
+
+const char *get_ops_attrs_names(unsigned int ops_no)
+{
+    std::string attrs_names;
+    for (const auto& attr_item : pnnx_graph.ops[ops_no]->attrs) {
+        attrs_names = attrs_names + attr_item.first + ",";
+    }
+
+    if (attrs_names.length() > 0)
+        attrs_names.pop_back();
+
+    return attrs_names.c_str();
+}
+
+unsigned int get_ops_attr_type(unsigned int ops_no, char *attr_name)
+{
+    std::string name = attr_name;
+    if (pnnx_graph.ops[ops_no]->attrs.find(name) == pnnx_graph.ops[ops_no]->attrs.end())
+        return -1;
+    else
+        return pnnx_graph.ops[ops_no]->attrs[name].type;
+}
+
+const char *get_ops_attr_shape(unsigned int ops_no, char *attr_name)
+{
+    std::string attr_shape;
+    std::string name = attr_name;
+
+    for (auto dim : pnnx_graph.ops[ops_no]->attrs[name].shape) {
+        attr_shape = attr_shape + std::to_string(dim) + ",";
+    }
+    if (attr_shape.length() > 0)
+        attr_shape.pop_back();
+
+    return attr_shape.c_str();
+}
+
+unsigned int get_ops_attr_data_size(unsigned int ops_no, char *attr_name)
+{
+    std::string name = attr_name;
+
+    if (pnnx_graph.ops[ops_no]->attrs.find(name) == pnnx_graph.ops[ops_no]->attrs.end())
+        return 0;
+    else
+        return pnnx_graph.ops[ops_no]->attrs[name].data.size();
+}
+
+unsigned int get_ops_attr(unsigned int ops_no, char *attr_name, char* buf)
+{
+    std::string name = attr_name;
+
+    memcpy(buf, pnnx_graph.ops[ops_no]->attrs[name].data.data(), pnnx_graph.ops[ops_no]->attrs[name].data.size());
+
+    return pnnx_graph.ops[ops_no]->attrs.size();
+}
+
+// Parameter
+const char *get_ops_param(unsigned int ops_no)
+{
+    std::string param_str;
+
+    for (const auto& param_item : pnnx_graph.ops[ops_no]->params) {
+        param_str = param_str + param_item.first + "=";
+        const pnnx::Parameter& param = param_item.second;
+
+        if (param.type == 0) {
+            param_str += "None";
+            param_str += "@None";
+        }
+        if (param.type == 1) {
+            if (param.b)
+                param_str += "True";
+            else
+                param_str += "False";
+            param_str += "@bool";
+        }
+        if (param.type == 2) {
+            param_str += std::to_string(param.i);
+            param_str += "@int";
+        }
+        if (param.type == 3) {
+            param_str += std::to_string(param.f);
+            param_str += "@float";
+        }
+        if (param.type == 4) {
+            param_str += param.s;
+            param_str += "@string";
+        }
+        if (param.type == 5) {
+            for (size_t i = 0; i < param.ai.size(); i++) {
+                param_str += std::to_string(param.ai[i]);
+                if (i + 1 != param.ai.size())
+                    param_str += ",";
+            }
+            param_str += "@[int]";
+        }
+        if (param.type == 6) {
+            for (size_t i = 0; i < param.af.size(); i++) {
+                param_str += std::to_string(param.af[i]);
+                if (i + 1 != param.af.size())
+                    param_str += ",";
+            }
+            param_str += "@[float]";
+        }
+        if (param.type == 7) {
+            for (size_t i = 0; i < param.af.size(); i++) {
+                param_str += param.as[i].c_str();
+                if (i + 1 != param.af.size())
+                    param_str += ",";
+            }
+            param_str += "@[string]";
+        }
+        param_str += "|";
+    }
+    if (param_str.length() > 0)
+        param_str.pop_back();
+
+    return param_str.c_str();
+}
+}
+

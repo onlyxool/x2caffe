@@ -352,12 +352,15 @@ if(NOT MSVC)
     add_definitions(-Wall -Wextra)
 endif()
 
-add_executable(pnnx ${pnnx_SRCS})
+add_library(pnnx SHARED ${pnnx_SRCS})
+
 
 if(PNNX_COVERAGE)
     target_compile_options(pnnx PUBLIC -coverage -fprofile-arcs -ftest-coverage)
     target_link_libraries(pnnx PUBLIC -coverage -lgcov)
 endif()
+
+target_include_directories(pnnx PRIVATE /usr/local/envs/mc/include/python3.7m/)
 
 if(TorchVision_FOUND)
     target_link_libraries(pnnx PRIVATE TorchVision::TorchVision)
@@ -375,4 +378,4 @@ endif()
 set_target_properties(pnnx PROPERTIES INSTALL_RPATH "$ORIGIN/")
 set_target_properties(pnnx PROPERTIES MACOSX_RPATH TRUE)
 
-install(TARGETS pnnx RUNTIME DESTINATION bin)
+install(TARGETS pnnx LIBRARY DESTINATION lib)

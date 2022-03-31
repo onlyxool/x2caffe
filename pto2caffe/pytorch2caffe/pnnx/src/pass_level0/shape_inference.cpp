@@ -16,10 +16,11 @@
 
 namespace pnnx {
 
-void shape_inference(const torch::jit::Module& mod, std::shared_ptr<torch::jit::Graph>& graph, const std::vector<at::Tensor>& input_tensors, const std::vector<at::Tensor>& input_tensors2)
+void shape_inference(const torch::jit::Module& mod, std::shared_ptr<torch::jit::Graph>& graph, const std::vector<at::Tensor>& input_tensors, const std::vector<at::Tensor>& input_tensors2, std::vector<std::string>& ops_name_vec)
 {
     // collect all intermediate output tensors
     std::vector<torch::jit::Value*> values;
+    int index = 0;
     for (const auto& n : graph->nodes())
     {
         for (const auto& on : n->outputs())
@@ -29,6 +30,32 @@ void shape_inference(const torch::jit::Module& mod, std::shared_ptr<torch::jit::
                 continue;
 
             values.push_back(on);
+            index++;
+            if (n->kind() == c10::prim::CallMethod) {
+                std::deque<std::string> module_names;
+                {
+                    auto np = n->input(0)->node();
+                    while (np->hasAttribute(torch::jit::attr::name))
+                    {
+                        module_names.push_front(np->s(torch::jit::attr::name));
+                        np = np->input(0)->node();
+                    }
+                }
+
+                std::string wrapped_name;
+                auto sub_mod = mod;
+                for (auto module_name : module_names)
+                {
+                    if (wrapped_name.size() > 0)
+                        wrapped_name = wrapped_name + "." + module_name;
+                    else
+                        wrapped_name = module_name;
+                    sub_mod = sub_mod.attr(module_name).toModule();
+                }
+                ops_name_vec.push_back(wrapped_name);
+            } else {
+                ops_name_vec.push_back("None");
+            }
         }
     }
 

@@ -12,8 +12,11 @@ class Status(Enum):
     # Objects and any members have been parsed from model.
     PARSED = 2
 
-    # ONNX object has been created.
+    # Model object has been created.
     CONVERTED = 3
+
+    # Forwarded
+    FORWARDED = 4
 
     # Reserved.
     INVALID = 10
@@ -33,6 +36,10 @@ class Status(Enum):
     @property
     def converted(self):
         return self == self.CONVERTED
+
+    @property
+    def forwarded(self):
+        return self == self.FORWARDED
 
 
 class Base(ABC):
@@ -67,6 +74,9 @@ class Base(ABC):
     def setConverted(self):
         assert(self.status.parsed)
         self.status = Status.CONVERTED
+
+    def setForwarded(self):
+        self.status = Status.FORWARDED
 
     def setInvalid(self):
         self.status = Status.INVALID

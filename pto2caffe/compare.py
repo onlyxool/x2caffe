@@ -92,11 +92,13 @@ def compare(platform, target_model, caffe_path, input_tensor, level=-1):
     elif platform == 'tensorflow':
         input_tensor = input_tensor.transpose(0, 2, 3, 1)
         from tensorflow2caffe.tensorflow import get_output
+    elif platform == 'pytorch':
+        from pytorch2caffe.pytorch import get_output
     else:
         raise NotImplementedError(paltform)
 
     for blob_name in caffe_output_dict:
-        target_output = get_output(target_model, input_tensor, blob_name)
+        target_output = get_output(target_model, input_tensor, blob_name if platform != 'pytorch' else blob2layer_map[blob_name])
 
         if target_output is None:
             continue

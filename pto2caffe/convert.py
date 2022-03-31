@@ -65,12 +65,14 @@ def CheckParam(param):
 
     # model
     if not os.path.isfile(param['model']):
-        sys.exit(errorMsg + 'Model File not exist  ' + param['model'])
+        errorMsg = errorMsg + 'Model File not exist  ' + param['model']
+        sys.exit(errorMsg)
     param['model'] = os.path.abspath(os.path.normpath(param['model']))
 
     # root_folder
     if not os.path.isdir(param['root_folder']):
-        sys.exit(errorMsg + 'Illegal root_folder  ' + param['root_folder'])
+        errorMsg = errorMsg + 'Illegal root_folder  ' + param['root_folder']
+        sys.exit(errorMsg)
     param['root_folder'] = os.path.abspath(os.path.normpath(param['root_folder']))
 
     # source
@@ -86,15 +88,19 @@ def CheckParam(param):
     if isContainFile(param['root_folder'], ['bin']):
         param['file_type'] = 'raw'
         if param['dtype'] is None:
-            sys.exit(errorMsg + 'argument dtype can\'t be None')
+            errorMsg = errorMsg + 'argument dtype can\'t be None'
+            sys.exit(errorMsg)
         if param['bin_shape'] is None:
-            sys.exit(errorMsg + 'argument bin_shape can\'t be None')
+            errorMsg = errorMsg + 'argument bin_shape can\'t be None'
+            sys.exit(errorMsg)
         elif len(param['bin_shape']) != 3:
-            sys.exit(errorMsg + 'Bin file shape should be 3 dimension')
+            errorMsg = errorMsg + 'Bin file shape should be 3 dimension'
+            sys.exit(errorMsg)
     elif isContainFile(param['root_folder'], ['jpg', 'bmp', 'png', 'jpeg']):
         param['file_type'] = 'img'
     else:
-        sys.exit(errorMsg + 'Can\'t find any data file or image file in ' + param['root_folder'])
+        errorMsg = errorMsg + 'Can\'t find any data file or image file in ' + param['root_folder']
+        sys.exit(errorMsg)
 
     # BGR -> RGB
     if param['color_format'] == 'BGR':
@@ -111,6 +117,9 @@ def CheckParam(param):
             from tflite2caffe.preload import get_input_shape
         elif param['platform'] == 'onnx':
             from onnx2caffe.preload import get_input_shape
+        elif param['platform'] == 'pytorch':
+            errorMsg = errorMsg + 'Pytorch model support dynamic shape, auto_crop can\'t apply.'
+            sys.exit(errorMsg)
 
         param['input_shape'] = get_input_shape(param['model'])
 
@@ -120,7 +129,7 @@ def CheckParam(param):
             param['crop_w'] = param['input_shape'][0][-1]
         else:
             errorMsg = errorMsg + 'Model input shape parse failed, auto_crop can\'t apply.'
-
+            sys.exit(errorMsg)
 
 def Convert(param=None):
     # Set Log level

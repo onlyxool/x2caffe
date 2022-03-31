@@ -223,7 +223,7 @@ public:
     std::vector<Operator*> ops;
     std::vector<Operand*> operands;
 
-private:
+//private:
     Graph(const Graph& rhs);
     Graph& operator=(const Graph& rhs);
 };
