@@ -186,7 +186,7 @@ def args_():
             help = 'Specify the Data shape when input data is bin file, default layout is [C,H,W]')
     args.add_argument('-color_format',  type = str,     required = False,   choices=['BGR', 'RGB', 'GRAY'],
             help = 'Specify the images color format, 0:BGR 1:RGB 2:GRAY')
-    args.add_argument('-scale',         type = float,   required = False,   nargs='+',  default = [1, 1, 1],
+    args.add_argument('-scale',         type = float,   required = False,   nargs='+',      default = [1, 1, 1],
             help = 'scale value')
     args.add_argument('-mean',          type = float,   required = False,   nargs='+',
             help = 'mean value')
@@ -201,11 +201,11 @@ def args_():
     args.add_argument('-dump',          type = int,     required = False,   default=-1,     choices=[0, 1, 2, 3],
             help = 'dump blob  1:print output.  2:print input & ouput')
     args.add_argument('-compare',       type = int,     required = False,   default=-1,     choices=[0, 1, 2],
-            help = '')
-    args.add_argument('-log',           type = int,     required = False,   default = 2,   choices=[0, 1, 2],
-            help = '')
-    args.add_argument('-simplifier',    type = int,     required = False,   default = 0,   choices=[0, 1],
-            help = '')
+            help = 'Compare network output, 0:Compare latest layer 1:Compare every layer')
+    args.add_argument('-log',           type = int,     required = False,   default=2,      choices=[0, 1, 2],
+            help = 'log print level, 0:Debug 1:Info 2:Warning, 3:ERROR')
+    args.add_argument('-simplifier',    type = int,     required = False,   default=0,      choices=[0, 1],
+            help = 'simplify onnx model by onnx-simplifier')
     args = args.parse_args()
     return args
 
