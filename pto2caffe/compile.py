@@ -13,4 +13,6 @@ for path, dir_list, file_list in current_folder:
             py_file = os.path.join(path, file_name)
             py_compile.compile(file=py_file, cfile=r'{}'.format(pyc_file), optimize=-1)
 
+
+os.system('cd pytorch2caffe/pnnx/ && ./mk.sh && cd -')
 print('Compile Pto2Caffe Done')
