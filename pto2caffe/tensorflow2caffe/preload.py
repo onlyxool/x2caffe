@@ -5,26 +5,12 @@ def get_input_shape(model_path):
         graph_def = tf.compat.v1.GraphDef()
         graph_def.ParseFromString(f.read())
 
-    fuck = graph_def.node
-    for node in fuck:
+    inputs_shape = []
+    for node in graph_def.node:
         if node.op == 'Placeholder':
-            print(dir(node.attr))
+            input_shape = []
+            for dim in node.attr['shape'].shape.dim:
+                input_shape.append(dim.size if dim.size != -1 else 1)
+            inputs_shape.append(input_shape)
 
-#    tf_ops = []
-#    with tf.compat.v1.Session() as sess:
-#    # Get Ops
-#        sess.graph.as_default()
-#        tf.compat.v1.import_graph_def(graph_def, name='')
-#        tf_ops = [op for op in sess.graph.get_operations() if op.type != 'Const' and op.type != 'Identity']
-#
-#        # Graph Input
-#        inputs_shape = []
-#        for op in tf_ops:
-#            if op.type == 'Placeholder':
-#                input_shape = []
-#                for dim in op.get_attr('shape').dim:
-#                    input_shape.append(dim.size)
-#                inputs_shape.append(input_shape)
-##inputs.append(op.outputs[0].name)
-#
-#    print(inputs_shape)
+    return inputs_shape

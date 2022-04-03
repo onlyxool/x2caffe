@@ -14,6 +14,8 @@ def convert(pb_file, input_tensor, caffe_model_path, dump_level=-1, param=None):
     model.convert()
     model.save(caffe_model_path)
 
+#    input_tensor = data_preprocess(param)
+
     if dump_level >= 0:
         model.dump(graph, param['model_name'], input_tensor, dump_level)
 

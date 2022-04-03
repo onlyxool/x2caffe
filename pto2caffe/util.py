@@ -181,8 +181,8 @@ def compute_scale_axis(bottom_shape, scale_shape):
 
     for i in range(len(shapeA)):
         shape_map = (shapeA[i:(len(shapeB)+i)] == shapeB)
-        shape_map = list(shape_map)
-        if isinstance(shape_map, type(np.array)) and shape_map.count(True) == len(shapeB):
+
+        if isinstance(shape_map, list) and shape_map.count(True) == len(shapeB):
             return i
 
     return None
