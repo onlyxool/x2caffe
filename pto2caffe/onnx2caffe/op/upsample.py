@@ -18,7 +18,15 @@ class Upsample(Operator):
 
     @property
     def type(self):
-        return 'Deconvolution'
+#        return 'Deconvolution'
+        if hasattr(self, 'convolution_param'):
+            return 'Deconvolution'
+        elif hasattr(self, 'upsample_param'):
+            return 'Upsample'
+        elif hasattr(self, 'interp_param'):
+            return 'Interp'
+        else:
+            return 'Resize'
 
 
     def parse(self):
@@ -46,36 +54,59 @@ class Upsample(Operator):
         else:
             raise NotImplementedError
 
-        self.convolution_param = dict()
-        self.convolution_param['stride_h'] = scale_factor
-        self.convolution_param['stride_w'] = scale_factor
-        self.convolution_param['group'] = self.inputs_shape[0][1]
-        self.convolution_param['num_output'] = self.outputs_shape[0][1]
-        self.convolution_param['bias_term'] = False
-
         if self.mode == 'nearest':
-            self.convolution_param['kernel_size'] = scale_factor
-        elif self.mode == 'bilinear':
-            self.convolution_param['kernel_size'] = 2 * scale_factor - scale_factor % 2
-            self.convolution_param['weight_filler'] = dict(type="bilinear")
+            if scale_factor % 1 == 0:
+                self.convolution_param = dict()
+                self.convolution_param['stride_h'] = scale_factor
+                self.convolution_param['stride_w'] = scale_factor
+                self.convolution_param['group'] = self.inputs_shape[0][1]
+                self.convolution_param['num_output'] = self.outputs_shape[0][1]
+                self.convolution_param['bias_term'] = False
+                self.convolution_param['kernel_size'] = scale_factor
+
+                self.weight = np.ones((self.outputs_shape[0][1], 1, int(self.convolution_param['kernel_size']), int(self.convolution_param['kernel_size'])), dtype=int)
+                if self.model.opset[0] < 9:
+                    self.inputs_buf.append(self.weight)
+                    self.inputs_shape.append(self.inputs_buf[1].shape)
+                else:
+                    self.inputs_buf[1] = self.weight
+                    self.inputs_shape[1] = self.inputs_buf[1].shape
+
+                self.attrs = self.convolution_param
+            else:
+                self.upsample_param = dict()
+                self.upsample_param['scale'] = scale_factor
+                self.attrs = self.upsample_param
+        elif self.mode == 'bilinear' or self.mode == 'linear':
+#            self.convolution_param['kernel_size'] = scale_factor
+#            self.convolution_param['weight_filler'] = dict(type="bilinear")
+            self.interp_param = dict()
+            self.interp_param['align_corners'] = False
+            self.interp_param['height'] = self.outputs_shape[0][2]
+            self.interp_param['width'] = self.outputs_shape[0][3]
+            self.attrs = self.interp_param
         else:
             raise NotImplementedError
 
-        self.weight = np.ones((self.outputs_shape[0][1], 1, int(self.convolution_param['kernel_size']), int(self.convolution_param['kernel_size'])), dtype=int)
-        if self.model.opset[0] < 9:
-            self.inputs_buf.append(self.weight)
-            self.inputs_shape.append(self.inputs_buf[1].shape)
-        else:
-            self.inputs_buf[1] = self.weight
-            self.inputs_shape[1] = self.inputs_buf[1].shape
+
         # TODO: self.convolution_param['pads']
 
-        self.attrs = self.convolution_param
         self.setParsed()
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, None, convolution_param=self.convolution_param)
+#        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, None, convolution_param=self.convolution_param)
+        if self.mode == 'nearest':
+            if hasattr(self, 'convolution_param'):
+                layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, None, convolution_param=self.convolution_param)
+            elif hasattr(self, 'upsample_param'):
+                layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, upsample_param=self.upsample_param)
+            else:
+                raise NotImplementedError
+        elif self.mode == 'bilinear' or self.mode == 'linear':
+                layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, interp_param=self.interp_param)
+        else:
+            raise NotImplementedError
 
         self.setConverted()
 
