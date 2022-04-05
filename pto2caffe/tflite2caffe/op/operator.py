@@ -87,7 +87,7 @@ class Operator(Base):
             scale = quant.Scale(0) if quant.ScaleLength() != 0 else 0
             zero_point = quant.ZeroPoint(0) if quant.ZeroPointLength() != 0 else 0
             if scale != 0 or zero_point != 0:
-                data = dequantize(data, scale, zero_point)
+                data = self.dequantize(data, scale, zero_point)
 
         return data.copy()
 

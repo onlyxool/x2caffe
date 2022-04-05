@@ -1,7 +1,8 @@
 import tflite
+from compare import compare
+from preprocess import preprocess
 from tflite2caffe.model import Model
 from caffe_dump import dump_caffe_model
-from compare import compare
 
 def convert(tf_file, input_tensor, caffe_model_path, dump_level=-1, param=None):
     with open(tf_file, 'rb') as f:
@@ -13,6 +14,8 @@ def convert(tf_file, input_tensor, caffe_model_path, dump_level=-1, param=None):
     model.parse()
     model.convert()
     model.save(caffe_model_path)
+
+    input_tensor = preprocess(input_tensor, param)
 
     if dump_level >= 0:
         model.dump(model_byte, param['model_name'], input_tensor, dump_level)

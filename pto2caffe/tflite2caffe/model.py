@@ -1,3 +1,4 @@
+import sys
 import tflite
 import logging
 from dump import Dump
@@ -47,7 +48,7 @@ OpMap = {
     'LOGISTIC': Activation,
     'DEQUANTIZE': Quantize,
     'MAX_POOL_2D': Pooling,
-    'STRIDED_SLICE': Slice,
+#    'STRIDED_SLICE': Slice,
     'CONCATENATION': Concat,
     'REDUCE_MAX': Reduce,
     'LEAKY_RELU': Activation,
@@ -68,6 +69,7 @@ class Model(Base):
     def __init__(self, model:tflite.Model, param):
         super().__init__(model, model.Subgraphs(0))
         self.version = model.Version()
+        self.inputs_shape = list()
         self.param = param
         self.operators = []
         self.layers = []
@@ -84,6 +86,8 @@ class Model(Base):
         print('TFlite Model Input size:')
         for i in range(self.graph.InputsLength()):
             print(self.graph.Inputs(i), ':', list(self.graph.Tensors(self.graph.Inputs(i)).ShapeAsNumpy()))
+            self.inputs_shape.append(list(self.graph.Tensors(self.graph.Inputs(i)).ShapeAsNumpy()))
+        self.param['inputs_shape'] = self.inputs_shape
 
         for index in range(self.graph.OperatorsLength()):
             tf_op = self.graph.Operators(index)
@@ -92,6 +96,10 @@ class Model(Base):
 
             if tf_op_name in ignore_op:
                 continue
+            if tf_op_name not in OpMap:
+                errorMsg = 'Error: Operator [' + tf_op_name + '] does not Support.\n'
+                sys.exit(errorMsg)
+
             op = OpMap[tf_op_name](self, tf_op, tf_op_code.BuiltinCode(), index)
             op.parse()
 #            print(op)

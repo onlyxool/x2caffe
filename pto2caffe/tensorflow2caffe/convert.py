@@ -1,8 +1,8 @@
 import tensorflow as tf
-
-from tensorflow2caffe.model import Model
-from caffe_dump import dump_caffe_model
 from compare import compare
+from preprocess import preprocess
+from caffe_dump import dump_caffe_model
+from tensorflow2caffe.model import Model
 
 def convert(pb_file, input_tensor, caffe_model_path, dump_level=-1, param=None):
     with tf.io.gfile.GFile(pb_file, 'rb') as f:
@@ -14,7 +14,7 @@ def convert(pb_file, input_tensor, caffe_model_path, dump_level=-1, param=None):
     model.convert()
     model.save(caffe_model_path)
 
-#    input_tensor = data_preprocess(param)
+    input_tensor = preprocess(input_tensor, param)
 
     if dump_level >= 0:
         model.dump(graph, param['model_name'], input_tensor, dump_level)

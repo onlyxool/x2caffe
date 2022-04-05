@@ -1,4 +1,5 @@
 import os
+import sys
 import cv2
 import numpy as np
 
@@ -25,7 +26,8 @@ def load_file2tensor(path, param):
         tensor = cv2.imread(path).transpose(2, 0, 1).astype(np.float32) # HWC->CHW
         assert(tensor is not None), 'Error: Input file is None  ' + path
     else:
-        raise NotImplementedError('Do not support input file format: '+ ext)
+        errorMsg = 'Do not support input file format: ' + ext
+        sys.exit(errorMsg)
 
     return tensor
 
@@ -56,7 +58,7 @@ def mean(tensor, means):
             tensor[i,:,:] = tensor[i,:,:] - mean
     else:
         errorMsg = 'mean length not equal tensor channel (' + str(len(means)) + ' != ' + str(tensor.shape[0]) + ')'
-        raise ValueError(errorMsg)
+        sys.exit(errorMsg)
 
     return tensor
 
@@ -64,7 +66,7 @@ def mean(tensor, means):
 def crop(tensor, crop_h, crop_w):
     if tensor.shape[-2] < crop_h or tensor.shape[-1] < crop_w:
         errorMsg = 'crop size > tensor size, tensor:', tensor.shape, 'crop:', [crop_h, crop_w]
-        raise ValueError(errorMsg)
+        sys.exit(errorMsg)
     else:
         offset_h = (tensor.shape[-2] - crop_h) // 2
         offset_w = (tensor.shape[-1] - crop_w) // 2
@@ -79,7 +81,7 @@ def std(tensor, stds):
             tensor[i,:,:] = tensor[i,:,:] / std
     else:
         errorMsg = 'std length not equal tensor channel (' + str(len(stds)) + ' != ' + str(tensor.shape[0]) + ')'
-        raise ValueError(errorMsg)
+        sys.exit(errorMsg)
 
     return tensor
 
@@ -92,9 +94,23 @@ def scale(tensor, scales):
         tensor = tensor / scales[0]
     else:
         errorMsg = 'scale length not equal tensor channel (' + str(len(scales)) + ' != ' + str(tensor.shape[0]) + ')'
-        raise ValueError(errorMsg)
+        sys.exit(errorMsg)
 
     return tensor
+
+
+def calc_crop(param):
+    if param['crop_h'] is None and param['crop_w'] is None:
+        if 'inputs_shape' in param and len(param['inputs_shape']) > 0:
+            if param['layout'] == 'NCHW':
+                param['crop_h'] = param['inputs_shape'][0][-2]
+                param['crop_w'] = param['inputs_shape'][0][-1]
+            elif param['layout'] == 'NHWC':
+                param['crop_h'] = param['inputs_shape'][0][1]
+                param['crop_w'] = param['inputs_shape'][0][2]
+        else:
+            errorMsg = '\nArgument Check Failed: Model input shape parse failed, auto_crop can\'t apply.'
+            sys.exit(errorMsg)
 
 
 def preprocess(tensor, param):
@@ -103,6 +119,9 @@ def preprocess(tensor, param):
     '''
     if param['mean'] is not None:
         tensor = mean(tensor, param['mean'])
+
+    if 'auto_crop' in param and param['auto_crop'] == 1:
+        calc_crop(param)
 
     if param['crop_h'] is not None and param['crop_w'] is not None:
         tensor = crop(tensor, param['crop_h'], param['crop_w'])

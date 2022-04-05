@@ -1,6 +1,7 @@
 import sys
 import torch
 from compare import compare
+from preprocess import preprocess
 from caffe_dump import dump_caffe_model
 from pytorch2caffe.model import Model
 
@@ -14,6 +15,8 @@ def check_model_file(pytorch_file):
 
 def convert(pytorch_file, input_tensor, caffe_model_path, dump_level=-1, param=None):
     check_model_file(pytorch_file)
+
+    input_tensor = preprocess(input_tensor, param)
 
     model = Model(pytorch_file, param, input_tensor)
     model.parse()

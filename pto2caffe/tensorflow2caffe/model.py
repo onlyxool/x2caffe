@@ -75,6 +75,8 @@ class Model(Base):
                     self.inputs.append(op.outputs[0].name)
                     self.layers.append(make_caffe_input_layer(op.outputs[0].name, shape_map_nhwc2nchw(input_shape), len(self.inputs), self.param))
 
+            self.param['inputs_shape'] = self.inputs_shape
+
             print('Tensorflow Frozen Graph Input size: ')
             for i, shape in enumerate(self.inputs_shape):
                 print(self.inputs[i], shape)

@@ -7,7 +7,7 @@ from preprocess import preprocess
 
 
 
-def set_bin_shape(source_tensor, input_tensor, param):
+def set_bin_shape(source_tensor, param):
     param['source_shape'] = [1] + list(source_tensor.shape)
 
 
@@ -108,28 +108,13 @@ def CheckParam(param):
         param['std'] = RGB2BGR(param['std'])
         param['scale'] = RGB2BGR(param['scale'])
 
-    if 'auto_crop' in param and param['auto_crop'] == 1:
-        if param['platform'] == 'tensorflow':
-            pass
-            from tensorflow2caffe.preload import get_input_shape
-        elif param['platform'] == 'tflite':
-            pass
-            from tflite2caffe.preload import get_input_shape
-        elif param['platform'] == 'onnx':
-            from onnx2caffe.preload import get_input_shape
-        elif param['platform'] == 'pytorch':
-            errorMsg = errorMsg + 'Pytorch model support dynamic shape, auto_crop can\'t apply.'
-            sys.exit(errorMsg)
-
-        param['input_shape'] = get_input_shape(param['model'])
-
-    if param['crop_h'] is None and param['crop_w'] is None:
-        if 'input_shape' in param and len(param['input_shape']) > 0:
-            param['crop_h'] = param['input_shape'][0][-2]
-            param['crop_w'] = param['input_shape'][0][-1]
+    # Layout
+    if 'layout' not in param or param['layout'] is None:
+        if param['platform'] == 'tensorflow' or param['platform'] == 'tflite':
+            param['layout'] = 'NHWC'
         else:
-            errorMsg = errorMsg + 'Model input shape parse failed, auto_crop can\'t apply.'
-            sys.exit(errorMsg)
+            param['layout'] = 'NCHW'
+
 
 def Convert(param=None):
     # Set Log level
@@ -148,11 +133,10 @@ def Convert(param=None):
     dump_level = param.get('dump', -1)
 
 # how many inputs
-    tensor = get_input_tensor(param['root_folder'], param)
-    input_tensor = preprocess(tensor, param)
+    input_tensor = get_input_tensor(param['root_folder'], param)
 
     if param['file_type'] == 'raw':
-        set_bin_shape(tensor, input_tensor, param)
+        set_bin_shape(input_tensor, param)
 
     if framework == 'pytorch':
         from pytorch2caffe.convert import convert as PytorchConvert
@@ -186,6 +170,12 @@ def args_():
             help = 'Specify the Data shape when input data is bin file, default layout is [C,H,W]')
     args.add_argument('-color_format',  type = str,     required = False,   choices=['BGR', 'RGB', 'GRAY'],
             help = 'Specify the images color format, 0:BGR 1:RGB 2:GRAY')
+
+#    args.add_argument('-input_shape',   type = int,     required = False,   nargs='+',
+#            help = 'Model input shape')
+    args.add_argument('-layout',        type = str,     required = False,   choices=['NCHW', 'NHWC'],
+            help = 'Model input layout [NCHW NHWC]')
+
     args.add_argument('-scale',         type = float,   required = False,   nargs='+',      default = [1, 1, 1],
             help = 'scale value')
     args.add_argument('-mean',          type = float,   required = False,   nargs='+',

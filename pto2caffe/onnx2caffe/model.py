@@ -111,6 +111,7 @@ class Model(Base):
                 sys.exit('Error: Model opset > 13 or <= 3, it may cause incompatiblility issue. (opset:{})\n'.format(opset_version))
 
         self.param = param
+        self.inputs_shape = list()
         self.operators = []
         self.layers = []
         self.inputs = []
@@ -183,7 +184,9 @@ class Model(Base):
         for input in self.graph.input:
             if input.name not in self.input_tensor:
                 self.inputs.append(input.name)
+                self.inputs_shape.append(self.shape[input.name])
                 print(input.name, self.shape[input.name])
+        self.param['inputs_shape'] = self.inputs_shape
 
         for index, node in enumerate(self.graph.node):
             if node.op_type not in OpMap:
