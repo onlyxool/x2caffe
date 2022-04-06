@@ -64,7 +64,122 @@ python convert.py -platform=pytorch -model=/path/to/torchscript/model.pt -root_f
 
 
 
+#### **Operators:**
+
+**Tensorflow:**
+
+| Operators             | Comment |
+| --------------------- | ------- |
+| Pad                   |         |
+| Add                   |         |
+| Mul                   |         |
+| AddV2                 |         |
+| MaxPool               |         |
+| BiasAdd               |         |
+| ConcatV2              |         |
+| Placeholder           |         |
+| Conv2D                |         |
+| LeakyRelu             |         |
+| FusedBatchNormV3      |         |
+| ResizeNearestNeighbor |         |
+| SpaceToDepth          |         |
 
 
 
+**TFLite:**
+
+| Operators               |      |
+| ----------------------- | ---- |
+| PAD                     |      |
+| ADD                     |      |
+| MUL                     |      |
+| SUB                     |      |
+| SPLIT                   |      |
+| MEAN                    |      |
+| RESHAPE                 |      |
+| SQUEEZE                 |      |
+| SOFTMAX                 |      |
+| RELU                    |      |
+| PRELU                   |      |
+| HARD_SWISH              |      |
+| QUANTIZE                |      |
+| TRANSPOSE               |      |
+| CONV_2D                 |      |
+| LOGISTIC                |      |
+| DEQUANTIZE              |      |
+| MAX_POOL_2D             |      |
+| CONCATENATION           |      |
+| REDUCE_MAX              |      |
+| LEAKY_RELU              |      |
+| RESIZE_BILINEAR         |      |
+| AVERAGE_POOL_2D         |      |
+| TRANSPOSE_CONV          |      |
+| FULLY_CONNECTED         |      |
+| DEPTHWISE_CONV_2D       |      |
+| RESIZE_NEAREST_NEIGHBOR |      |
+
+
+
+**ONNX:**
+
+| Operators             |      |
+| --------------------- | ---- |
+| Exp                   |      |
+| Log                   |      |
+| Pad                   |      |
+| LRN                   |      |
+| Add                   |      |
+| Sub                   |      |
+| Mul                   |      |
+| Pow                   |      |
+| Tanh                  |      |
+| Sqrt                  |      |
+| Sum                   |      |
+| Div                   |      |
+| Slice                 |      |
+| Split                 |      |
+| MatMul                |      |
+| Concat                |      |
+| Resize                |      |
+| Dropout               |      |
+| Reshape               |      |
+| Squeeze               |      |
+| Flatten               |      |
+| MaxPool               |      |
+| Relu                  |      |
+| Clip                  |      |
+| Conv                  |      |
+| PRelu                 |      |
+| Identity              |      |
+| Gemm                  |      |
+| Constant              |      |
+| Softplus              |      |
+| Unsqueeze             |      |
+| Transpose             |      |
+| ReduceMean            |      |
+| Sigmoid               |      |
+| Softmax               |      |
+| AveragePool           |      |
+| LeakyRelu             |      |
+| GlobalAveragePool     |      |
+| ConvTranspose         |      |
+| BatchNormalization    |      |
+| InstanceNormalization |      |
+| Upsample              |      |
+| Mish                  |      |
+
+
+
+**Pytorch:**
+
+| Operators    |      |
+| ------------ | ---- |
+| nn.ReLU      |      |
+| torch.cat    |      |
+| nn.Linear    |      |
+| nn.Dropout   |      |
+| Tensor.slice |      |
+| nn.AvgPool2d |      |
+| nn.MaxPool2d |      |
+| nn.Conv2d    |      |
 
