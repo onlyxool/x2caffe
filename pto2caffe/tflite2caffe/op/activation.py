@@ -65,12 +65,12 @@ class Activation(Operator):
             self.attrs = self.sigmoid_param
         elif self.op_code == tflite.BuiltinOperator.PRELU:
             self.slope = self.inputs_buf[1].transpose(2, 0, 1)
-            self.prelux_param = dict()
+            self.prelu_param = dict()
             if self.slope.shape[0] == 1:
-                self.prelux_param['channel_shared'] = True
+                self.prelu_param['channel_shared'] = True
             else:
-                self.prelux_param['channel_shared'] = False
-            self.attrs = self.prelux_param
+                self.prelu_param['channel_shared'] = False
+            self.attrs = self.prelu_param
         elif self.op_code == tflite.BuiltinOperator.RELU6:
             self.relux_param = dict()
             self.relux_param['negative_slope'] = 0
