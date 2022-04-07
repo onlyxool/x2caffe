@@ -6,6 +6,6 @@ fi
 cd build
 
 cmake ..
-make -j
+make -j4
 cp src/libpnnx.so ../../libpnnx.so
 cd ..
