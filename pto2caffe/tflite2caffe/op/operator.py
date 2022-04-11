@@ -3,10 +3,8 @@ import logging
 import numpy as np
 from base import Base
 from util import *
-
+from tflite2caffe.quantize import Dequantize, isQuantilize
 logger = logging.getLogger('tflite2caffe')
-
-
 
 
 class Operator(Base):
@@ -50,15 +48,6 @@ class Operator(Base):
         return '%s attr%s: %s -> %s' % (self.shorty, self.attrs, inames, onames)
 
 
-    @staticmethod
-    def dequantize(tensor, scale, zero_point): #TODO
-        tensor_int32 = tensor.astype('int32')
-        tensor_shiftted = np.subtract(tensor_int32, zero_point)
-        tensor_fp32 = np.multiply(tensor_shiftted.astype('float32'), scale)
-
-        return tensor_fp32
-
-
     def getBuffer(self, tensor_id):
         type_id = self.graph.Tensors(tensor_id).Type()
         tensor_type = ['float32', 'float16', 'int32', 'uint8', 'int64', 'string', 'bool', 'int16', 'COMPLEX64', 'int8', 'float64', 'COMPLEX128']
@@ -84,10 +73,11 @@ class Operator(Base):
 
         quant = tensor.Quantization()
         if quant is not None:
-            scale = quant.Scale(0) if quant.ScaleLength() != 0 else 0
-            zero_point = quant.ZeroPoint(0) if quant.ZeroPointLength() != 0 else 0
-            if scale != 0 or zero_point != 0:
-                data = self.dequantize(data, scale, zero_point)
+            quantizedDimmension = quant.QuantizedDimension()
+            scale = quant.ScaleAsNumpy()
+            zero_point = quant.ZeroPointAsNumpy()
+            if isQuantilize(quant.ScaleLength(), quant.ZeroPointLength()):
+                data = Dequantize(data, scale, zero_point, quantizedDimmension, np.float32)
 
         return data.copy()
 

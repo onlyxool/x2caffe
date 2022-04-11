@@ -3,51 +3,10 @@ import logging
 import numpy as np
 import flatbuffers
 import tensorflow as tf
+from tflite2caffe.quantize import Dequantize, Quantize, isQuantilize, checkQuantilize
 from tensorflow.lite.python import schema_py_generated as schema_fb
 
-logger = logging.getLogger('TFLite')
-
-
-def isQuantilize(detail):
-    scales = detail['quantization_parameters']['scales']
-    zero_points = detail['quantization_parameters']['zero_points']
-    if scales.size != 0 and zero_points.size != 0:
-        return True
-    else:
-        return False
-
-
-def quantize(tensor, detail): #TODO
-    quantization = detail['quantization_parameters']
-    if quantization == (0.0, 0):
-        return tensor
-
-    scales = quantization['scales']
-    zero_points = quantization['zero_points']
-
-    tensor_scaled = np.divide(tensor, scales)
-    tensor_quant = np.add(tensor_scaled, zero_points)
-
-    return tensor_quant.astype(detail['dtype'])
-
-
-def dequantize(tensor, detail): #TODO
-    quantization = detail['quantization_parameters']
-    if quantization == (0.0, 0):
-        return tensor
-
-    logger.debug("Dequantizing", detail['name'], detail['index'])
-#    print(quantization)
-    scales = quantization['scales']
-    zero_points = quantization['zero_points']
-    if quantization['quantized_dimension'] == 0:
-        tensor_int32 = tensor.astype('int32')
-        tensor_shiftted = np.subtract(tensor_int32, zero_points)
-        tensor_fp32 = np.multiply(tensor_shiftted.astype('float32'), scales)
-    else:
-        raise NotImplementedError(type(quantization['quantized_dimension']))
-
-    return tensor_fp32
+logger = logging.getLogger('tflite2caffe')
 
 
 def OutputsOffset(subgraph, j):
@@ -84,47 +43,35 @@ def get_output(model, input_tensor, blob_name):
             return None
 
     model = buffer_change_output_tensor_to(model, blob_name)
+
     interpreter = tf.lite.Interpreter(model_content=model)
-
-#    signature = interpreter.get_signature_list()
-#    if not signature:
-#        encode = interpreter.get_signature_runner('encode')
-#        decode = interpreter.get_signature_runner('decode')
-#
-#        input = tf.constant([1, 2, 3], dtype=tf.float32)
-#        print('Input:', input)
-#        encoded = encode(x=input)
-#        print('Encoded result:', encoded)
-#        decoded = decode(x=encoded['encoded_result'])
-#        print('Decoded result:', decoded)
-
     interpreter.allocate_tensors()
     input_details = interpreter.get_input_details()
+    output_details = interpreter.get_output_details()
 
-
+    # Quantize Input
     for detail in input_details:
-#        print(input_tensor)
-#        print(detail)
-        if isQuantilize(detail):
-            input_tensor = quantize(input_tensor, detail) #TODO
-#        print(input_tensor, 'oooooooo')
-#input_tensor = tf.convert_to_tensor(input_tensor)
+        scales = detail['quantization_parameters']['scales']
+        zero_points = detail['quantization_parameters']['zero_points']
+        quantized_dimension = detail['quantization_parameters']['quantized_dimension']
+        dtype = detail['dtype']
+        if isQuantilize(len(scales), len(zero_points)) and checkQuantilize(input_tensor, scales, zero_points, dtype, quantized_dimension):
+            input_tensor = Quantize(input_tensor, scales, zero_points, quantized_dimension, dtype)
+
         interpreter.set_tensor(detail['index'], input_tensor)
 
-#input_tensor = input_tensor.astype(input_details[0]['dtype'])
-
-    # Model Run
+    # Model Inference
     interpreter.invoke()
-    output_index = interpreter.get_output_details()[0]["index"]
-    output = interpreter.get_tensor(output_index)
+    output = interpreter.get_tensor(output_details[0]["index"])
 
-    # Dequantize
-    output_details = interpreter.get_output_details()
+    # Dequantize Output
     for detail in output_details:
         if detail['index'] == blob_name:
-            if isQuantilize(detail):
-                print('Dequantize output:', str(detail['dtype']), ' to float32')
-#                print(output)
-                output = dequantize(output, detail)
-
+            scales = detail['quantization_parameters']['scales']
+            zero_points = detail['quantization_parameters']['zero_points']
+            quantized_dimension = detail['quantization_parameters']['quantized_dimension']
+            dtype = detail['dtype']
+            if isQuantilize(len(scales), len(zero_points)):
+                print('Dequantize Blob', dtype, 'to', np.float32)
+                output = Dequantize(output, scales, zero_points, quantized_dimension, dtype)
     return output.transpose(0, 3, 1, 2) if len(output.shape) == 4 else output
