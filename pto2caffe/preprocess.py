@@ -132,4 +132,4 @@ def preprocess(tensor, param):
     if param['scale'] is not None:
         tensor = scale(tensor, param['scale'])
 
-    return np.expand_dims(tensor, axis=0) # Unsqueeze CHW->NCHW
+    return np.expand_dims(tensor, axis=0).astype(np.float32) # Unsqueeze CHW->NCHW
