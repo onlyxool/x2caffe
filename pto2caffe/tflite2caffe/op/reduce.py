@@ -1,3 +1,4 @@
+import sys
 import tflite
 import logging
 from util import dim_map_nhwc2nchw
@@ -42,7 +43,8 @@ class Reduce(Operator):
         op_opt = self.op.BuiltinOptions()
         opt = tflite.ReducerOptions()
         opt.Init(op_opt.Bytes, op_opt.Pos)
-        assert(not opt.KeepDims()), 'Reduce: KeepDims Not Supported.'
+        if opt.KeepDims():
+            sys.exit('Reduce: Attributes KeepDims Not Supported.\n')
 
         axis = []
         for i in range(len(self.inputs_buf[1])):
@@ -57,8 +59,8 @@ class Reduce(Operator):
                 self.pooling_param['ceil_mode'] = False
                 self.attrs = self.pooling_param
             else:
-                print('ReduceMax\'s axis:', axis, 'Not support')
-                raise NotImplementedError
+                errorMsg = 'ReduceMax\'s axis: ' + axis + ' Not support'
+                sys.exit(errorMsg)
         elif self.op_code == tflite.BuiltinOperator.MEAN:
             if axis == [2,3]:
                 self.pooling_param['pool'] = 1
@@ -68,8 +70,8 @@ class Reduce(Operator):
                 self.pooling_param['ceil_mode'] = False
                 self.attrs = self.pooling_param
             else:
-                print('ReduceMean\'s axis:', axis, 'Not support')
-                raise NotImplementedError
+                errorMsg = 'ReduceMean\'s axis: ' + axis + ' Not support'
+                sys.exit(errorMsg)
 
         self.setParsed()
 

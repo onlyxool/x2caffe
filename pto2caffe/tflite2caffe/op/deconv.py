@@ -46,13 +46,13 @@ class Deconvolution(Operator):
 
         # Option
         op_opt = self.op.BuiltinOptions()
-        opt =tflite.TransposeConvOptions()
+        opt = tflite.TransposeConvOptions()
         opt.Init(op_opt.Bytes, op_opt.Pos)
         self.convolution_param['num_output'] = self.outputs_shape[0][1]
         self.convolution_param['stride_h'] = opt.StrideH()
         self.convolution_param['stride_w'] = opt.StrideW()
-        self.convolution_param['dilation'] = [1, 1]
-#        self.convolution_param['group'] = self.inputs_shape[2][1]
+#        self.convolution_param['dilation'] = [1, 1]
+#        self.convolution_param['group'] = 1
         self.convolution_param['kernel_h'] = self.weight.shape[2]
         self.convolution_param['kernel_w'] = self.weight.shape[3]
         self.convolution_param['bias_term'] = False

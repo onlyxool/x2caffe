@@ -63,7 +63,6 @@ OpMap = {
 }
 
 ignore_op = ['CUSTOM']
-
 class Model(Base):
 
     def __init__(self, model:tflite.Model, param):
@@ -102,7 +101,7 @@ class Model(Base):
 
             op = OpMap[tf_op_name](self, tf_op, tf_op_code.BuiltinCode(), index)
             op.parse()
-#            print(op)
+
             logger.debug(op)
             if op.status.parsed:
                 self.operators.append(op)
