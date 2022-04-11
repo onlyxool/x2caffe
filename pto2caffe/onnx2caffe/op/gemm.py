@@ -55,18 +55,11 @@ class InnerProduct(Operator):
            self.pre_permute_param = dict(order=[1,0])
 
         transB = self.attrs.get('transB', 0)
-        self.weight = self.weight.transpose(1,0)
-        if transB != 0:
-            self.inner_product_param['num_output'] = self.weight.shape[1]
-            self.inner_product_param['axis'] = self.inputs_shape[0].index(self.weight.shape[0])
-            self.inner_product_param['transpose'] = True
-        else:
-            self.inner_product_param['num_output'] = self.weight.shape[0]
-            self.inner_product_param['axis'] = self.inputs_shape[0].index(self.weight.shape[1])
-            self.inner_product_param['transpose'] = False
-#        self.inner_product_param['num_output'] = self.weight.shape[0]
-#        self.inner_product_param['axis'] = self.inputs_shape[0].index(self.weight.shape[1])
-#        self.inner_product_param['transpose'] = False
+        if transB == 0:
+            self.weight = self.weight.transpose(1,0)
+
+        self.inner_product_param['num_output'] = self.weight.shape[0]
+        self.inner_product_param['transpose'] = False
 
         self.inner_product_param['weight_filler'] = dict()
         self.inner_product_param['weight_filler']['type'] = 'constant'
