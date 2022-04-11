@@ -106,6 +106,7 @@ def compare(platform, target_model, caffe_path, input_tensor, level=-1):
             target_output = target_output.reshape(-1)
 
         print(blob2layer_map[blob_name], '[', blob_name, ']:')
+
         size_diff = calc_size(caffe_output_dict[blob_name], target_output)
         if size_diff is not None:
             print('  Size compare error:', caffe_output_dict[blob_name].shape, target_output.shape)
@@ -114,10 +115,8 @@ def compare(platform, target_model, caffe_path, input_tensor, level=-1):
         max_err = calc_max_diff(caffe_output_dict[blob_name], target_output)
         max_ratio = calc_max_ratio(caffe_output_dict[blob_name], target_output)
 
-#        if (cosin_simi - 1) > 0.02 or (1 - cosin_simi) > 0.02:
-#            print(platform, target_output.dtype, target_output, target_output.shape)
-#            print('caffe', caffe_output_dict[blob_name].dtype, caffe_output_dict[blob_name], caffe_output_dict[blob_name].shape)
-
         print('  cosin_simi: %8f'% cosin_simi)
         print('  cmax_err: %8f'% max_err)
         print('  max_ratio: %8f'% max_ratio, '\n')
+
+    return (cosin_simi, max_err, max_ratio)
