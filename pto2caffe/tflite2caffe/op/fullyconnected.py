@@ -25,6 +25,12 @@ class InnerProduct(Operator):
 
         self.parseInput()
         self.parseOutput()
+        for legacy in self.model.legacys:
+            if legacy.op_code == tflite.BuiltinOperator.DEQUANTIZE:
+                if legacy.outputs[0] == self.inputs[1]:
+                    self.inputs_buf[1] = legacy.inputs_buf[0]
+                if legacy.outputs[0] == self.inputs[2]:
+                    self.inputs_buf[2] = legacy.inputs_buf[0]
 
         # Weight
         weight = self.inputs_buf[1]
