@@ -5,6 +5,7 @@ from onnx2caffe.op.operator import Operator
 
 logger = logging.getLogger('onnx2caffe')
 
+
 class Pooling(Operator):
 
     def __init__(self, model, node, index):
@@ -12,17 +13,19 @@ class Pooling(Operator):
         self.pooling_param = dict()
         self.setInited()
 
+
     @property
     def type(self):
         return 'Pooling'
         
+
     def parse(self):
         logger.debug("Parsing %s...", self.type)
 
         self.parseInput()
         self.parseOutput()
 
-        # Options
+        # Attributes
         self.parseAttributes()
 
         if self.op_code == 'MaxPool':

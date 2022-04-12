@@ -5,6 +5,7 @@ from onnx2caffe.op.operator import Operator
 
 logger = logging.getLogger('onnx2caffe')
 
+
 class Deconvolution(Operator):
 
     def __init__(self, model, node, index):
@@ -30,7 +31,7 @@ class Deconvolution(Operator):
         # Bias
         self.bias = self.inputs_buf[2] if len(self.inputs_buf) == 3 else None
 
-        # Option
+        # Attributes
         self.parseAttributes()
         self.convolution_param['num_output'] = self.outputs_shape[0][1]
 

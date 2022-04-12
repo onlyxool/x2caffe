@@ -5,6 +5,7 @@ from onnx2caffe.op.operator import Operator
 
 logger = logging.getLogger('onnx2caffe')
 
+
 class TanH(Operator):
 
     def __init__(self, model, node, index):
@@ -24,7 +25,7 @@ class TanH(Operator):
         self.parseInput()
         self.parseOutput()
 
-        # Option
+        # Attributes
         self.parseAttributes()
 
         self.attrs = self.tanh_param

@@ -7,11 +7,17 @@ logger = logging.getLogger('onnx2caffe')
 
 
 class InstanceNormalization(Operator):
+
     def __init__(self, model, node, index):
         super().__init__(model, node, index)
         self.batch_norm_param = dict()
         self.scale_param = dict()
         self.setInited()
+
+
+    @property
+    def type(self):
+        return 'BatchNorm'
 
 
     def parse(self):
@@ -26,7 +32,7 @@ class InstanceNormalization(Operator):
         # Bias
         self.bias = self.inputs_buf[2]
 
-        # Option
+        # Attributes
         self.parseAttributes()
         self.batch_norm_param['eps'] = self.attrs.get('epsilon', 1e-5)
         self.batch_norm_param['use_global_stats'] = False
@@ -34,12 +40,8 @@ class InstanceNormalization(Operator):
         self.scale_param['bias_term'] = True
 
         self.attrs = self.batch_norm_param
+
         self.setParsed()
-
-
-    @property
-    def type(self):
-        return 'BatchNorm'
 
 
     def convert(self):

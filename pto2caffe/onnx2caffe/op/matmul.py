@@ -14,6 +14,7 @@ def splitkernel(length):
 
     return None
 
+
 class MatMul(Operator):
 
     def __init__(self, model, node, index):
@@ -48,7 +49,7 @@ class MatMul(Operator):
             # Bias
             self.bias = None
 
-            # Options
+            # Attributes
             self.convolution_param['num_output'] = self.weight.shape[0]
             self.convolution_param['stride_h'] = weight_size
             self.convolution_param['stride_w'] = weight_size

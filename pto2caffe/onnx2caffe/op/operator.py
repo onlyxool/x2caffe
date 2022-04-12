@@ -1,6 +1,6 @@
-import numpy as np
 from base import Base
 from onnx import numpy_helper
+
 
 class Operator(Base):
 

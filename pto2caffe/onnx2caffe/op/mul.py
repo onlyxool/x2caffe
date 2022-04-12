@@ -30,7 +30,7 @@ class Mul(Operator):
         self.parseInput()
         self.parseOutput()
 
-        # Option
+        # Attributes
         self.parseAttributes()
 
         if self.inputs_buf[0] is None and self.inputs_buf[1] is None:

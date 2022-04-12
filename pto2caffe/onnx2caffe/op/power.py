@@ -25,7 +25,7 @@ class Pow(Operator):
         self.parseInput()
         self.parseOutput()
 
-        # Option
+        # Attributes
         self.parseAttributes()
 
         self.power_param['power'] = self.inputs_buf[1]

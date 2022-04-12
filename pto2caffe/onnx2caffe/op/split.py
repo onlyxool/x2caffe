@@ -1,10 +1,10 @@
 import logging
-import numpy as np
 
 from caffe_transform import caffe_layer
 from onnx2caffe.op.operator import Operator
 
 logger = logging.getLogger('onnx2caffe')
+
 
 class Split(Operator):
 
@@ -25,7 +25,7 @@ class Split(Operator):
         self.parseInput()
         self.parseOutput()
 
-        # Option
+        # Attributes
         self.parseAttributes()
         self.slice_param['axis'] = self.attrs['axis']
 

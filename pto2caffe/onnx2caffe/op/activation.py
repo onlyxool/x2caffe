@@ -37,7 +37,7 @@ class Activation(Operator):
         self.parseInput()
         self.parseOutput()
 
-        # Option
+        # Attributes
         self.parseAttributes()
         if self.op_code == 'LeakyRelu':
             self.relu_param = dict()

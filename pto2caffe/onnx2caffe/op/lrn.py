@@ -5,6 +5,7 @@ from onnx2caffe.op.operator import Operator
 
 logger = logging.getLogger('onnx2caffe')
 
+
 class LRN(Operator):
 
     def __init__(self, model, node, index):
@@ -24,7 +25,7 @@ class LRN(Operator):
         self.parseInput()
         self.parseOutput()
 
-        # Option
+        # Attributes
         self.parseAttributes()
         self.lrn_param['alpha'] = self.attrs['alpha']
         self.lrn_param['beta'] = self.attrs['beta']

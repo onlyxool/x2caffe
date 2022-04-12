@@ -1,9 +1,9 @@
 import logging
 
-from caffe_transform import caffe_layer
 from onnx2caffe.op.operator import Operator
 
 logger = logging.getLogger('onnx2caffe')
+
 
 class Constant(Operator):
 
@@ -23,7 +23,7 @@ class Constant(Operator):
         self.parseInput()
         self.parseOutput()
 
-        # Option
+        # Attributes
         self.parseAttributes()
         self.model.input_tensor[self.node.output[0]] = self.attrs['value']
 

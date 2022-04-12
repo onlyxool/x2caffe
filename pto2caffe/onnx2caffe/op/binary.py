@@ -30,7 +30,7 @@ class Binary(Operator):
         self.parseInput()
         self.parseOutput()
 
-        # Option
+        # Attributes
         self.parseAttributes()
         if self.op_code == 'Sum':
             self.eltwise_param = dict()

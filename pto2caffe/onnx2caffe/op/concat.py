@@ -15,13 +15,14 @@ class Concat(Operator):
     def type(self):
         return 'Concat'
 
+
     def parse(self):
         logger.debug("Parsing %s...", self.shorty)
 
         self.parseInput()
         self.parseOutput()
 
-        # Option
+        # Attributes
         self.parseAttributes()
         self.concat_param = dict()
         self.concat_param['axis'] = self.attrs['axis']

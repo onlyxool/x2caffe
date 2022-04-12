@@ -26,7 +26,7 @@ class Mish(Operator):
         self.parseInput()
         self.parseOutput()
 
-        # Option
+        # Attributes
         self.parseAttributes()
 
         self.setParsed()

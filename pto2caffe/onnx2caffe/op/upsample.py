@@ -9,6 +9,7 @@ from onnx2caffe.op.operator import Operator
 
 logger = logging.getLogger('onnx2caffe')
 
+
 class Upsample(Operator):
 
     def __init__(self, model, node, index):
@@ -18,7 +19,6 @@ class Upsample(Operator):
 
     @property
     def type(self):
-#        return 'Deconvolution'
         if hasattr(self, 'convolution_param'):
             return 'Deconvolution'
         elif hasattr(self, 'upsample_param'):
@@ -35,7 +35,7 @@ class Upsample(Operator):
         self.parseInput()
         self.parseOutput()
 
-        # Option
+        # Attributes
         self.parseAttributes()
         self.mode = str(self.attrs['mode'], encoding = "utf8")
 
@@ -78,8 +78,6 @@ class Upsample(Operator):
                 self.upsample_param['scale'] = scale_factor
                 self.attrs = self.upsample_param
         elif self.mode == 'bilinear' or self.mode == 'linear':
-#            self.convolution_param['kernel_size'] = scale_factor
-#            self.convolution_param['weight_filler'] = dict(type="bilinear")
             self.interp_param = dict()
             self.interp_param['align_corners'] = False
             self.interp_param['height'] = self.outputs_shape[0][2]
@@ -95,7 +93,6 @@ class Upsample(Operator):
 
 
     def convert(self):
-#        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, None, convolution_param=self.convolution_param)
         if self.mode == 'nearest':
             if hasattr(self, 'convolution_param'):
                 layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, None, convolution_param=self.convolution_param)

@@ -5,6 +5,7 @@ from onnx2caffe.op.operator import Operator
 
 logger = logging.getLogger('onnx2caffe')
 
+
 class Dropout(Operator):
 
     def __init__(self, model, node, index):
@@ -27,7 +28,7 @@ class Dropout(Operator):
             self.outputs.pop()
             self.outputs_shape.pop()
 
-        # Option
+        # Attributes
         self.parseAttributes()
         self.dropout_param['dropout_ratio'] = self.attrs['ratio']
         self.attrs = self.dropout_param

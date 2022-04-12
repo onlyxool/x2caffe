@@ -1,10 +1,9 @@
 import sys
 import logging
+from base import Base
 from dump import Dump
 from onnx import numpy_helper
-from collections import Iterable
 
-from base import Base
 
 from onnx2caffe.op.log import Log
 from onnx2caffe.op.exp import Exp
@@ -208,8 +207,8 @@ class Model(Base):
         logger.debug("Converting the Model...")
 
         for index, input in enumerate(self.inputs):
-#self.layers.append(make_caffe_input_layer(input, [self.shape[input][0], self.shape[input][3], self.shape[input][1], self.shape[input][2],], index, self.param))# For tf2onnx
             self.layers.append(make_caffe_input_layer(input, self.shape[input], index, self.param))
+
         for op in self.operators:
             logger.debug(op)
             layers = op.convert()

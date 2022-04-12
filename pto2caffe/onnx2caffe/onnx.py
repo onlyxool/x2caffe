@@ -2,7 +2,7 @@ import onnx
 import onnxruntime
 import numpy as np
 from onnx import helper
-#from onnx import shape_inference
+
 
 def shape_proto2list(proto_shape):
     list_shape = []

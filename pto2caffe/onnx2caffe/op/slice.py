@@ -25,7 +25,7 @@ class Slice(Operator):
         self.parseInput()
         self.parseOutput()
 
-        # Option
+        # Attributes
         self.parseAttributes()
 
         if self.model.opset[0] < 10:

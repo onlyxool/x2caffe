@@ -6,6 +6,7 @@ from onnx2caffe.op.operator import Operator
 
 logger = logging.getLogger('onnx2caffe')
 
+
 class Resize(Operator):
 
     def __init__(self, model, node, index):
@@ -51,7 +52,7 @@ class Resize(Operator):
 
         assert(scale_factor != 0)
 
-        # Option
+        # Attributes
         self.parseAttributes()
         self.mode = str(self.attrs['mode'], encoding = "utf8")
         coordinate = str(self.attrs.get('coordinate_transformation_mode', b''), encoding = "utf8")

@@ -25,7 +25,7 @@ class Sqrt(Operator):
         self.parseInput()
         self.parseOutput()
 
-        # Option
+        # Attributes
         self.parseAttributes()
 
         self.power_param['power'] = 0.5

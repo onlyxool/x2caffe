@@ -23,7 +23,7 @@ class Softplus(Operator):
         self.parseInput()
         self.parseOutput()
 
-        # Option
+        # Attributes
         self.parseAttributes()
         self.softplus_param = dict()
 

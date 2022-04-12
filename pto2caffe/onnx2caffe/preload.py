@@ -2,7 +2,6 @@ import onnx
 from onnx import shape_inference
 
 
-
 def get_input_shape(model_path):
     onnx_model = onnx.load(model_path)
     onnx_model = shape_inference.infer_shapes(onnx_model)

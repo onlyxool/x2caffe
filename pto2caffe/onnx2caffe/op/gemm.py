@@ -39,7 +39,7 @@ class InnerProduct(Operator):
         # Bias
         self.bias = self.inputs_buf[2] if len(self.inputs_buf) == 3 else None
 
-        # Options
+        # Attributes
         self.parseAttributes()
 
         alpha = self.attrs.get('alpha', 1.0)

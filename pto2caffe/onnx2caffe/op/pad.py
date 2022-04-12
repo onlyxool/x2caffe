@@ -1,7 +1,7 @@
+import sys
 import logging
 import numpy as np
 
-from caffe_transform import caffe_layer
 from onnx2caffe.op.operator import Operator
 
 logger = logging.getLogger('onnx2caffe')
@@ -26,11 +26,12 @@ class Pad(Operator):
         self.parseInput()
         self.parseOutput()
 
-        # Option
+        # Attributes
         self.parseAttributes()
         if self.attrs.get('value', 0.0) != 0.0 or self.attrs.get('mode', b'constant').decode() != 'constant':
-            print('Warning: Caffe support constant Pad mode only.')
-#            raise NotImplementedError('Caffe support constant Pad mode only.')
+            errorMsg = 'Caffe support constant Pad mode only.'
+            print('Warning:', errorMsg)
+#            sys.exit(errorMsg)
 
         if self.model.opset[0] >= 11:
             pad = self.inputs_buf[1].reshape(-1, len(self.inputs_shape[0]))
@@ -44,7 +45,7 @@ class Pad(Operator):
             self.pad['bottom']  = pad[1][2]
         else:
             errorMsg = 'Input tensor has' + len(self.inputs_shape[0]) + 'dimentions'
-            raise NotImplementedError(errorMsg)
+            sys.exit(errorMsg)
 
         self.isLegacy = True
 

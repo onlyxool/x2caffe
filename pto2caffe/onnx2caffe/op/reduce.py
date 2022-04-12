@@ -5,6 +5,7 @@ from onnx2caffe.op.operator import Operator
 
 logger = logging.getLogger('onnx2caffe')
 
+
 class Reduce(Operator):
 
     def __init__(self, model, node, index):
@@ -24,18 +25,15 @@ class Reduce(Operator):
         self.parseInput()
         self.parseOutput()
 
-        # Options
+        # Attributes
         self.parseAttributes()
 
-        if self.op_code == 'ReduceMean':
-            self.pooling_param['pool'] = 1 # Pooling.AVE
-            self.pooling_param['kernel_h'] = self.inputs_shape[0][2]
-            self.pooling_param['kernel_w'] = self.inputs_shape[0][3] if len(self.inputs_shape[0]) == 4 else 1
-            self.pooling_param['stride_h'] = 1
-            self.pooling_param['stride_w'] = 1
-            self.pooling_param['ceil_mode'] = False
-        else:
-            raise NotImplementedError(self.op_code)
+        self.pooling_param['pool'] = 1 # Pooling.AVE
+        self.pooling_param['kernel_h'] = self.inputs_shape[0][2]
+        self.pooling_param['kernel_w'] = self.inputs_shape[0][3] if len(self.inputs_shape[0]) == 4 else 1
+        self.pooling_param['stride_h'] = 1
+        self.pooling_param['stride_w'] = 1
+        self.pooling_param['ceil_mode'] = False
 
         self.attrs = self.pooling_param
 

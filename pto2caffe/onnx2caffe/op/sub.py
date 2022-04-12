@@ -1,5 +1,4 @@
 import logging
-import numpy as np
 
 from caffe_transform import caffe_layer
 from onnx2caffe.op.operator import Operator
@@ -30,7 +29,7 @@ class Sub(Operator):
         self.parseInput()
         self.parseOutput()
 
-        # Option
+        # Attributes
         self.parseAttributes()
 
         if self.inputs_buf[0] is None and self.inputs_buf[1] is None:
@@ -45,7 +44,6 @@ class Sub(Operator):
                 bias_index = 1
                 input_index = 0
 
-            self.weight = np.ones(self.inputs_shape[bias_index], dtype=float, order='C')
             self.bias = -self.inputs_buf[bias_index]
 
             self.scale_param = dict()
