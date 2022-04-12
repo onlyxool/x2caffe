@@ -16,7 +16,7 @@ for path, dir_list, file_list in current_folder:
 
 
 
-
+# PNNX
 pnnx_dir = 'pytorch2caffe/pnnx/'
 pnnx_build_dir = pnnx_dir + 'build/'
 if os.path.isdir(pnnx_build_dir):
@@ -24,5 +24,7 @@ if os.path.isdir(pnnx_build_dir):
 os.mkdir(pnnx_build_dir)
 os.system('cd pytorch2caffe/pnnx/build && cmake .. && make -j8 && cd ../../..')
 shutil.copyfile('pytorch2caffe/pnnx/build/src/libpnnx.so', 'pytorch2caffe/libpnnx.so')
+shutil.copyfile('pytorch2caffe/pnnx/build/src/libpnnx.so', '../release/pto2caffe/pytorch2caffe/libpnnx.so')
+
 
 print('Compile Pto2Caffe Done')
