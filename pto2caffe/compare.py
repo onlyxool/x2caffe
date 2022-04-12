@@ -1,9 +1,5 @@
-import os
-import sys
 import math
-envroot = os.environ.get('MCHOME', os.environ['PWD'])
-sys.path.append(envroot + '/toolchain/caffe/python')
-sys.path.append(envroot + '/toolchain/caffe/python/caffe')
+import caffe_path
 
 import caffe
 from caffe.proto import caffe_pb2
