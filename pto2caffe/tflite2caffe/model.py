@@ -6,6 +6,9 @@ from base import Base
 from util import *
 
 from tflite2caffe.op.pad import Pad
+from tflite2caffe.op.relu import ReLU
+from tflite2caffe.op.relux import ReLUX
+from tflite2caffe.op.prelu import PReLU
 from tflite2caffe.op.swish import Swish
 from tflite2caffe.op.split import Slice #TODO
 from tflite2caffe.op.binary import Binary
@@ -14,14 +17,13 @@ from tflite2caffe.op.resize import Resize
 from tflite2caffe.op.concat import Concat
 from tflite2caffe.op.reshape import Reshape
 from tflite2caffe.op.pooling import Pooling
+from tflite2caffe.op.sigmoid import Sigmoid
 from tflite2caffe.op.softmax import Softmax
 from tflite2caffe.op.conv import Convolution
-from tflite2caffe.op.deconv import Deconvolution
 from tflite2caffe.op.quantize import Quantize
 from tflite2caffe.op.transpose import Permute
-from tflite2caffe.op.activation import Activation
+from tflite2caffe.op.deconv import Deconvolution
 from tflite2caffe.op.fullyconnected import InnerProduct
-from tflite2caffe.op.activation import handleFusedActivation
 
 from caffe_transform import save_caffe_model
 from caffe_transform import make_caffe_input_layer
@@ -31,27 +33,27 @@ logger = logging.getLogger('TFLite2Caffe')
 
 OpMap = {
     'PAD': Pad,
+    'RELU': ReLU,
     'ADD': Binary,
     'MUL': Binary,
     'SUB': Binary,
-    'SPLIT': Slice,
     'MEAN': Reduce,
+    'PRELU': PReLU,
+    'SPLIT': Slice,
     'RESHAPE': Reshape,
     'SQUEEZE': Reshape,
     'SOFTMAX': Softmax,
-    'RELU': Activation,
-    'PRELU': Activation,
+    'LEAKY_RELU': ReLU,
+    'LOGISTIC': Sigmoid,
     'HARD_SWISH': Swish,
     'QUANTIZE': Quantize,
     'TRANSPOSE': Permute,
+    'REDUCE_MAX': Reduce,
     'CONV_2D': Convolution,
-    'LOGISTIC': Activation,
     'DEQUANTIZE': Quantize,
     'MAX_POOL_2D': Pooling,
 #    'STRIDED_SLICE': Slice,
     'CONCATENATION': Concat,
-    'REDUCE_MAX': Reduce,
-    'LEAKY_RELU': Activation,
     'RESIZE_BILINEAR': Resize,
     'AVERAGE_POOL_2D': Pooling,
     'TRANSPOSE_CONV': Deconvolution,
@@ -63,6 +65,31 @@ OpMap = {
 }
 
 ignore_op = ['CUSTOM']
+
+
+def handleFusedActivation(preop):
+    if preop.activ_type_code == tflite.ActivationFunctionType.RELU:
+        op = ReLU(preop.model, None, tflite.BuiltinOperator.RELU, preop.index)
+    elif preop.activ_type_code == tflite.ActivationFunctionType.RELU_N1_TO_1:
+        raise NotImplementedError('ReluN1To1 is not supported.')
+    elif preop.activ_type_code == tflite.ActivationFunctionType.RELU6:
+        op = ReLUX(preop.model, None, tflite.BuiltinOperator.RELU6, preop.index)
+    elif preop.activ_type_code == tflite.ActivationFunctionType.TANH:
+         raise NotImplementedError('Tanh is not supported.')
+    elif preop.activ_type_code == tflite.ActivationFunctionType.SIGN_BIT:
+         raise NotImplementedError('SignBits is not supported.')
+    else:
+        return
+
+    for output in preop.outputs:
+        op.outputs.append(output)
+        op.inputs.append(output)
+    op.inputs_buf.append(None)
+    op.parse()
+
+    return op
+
+
 class Model(Base):
 
     def __init__(self, model:tflite.Model, param):
