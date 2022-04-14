@@ -11,7 +11,9 @@ from onnx2caffe.op.pad import Pad
 from onnx2caffe.op.lrn import LRN
 from onnx2caffe.op.mul import Mul
 from onnx2caffe.op.add import Add
+from onnx2caffe.op.sum import Sum
 from onnx2caffe.op.sub import Sub
+from onnx2caffe.op.div import Div
 from onnx2caffe.op.tanh import TanH
 from onnx2caffe.op.power import Pow
 from onnx2caffe.op.sqrt import Sqrt
@@ -21,7 +23,6 @@ from onnx2caffe.op.prelu import PReLU
 from onnx2caffe.op.slice import Slice
 from onnx2caffe.op.split import Split
 from onnx2caffe.op.reduce import Reduce
-from onnx2caffe.op.binary import Binary
 from onnx2caffe.op.concat import Concat
 from onnx2caffe.op.resize import Resize
 from onnx2caffe.op.matmul import MatMul
@@ -58,15 +59,15 @@ OpMap = {
     'Pad': Pad,
     'LRN': LRN,
     'Add': Add,
+    'Sum': Sum,
     'Sub': Sub,
     'Mul': Mul,
+    'Div': Div,
     'Pow': Pow,
     'Tanh': TanH,
     'Sqrt': Sqrt,
     'Relu': ReLU,
     'Clip': ReLUX,
-    'Sum': Binary,
-    'Div': Binary,
     'PRelu': PReLU,
     'Slice': Slice,
     'Split': Split,
