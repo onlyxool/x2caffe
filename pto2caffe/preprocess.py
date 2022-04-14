@@ -4,7 +4,6 @@ import cv2
 import numpy as np
 
 
-
 numpy_dtype = { 
     'u8': np.uint8,
     's8': np.int8,
@@ -99,37 +98,20 @@ def scale(tensor, scales):
     return tensor
 
 
-def calc_crop(param):
-    if param['crop_h'] is None and param['crop_w'] is None:
-        if 'inputs_shape' in param and len(param['inputs_shape']) > 0:
-            if param['layout'] == 'NCHW':
-                param['crop_h'] = param['inputs_shape'][0][-2]
-                param['crop_w'] = param['inputs_shape'][0][-1]
-            elif param['layout'] == 'NHWC':
-                param['crop_h'] = param['inputs_shape'][0][1]
-                param['crop_w'] = param['inputs_shape'][0][2]
-        else:
-            errorMsg = '\nArgument Check Failed: Model input shape parse failed, auto_crop can\'t apply.'
-            sys.exit(errorMsg)
-
-
 def preprocess(tensor, param):
     '''
-        Input tensor should be 3 dimension and has [C, H, W] layout
+        Input tensor should be 3 dimensions and has [C, H, W] layout
     '''
+    if param['scale'] is not None:
+        tensor = scale(tensor, param['scale'])
+
     if param['mean'] is not None:
         tensor = mean(tensor, param['mean'])
-
-    if 'auto_crop' in param and param['auto_crop'] == 1:
-        calc_crop(param)
-
-    if param['crop_h'] is not None and param['crop_w'] is not None:
-        tensor = crop(tensor, param['crop_h'], param['crop_w'])
 
     if param['std'] is not None:
         tensor = std(tensor, param['std'])
 
-    if param['scale'] is not None:
-        tensor = scale(tensor, param['scale'])
+    if param['crop_h'] is not None and param['crop_w'] is not None:
+        tensor = crop(tensor, param['crop_h'], param['crop_w'])
 
     return np.expand_dims(tensor, axis=0).astype(np.float32) # Unsqueeze CHW->NCHW

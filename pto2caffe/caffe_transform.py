@@ -180,6 +180,10 @@ def make_caffe_input_layer(input, input_shape, index, param):
         caffe_scale = 1/(np.array(param['scale']) * np.array(param['std']))
         transform_param['scale'] = caffe_scale.tolist()
 
+    if param.get('auto_crop', 0) == 1:
+        param['crop_h'] = input_shape[2]
+        param['crop_w'] = input_shape[3]
+
     if param['crop_h'] is not None:
         transform_param['crop_h'] = param['crop_h']
     if param['crop_w'] is not None:
