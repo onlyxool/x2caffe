@@ -108,6 +108,11 @@ def CheckParam(param):
         param['std'] = RGB2BGR(param['std'])
         param['scale'] = RGB2BGR(param['scale'])
 
+    if 'auto_crop' in param and param['auto_crop'] == 1:
+        if param['platform'] == 'pytorch':
+            errorMsg = errorMsg + 'Pytorch model support dynamic shape, auto_crop can\'t apply.'
+            sys.exit(errorMsg)
+
     # Layout
     if 'layout' not in param or param['layout'] is None:
         if param['platform'] == 'tensorflow' or param['platform'] == 'tflite':
@@ -132,7 +137,6 @@ def Convert(param=None):
     caffe_model_path = os.path.splitext(model_path)[0]
     dump_level = param.get('dump', -1)
 
-# how many inputs
     input_tensor = get_input_tensor(param['root_folder'], param)
 
     if param['file_type'] == 'raw':
@@ -196,6 +200,8 @@ def args_():
             help = 'log print level, 0:Debug 1:Info 2:Warning, 3:ERROR')
     args.add_argument('-simplifier',    type = int,     required = False,   default=0,      choices=[0, 1],
             help = 'simplify onnx model by onnx-simplifier')
+    args.add_argument('-streamlit',     type = int,     required = False,   default=0,      choices=[0, 1],
+            help = 'Web Interface Flag')
     args = args.parse_args()
     return args
 
