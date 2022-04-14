@@ -25,6 +25,6 @@ os.mkdir(pnnx_build_dir)
 os.system('cd pytorch2caffe/pnnx/build && cmake .. && make -j8 && cd ../../..')
 shutil.copyfile('pytorch2caffe/pnnx/build/src/libpnnx.so', 'pytorch2caffe/libpnnx.so')
 shutil.copyfile('pytorch2caffe/pnnx/build/src/libpnnx.so', '../release/pto2caffe/pytorch2caffe/libpnnx.so')
-
+os.system('cd ../release/pto2caffe/ && ln -s ../caffe/python/caffe/ caffe')
 
 print('Compile Pto2Caffe Done')
