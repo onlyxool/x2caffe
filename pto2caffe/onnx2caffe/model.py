@@ -15,6 +15,9 @@ from onnx2caffe.op.sub import Sub
 from onnx2caffe.op.tanh import TanH
 from onnx2caffe.op.power import Pow
 from onnx2caffe.op.sqrt import Sqrt
+from onnx2caffe.op.relu import ReLU
+from onnx2caffe.op.relux import ReLUX
+from onnx2caffe.op.prelu import PReLU
 from onnx2caffe.op.slice import Slice
 from onnx2caffe.op.split import Split
 from onnx2caffe.op.reduce import Reduce
@@ -23,7 +26,8 @@ from onnx2caffe.op.concat import Concat
 from onnx2caffe.op.resize import Resize
 from onnx2caffe.op.matmul import MatMul
 #from onnx2caffe.op.expand import Expand
-from onnx2caffe.op.customop import Mish
+from onnx2caffe.op.sigmoid import Sigmoid
+from onnx2caffe.op.softmax import Softmax
 from onnx2caffe.op.reshape import Reshape #Not Finish yet
 from onnx2caffe.op.pooling import Pooling
 from onnx2caffe.op.dropout import Dropout
@@ -35,9 +39,11 @@ from onnx2caffe.op.softplus import Softplus
 from onnx2caffe.op.transpose import Permute
 from onnx2caffe.op.batchnorm import BatchNorm
 from onnx2caffe.op.deconv import Deconvolution
-from onnx2caffe.op.activation import Activation
+
+from onnx2caffe.op.customop import Mish
 from onnx2caffe.op.upsample import Upsample #Deprecated
 from onnx2caffe.op.instancenormalization import InstanceNormalization # Not test yet
+
 
 from caffe_transform import save_caffe_model
 from caffe_transform import make_caffe_input_layer
@@ -57,23 +63,26 @@ OpMap = {
     'Pow': Pow,
     'Tanh': TanH,
     'Sqrt': Sqrt,
+    'Relu': ReLU,
+    'Clip': ReLUX,
     'Sum': Binary,
     'Div': Binary,
+    'PRelu': PReLU,
     'Slice': Slice,
     'Split': Split,
     'MatMul': MatMul,
 #    'Expand': Expand,
     'Concat': Concat,
     'Resize': Resize,
+    'LeakyRelu': ReLU,
+    'Sigmoid': Sigmoid,
+    'Softmax': Softmax,
     'Dropout': Dropout,
     'Reshape': Reshape,
     'Squeeze': Reshape,
     'Flatten': Flatten,
     'MaxPool': Pooling,
-    'Relu': Activation,
-    'Clip': Activation,
     'Conv': Convolution,
-    'PRelu': Activation,
     'Identity': Reshape,
     'Gemm': InnerProduct,
     'Constant': Constant,
@@ -81,10 +90,7 @@ OpMap = {
     'Unsqueeze': Reshape,
     'Transpose': Permute,
     'ReduceMean': Reduce,
-    'Sigmoid': Activation,
-    'Softmax': Activation,
     'AveragePool': Pooling,
-    'LeakyRelu': Activation,
     'GlobalAveragePool': Pooling,
     'ConvTranspose': Deconvolution,
     'BatchNormalization': BatchNorm,
