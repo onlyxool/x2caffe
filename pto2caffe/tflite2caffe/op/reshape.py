@@ -8,12 +8,6 @@ logger = logging.getLogger('tflite2caffe')
 
 class Reshape(Operator):
 
-    TypeMapping = { 
-        tflite.BuiltinOperator.RESHAPE: 'Reshape',
-        tflite.BuiltinOperator.SQUEEZE: 'Squeeze',
-    }   
-
-
     def __init__(self, model, tf_op, tf_op_code, index):
         super().__init__(model, tf_op, tf_op_code, index)
         self.reshape_param = dict()
@@ -28,16 +22,12 @@ class Reshape(Operator):
     def parse(self):
         logger.debug("Parsing %s...", self.shorty)
 
-        if self.op_code == tflite.BuiltinOperator.RESHAPE:
-            assert(self.op.InputsLength() >= 2)
-        elif self.op_code == tflite.BuiltinOperator.SQUEEZE:
-            assert(self.op.InputsLength() == 1)
-        assert(self.op.OutputsLength() == 1)
+        assert(self.op_code in (tflite.BuiltinOperator.RESHAPE, tflite.BuiltinOperator.SQUEEZE))
 
         self.parseInput()
         self.parseOutput()
 
-        # Option
+        # Attributes
         op_opt = self.op.BuiltinOptions()
         if self.op_code == tflite.BuiltinOperator.RESHAPE:
             opt = tflite.ReshapeOptions()
@@ -46,8 +36,6 @@ class Reshape(Operator):
             opt = tflite.SqueezeOptions()
             opt.Init(op_opt.Bytes, op_opt.Pos)
             self.reshape_param = dict(shape=dict(dim=self.outputs_shape[0]))
-        else:
-            raise NotImplementedError
 
         self.attrs = self.reshape_param
 

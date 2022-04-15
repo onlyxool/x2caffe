@@ -7,13 +7,8 @@ from util import handleLegacyPad
 
 logger = logging.getLogger('tflite2caffe')
 
+
 class Pooling(Operator):
-
-    TypeMapping = {
-        tflite.BuiltinOperator.AVERAGE_POOL_2D: 'AveragePool',
-        tflite.BuiltinOperator.MAX_POOL_2D: 'MaxPool',
-    }
-
 
     def __init__(self, model, tf_op, tf_op_code, index):
         super().__init__(model, tf_op, tf_op_code, index)
@@ -30,14 +25,14 @@ class Pooling(Operator):
     def parse(self):
         logger.debug("Parsing %s...", self.type)
 
-        assert(self.op_code in self.TypeMapping)
+        assert(self.op_code in (tflite.BuiltinOperator.AVERAGE_POOL_2D, tflite.BuiltinOperator.MAX_POOL_2D))
         assert(self.op.InputsLength() == 1)
         assert(self.op.OutputsLength() == 1)
 
         self.parseInput()
         self.parseOutput()
 
-        # Options
+        # Attributes
         op_opt = self.op.BuiltinOptions()
         opt = tflite.Pool2DOptions()
         opt.Init(op_opt.Bytes, op_opt.Pos)

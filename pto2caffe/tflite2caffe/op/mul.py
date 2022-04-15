@@ -17,6 +17,7 @@ class Mul(Operator):
         super().__init__(model, tf_op, tf_op_code, index)
         self.setInited()
 
+
     @property
     def type(self):
         if hasattr(self, 'eltwise_param'):

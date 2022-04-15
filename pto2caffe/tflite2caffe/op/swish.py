@@ -6,11 +6,8 @@ from tflite2caffe.op.operator import Operator
 
 logger = logging.getLogger('tflite2caffe')
 
-class Swish(Operator):
 
-    TypeMapping = {
-            tflite.BuiltinOperator.HARD_SWISH: 'HardSwish',
-    }
+class Swish(Operator):
 
     def __init__(self, model, tf_op, tf_op_code, index):
         super().__init__(model, tf_op, tf_op_code, index)
@@ -28,6 +25,7 @@ class Swish(Operator):
     def parse(self):
         logger.debug("Parsing %s...", self.type)
 
+        assert(self.op_code == tflite.BuiltinOperator.HARD_SWISH)
         assert(self.op.InputsLength() == 1)
         assert(self.op.OutputsLength() == 1)
 

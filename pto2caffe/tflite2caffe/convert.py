@@ -4,6 +4,7 @@ from preprocess import preprocess
 from tflite2caffe.model import Model
 from caffe_dump import dump_caffe_model
 
+
 def convert(tf_file, input_tensor, caffe_model_path, dump_level=-1, param=None):
     with open(tf_file, 'rb') as f:
         model_byte = f.read()

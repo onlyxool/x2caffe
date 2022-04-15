@@ -7,6 +7,7 @@ from util import handleLegacyPad
 
 logger = logging.getLogger('tflite2caffe')
 
+
 class Convolution(Operator):
 
     def __init__(self, model, tf_op, tf_op_code, index):
@@ -31,6 +32,7 @@ class Convolution(Operator):
     def parse(self):
         logger.debug("Parsing %s...", self.type)
 
+        assert(self.op_code in (tflite.BuiltinOperator.CONV_2D, tflite.BuiltinOperator.DEPTHWISE_CONV_2D))
         assert(self.op.InputsLength() == 3), "TFLite Conv always has bias"
         assert(self.op.OutputsLength() == 1)
 
@@ -56,7 +58,7 @@ class Convolution(Operator):
             self.bias = bias
         self.inputs_buf[2] = self.bias
 
-        # Option
+        # Attributes
         op_opt = self.op.BuiltinOptions()
         opt = tflite.DepthwiseConv2DOptions() if self.isDepthwise else tflite.Conv2DOptions()
         opt.Init(op_opt.Bytes, op_opt.Pos)

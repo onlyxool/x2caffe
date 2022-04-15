@@ -6,20 +6,25 @@ from tflite2caffe.op.operator import Operator
 
 logger = logging.getLogger('tflite2caffe')
 
+
 class InnerProduct(Operator):
+
     def __init__(self, model, tf_op, tf_op_code, index):
         super().__init__(model, tf_op, tf_op_code, index)
         self.inner_product_param = dict()
         self.attrs = self.inner_product_param
         self.setInited()
 
+
     @property
     def type(self):
         return 'InnerProduct'
 
+
     def parse(self):
         logger.debug("Parsing %s...", self.type)
 
+        assert(self.op_code == tflite.BuiltinOperator.FULLY_CONNECTED)
         assert(self.op.InputsLength() == 3), "TFLite Fullly Connected always has bias"
         assert(self.op.OutputsLength() == 1)
 
@@ -48,14 +53,16 @@ class InnerProduct(Operator):
             self.bias = bias
         self.inputs_buf[2] = self.bias
 
-        # Options
+        # Attributes
         op_opt = self.op.BuiltinOptions()
         opt = tflite.FullyConnectedOptions()
         opt.Init(op_opt.Bytes, op_opt.Pos)
 #        print(opt.WeightsFormat(), opt.KeepNumDims(), opt.FusedActivationFunction(), opt.AsymmetricQuantizeInputs())
+
         self.inner_product_param['num_output'] = self.outputs_shape[0][1]
         self.inner_product_param['weight_filler'] = dict()
         self.inner_product_param['weight_filler']['type'] = 'xavier'
+
         if self.bias is not None:
             self.inner_product_param['bias_term'] = True
             self.inner_product_param['bias_filler'] = dict()
@@ -72,5 +79,7 @@ class InnerProduct(Operator):
 
     def convert(self):
         layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, inner_product_param=self.inner_product_param)
+
         self.setConverted()
+
         return [layer]

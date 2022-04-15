@@ -13,7 +13,6 @@ class Deconvolution(Operator):
     def __init__(self, model, tf_op, tf_op_code, index):
         super().__init__(model, tf_op, tf_op_code, index)
         self.convolution_param = dict()
-#        self.convolution_param['group'] = 1
         self.attrs = self.convolution_param
         self.setInited()
 
@@ -26,6 +25,7 @@ class Deconvolution(Operator):
     def parse(self):
         logger.debug("Parsing %s...", self.type)
 
+        assert(self.op_code == tflite.BuiltinOperator.TRANSPOSE_CONV)
         assert(self.op.InputsLength() == 3), "TFLite Conv always has bias"
         assert(self.op.OutputsLength() == 1)
 
@@ -44,7 +44,7 @@ class Deconvolution(Operator):
         self.inputs_buf[1] = self.weight
         self.inputs_shape[1] = list(self.inputs_buf[1].shape)
 
-        # Option
+        # Attributes
         op_opt = self.op.BuiltinOptions()
         opt = tflite.TransposeConvOptions()
         opt.Init(op_opt.Bytes, op_opt.Pos)

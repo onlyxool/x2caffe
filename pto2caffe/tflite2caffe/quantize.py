@@ -27,6 +27,7 @@ def checkQuantilize(tensor, scales, zero_points, dtype, quantized_dimension):
 
     return True
 
+
 def isQuantilize(scales_len, zero_points_len):
     if scales_len == 0 and zero_points_len == 0:
         return False

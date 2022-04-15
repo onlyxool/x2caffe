@@ -8,12 +8,8 @@ from tflite2caffe.op.operator import Operator
 
 logger = logging.getLogger('tflite2caffe')
 
-class Slice(Operator):
 
-    TypeMapping = {
-            tflite.BuiltinOperator.SPLIT: 'Slice',
-            tflite.BuiltinOperator.STRIDED_SLICE: 'Slice',
-    }
+class Slice(Operator):
 
     def __init__(self, model, tf_op, tf_op_code, index):
         super().__init__(model, tf_op, tf_op_code, index)
@@ -30,6 +26,7 @@ class Slice(Operator):
     def parse(self):
         logger.debug("Parsing %s...", self.type)
 
+        assert(self.op_code in (tflite.BuiltinOperator.SPLIT, tflite.BuiltinOperator.STRIDED_SLICE))
         assert(self.op.InputsLength() == 2 or self.op.InputsLength() == 4)
         assert(self.op.OutputsLength() == 1)
 
@@ -46,7 +43,7 @@ class Slice(Operator):
             assert(opt.EllipsisMask() == 0), "EllipsisMask not supported!"
             assert(opt.NewAxisMask() == 0), "NewAxisMask not supported!"
             assert(opt.ShrinkAxisMask() == 0), "ShrinkAxisMask not supported!"
-#            print(opt.BeginMask(), opt.EndMask())
+            #print(opt.BeginMask(), opt.EndMask())
 
             assert(len(self.inputs_buf[1]) == len(self.inputs_shape[0]))
 

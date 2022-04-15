@@ -11,11 +11,6 @@ logger = logging.getLogger('tflite2caffe')
 
 class Reduce(Operator):
 
-    TypeMapping = {
-        tflite.BuiltinOperator.MEAN: 'ReduceMean',
-        tflite.BuiltinOperator.REDUCE_MAX: 'ReduceMax',
-    }
-
     def __init__(self, model, tf_op, tf_op_code, index):
         super().__init__(model, tf_op, tf_op_code, index)
 
@@ -32,6 +27,7 @@ class Reduce(Operator):
     def parse(self):
         logger.debug("Parsing %s...", self.type)
 
+        assert(self.op_code in (tflite.BuiltinOperator.MEAN, tflite.BuiltinOperator.REDUCE_MAX))
         assert(self.op.InputsLength() == 2)
         assert(self.op.OutputsLength() == 1)
 
@@ -39,7 +35,7 @@ class Reduce(Operator):
         self.parseOutput()
         assert(len(self.inputs_shape[0]) == 4)
 
-        # Option
+        # Attributes
         op_opt = self.op.BuiltinOptions()
         opt = tflite.ReducerOptions()
         opt.Init(op_opt.Bytes, op_opt.Pos)

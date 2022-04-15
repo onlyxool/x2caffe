@@ -5,17 +5,10 @@ import numpy as np
 from caffe_transform import caffe_layer
 from tflite2caffe.op.operator import Operator
 
-
 logger = logging.getLogger('tflite2caffe')
 
 
 class Resize(Operator):
-
-    TypeMapping = {
-        tflite.BuiltinOperator.RESIZE_NEAREST_NEIGHBOR: 'Resize',
-        tflite.BuiltinOperator.RESIZE_BILINEAR: 'Resize',
-    }
-
 
     def __init__(self, model, tf_op, tf_op_code, index):
         super().__init__(model, tf_op, tf_op_code, index)
@@ -32,14 +25,12 @@ class Resize(Operator):
                 return 'Upsample'
         elif self.op_code == tflite.BuiltinOperator.RESIZE_BILINEAR:
             return 'Interp'
-        else:
-            raise NotImplementedError
 
 
     def parse(self):
         logger.debug("Parsing %s...", self.type)
 
-        assert(self.op_code in self.TypeMapping)
+        assert(self.op_code in (tflite.BuiltinOperator.RESIZE_NEAREST_NEIGHBOR, tflite.BuiltinOperator.RESIZE_BILINEAR))
         assert(self.op.InputsLength() == 2), "TFLite has only two inputs"
         assert(self.op.OutputsLength() == 1)
 
@@ -54,10 +45,10 @@ class Resize(Operator):
         input_h = self.inputs_shape[0][2]
         input_w = self.inputs_shape[0][3]
 
-        # Option
+        # Attributes
         scale_factor = output_h/input_h
         if self.op_code == tflite.BuiltinOperator.RESIZE_NEAREST_NEIGHBOR:
-#            if output_h/input_h == output_h//input_h and output_w/input_w == output_w//input_w:
+            #if output_h/input_h == output_h//input_h and output_w/input_w == output_w//input_w:
             if scale_factor % 1 == 0:
                 self.convolution_param = dict()
                 self.convolution_param['bias_term'] = False
@@ -86,7 +77,7 @@ class Resize(Operator):
             self.interp_param['width'] = self.inputs_buf[1][1]
 
             self.attrs = self.interp_param
-#opt.HalfPixelCenters()
+            #opt.HalfPixelCenters()
 
         self.setParsed()
 
@@ -97,12 +88,9 @@ class Resize(Operator):
                 layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, None, convolution_param=self.convolution_param)
             elif hasattr(self, 'upsample_param'):
                 layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, upsample_param=self.upsample_param)
-            else:
-                raise NotImplementedError
         elif self.op_code == tflite.BuiltinOperator.RESIZE_BILINEAR:
             layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, interp_param=self.interp_param)
-        else:
-            raise NotImplementedError
 
         self.setConverted()
+
         return [layer]
