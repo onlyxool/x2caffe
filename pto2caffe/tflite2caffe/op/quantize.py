@@ -19,19 +19,16 @@ class Quantize(Operator):
     def type(self):
         if hasattr(self, 'reshape_param'):
             return 'Reshape'
-        else:
-            if self.op_code == tflite.BuiltinOperator.QUANTIZE:
-                return 'Quantize'
-            elif self.op_code == tflite.BuiltinOperator.DEQUANTIZE:
-                return 'Dequantize'
+        elif self.op_code == tflite.BuiltinOperator.QUANTIZE:
+            return 'Quantize'
+        elif self.op_code == tflite.BuiltinOperator.DEQUANTIZE:
+            return 'Dequantize'
 
 
     def parse(self):
         logger.debug("Parsing %s...", self.type)
 
         assert(self.op_code in (tflite.BuiltinOperator.QUANTIZE, tflite.BuiltinOperator.DEQUANTIZE))
-        assert(self.op.InputsLength() == 1)
-        assert(self.op.OutputsLength() == 1)
 
         self.parseInput()
         self.parseOutput()
@@ -39,10 +36,13 @@ class Quantize(Operator):
         if self.inputs_buf[0] is None:
             self.reshape_param = dict(shape=dict(dim=self.outputs_shape[0]))
             self.setParsed()
+        else:
+            self.model.tensor[self.outputs[0]] = self.model.tensor[self.inputs[0]]
 
 
     def convert(self):
-        if hasattr(self, 'reshape_param'):
-            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, reshape_param=self.reshape_param)
-            self.setConverted()
-            return [layer]
+        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, reshape_param=self.reshape_param)
+
+        self.setConverted()
+
+        return [layer]
