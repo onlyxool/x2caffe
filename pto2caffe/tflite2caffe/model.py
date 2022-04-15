@@ -29,7 +29,7 @@ from tflite2caffe.op.fullyconnected import InnerProduct
 
 from caffe_transform import save_caffe_model
 from caffe_transform import make_caffe_input_layer
-
+from tflite2caffe.quantize import Dequantize, isQuantilize
 
 logger = logging.getLogger('TFLite2Caffe')
 
@@ -99,6 +99,7 @@ class Model(Base):
         super().__init__(model, model.Subgraphs(0))
         self.version = model.Version()
         self.inputs_shape = list()
+        self.tensor = dict()
         self.param = param
         self.operators = []
         self.layers = []
@@ -118,6 +119,31 @@ class Model(Base):
             self.inputs_shape.append(list(self.graph.Tensors(self.graph.Inputs(i)).ShapeAsNumpy()))
         self.param['inputs_shape'] = self.inputs_shape
 
+        # Tensors
+        for i in range(self.graph.TensorsLength()):
+            type_id = self.graph.Tensors(i).Type()
+            tensor_type = ['float32', 'float16', 'int32', 'uint8', 'int64', 'string', 'bool', 'int16', 'COMPLEX64', 'int8', 'float64', 'COMPLEX128']
+            buffer_id = self.graph.Tensors(i).Buffer()
+            buf = self.model.Buffers(buffer_id).DataAsNumpy()
+            shape = self.graph.Tensors(i).ShapeAsNumpy()
+
+            if isinstance(buf, int) and buf == 0:
+                self.tensor[i] = None
+            elif isinstance(buf, np.ndarray):
+                nparray = np.frombuffer(buf, dtype=tensor_type[type_id]).reshape(shape)
+                if self.graph.Tensors(i).Quantization() is not None:
+                    quantizedDimmension = self.graph.Tensors(i).Quantization().QuantizedDimension()
+                    scale = self.graph.Tensors(i).Quantization().ScaleAsNumpy()
+                    zero_point = self.graph.Tensors(i).Quantization().ZeroPointAsNumpy()
+
+                    if isQuantilize(self.graph.Tensors(i).Quantization().ScaleLength(), self.graph.Tensors(i).Quantization().ZeroPointLength()):
+                        nparray = Dequantize(nparray, scale, zero_point, quantizedDimmension, np.float32)
+
+                self.tensor[i] = nparray
+            else:
+                raise NotImplementedError
+
+        # Operators
         for index in range(self.graph.OperatorsLength()):
             tf_op = self.graph.Operators(index)
             tf_op_code = self.model.OperatorCodes(tf_op.OpcodeIndex())
