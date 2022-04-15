@@ -6,12 +6,14 @@ from base import Base
 from util import *
 
 from tflite2caffe.op.pad import Pad
+from tflite2caffe.op.add import Add
+from tflite2caffe.op.mul import Mul
+from tflite2caffe.op.sub import Sub
 from tflite2caffe.op.relu import ReLU
 from tflite2caffe.op.relux import ReLUX
 from tflite2caffe.op.prelu import PReLU
 from tflite2caffe.op.swish import Swish
 from tflite2caffe.op.split import Slice #TODO
-from tflite2caffe.op.binary import Binary
 from tflite2caffe.op.reduce import Reduce
 from tflite2caffe.op.resize import Resize
 from tflite2caffe.op.concat import Concat
@@ -33,10 +35,10 @@ logger = logging.getLogger('TFLite2Caffe')
 
 OpMap = {
     'PAD': Pad,
+    'ADD': Add,
+    'MUL': Mul,
+    'SUB': Sub,
     'RELU': ReLU,
-    'ADD': Binary,
-    'MUL': Binary,
-    'SUB': Binary,
     'MEAN': Reduce,
     'PRELU': PReLU,
     'SPLIT': Slice,
@@ -61,6 +63,7 @@ OpMap = {
     'DEPTHWISE_CONV_2D': Convolution,
     'RESIZE_NEAREST_NEIGHBOR': Resize,
 #    'DIV': Binary,
+#   'POW': Binary,
 #    'MIRROR_PAD': Pad,
 }
 
