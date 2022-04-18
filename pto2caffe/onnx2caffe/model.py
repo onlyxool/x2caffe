@@ -5,6 +5,7 @@ from dump import Dump
 from onnx import numpy_helper
 
 
+from onnx2caffe.op.elu import Elu
 from onnx2caffe.op.log import Log
 from onnx2caffe.op.exp import Exp
 from onnx2caffe.op.pad import Pad
@@ -54,6 +55,7 @@ logger = logging.getLogger('ONNX2caffe')
 
 
 OpMap = {
+    'Elu': Elu,
     'Exp': Exp,
     'Log': Log,
     'Pad': Pad,
