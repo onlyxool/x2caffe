@@ -1,3 +1,4 @@
+import sys
 import logging
 from dump import Dump
 from base import Base
@@ -18,6 +19,7 @@ from tensorflow2caffe.op.spacetodepth import SpaceToDepth
 from caffe_transform import save_caffe_model
 from caffe_transform import make_caffe_input_layer
 from util import shape_map_nhwc2nchw
+
 
 logger = logging.getLogger('TensorFlow2Caffe')
 
@@ -41,7 +43,6 @@ OpMap = {
 class Model(Base):
 
     def __init__(self, graph, param):
-
         super().__init__(None, graph)
         self.graph = graph
         self.param = param
@@ -94,6 +95,10 @@ class Model(Base):
 
         # Parse all operations
         for index, tf_op in enumerate(tf_ops):
+            if tf_op.type not in OpMap:
+                errorMsg = 'Error: Operator [' + tf_op.type + '] does not Support.\n'
+                sys.exit(errorMsg)
+
             op = OpMap[tf_op.type](self, tf_op, tf_op.type, index)
             op.parse()
             if op.status.parsed:
