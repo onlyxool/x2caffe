@@ -25,6 +25,7 @@ from tflite2caffe.op.conv import Convolution
 from tflite2caffe.op.quantize import Quantize
 from tflite2caffe.op.transpose import Permute
 from tflite2caffe.op.deconv import Deconvolution
+from tflite2caffe.op.depthtospace import DepthToSpace
 from tflite2caffe.op.fullyconnected import InnerProduct
 
 from caffe_transform import save_caffe_model
@@ -58,6 +59,7 @@ OpMap = {
     'CONCATENATION': Concat,
     'RESIZE_BILINEAR': Resize,
     'AVERAGE_POOL_2D': Pooling,
+    'DEPTH_TO_SPACE': DepthToSpace,
     'TRANSPOSE_CONV': Deconvolution,
     'FULLY_CONNECTED': InnerProduct,
     'DEPTHWISE_CONV_2D': Convolution,
