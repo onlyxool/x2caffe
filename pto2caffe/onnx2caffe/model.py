@@ -51,8 +51,7 @@ from caffe_transform import save_caffe_model
 from caffe_transform import make_caffe_input_layer
 
 
-logger = logging.getLogger('ONNX2caffe')
-
+logger = logging.getLogger('onnx2caffe')
 
 OpMap = {
     'Elu': Elu,
@@ -203,6 +202,7 @@ class Model(Base):
 
             op = OpMap[node.op_type](self, node, index)
             op.parse()
+
             if op.status.parsed:
                 self.operators.append(op)
             else:
@@ -219,7 +219,6 @@ class Model(Base):
             self.layers.append(make_caffe_input_layer(input, self.shape[input], index, self.param))
 
         for op in self.operators:
-            logger.debug(op)
             layers = op.convert()
             for layer in layers:
                 self.layers.append(layer)
