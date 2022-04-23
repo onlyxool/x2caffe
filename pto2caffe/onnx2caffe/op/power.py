@@ -14,13 +14,9 @@ class Pow(Operator):
         self.setInited()
 
 
-    @property
-    def type(self):
-        return 'Power'
-
-
     def parse(self):
         logger.debug("Parsing %s...", self.type)
+        self.layer_type = 'Power'
 
         self.parseInput()
         self.parseOutput()

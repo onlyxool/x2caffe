@@ -14,13 +14,9 @@ class PReLU(Operator):
         self.setInited()
 
 
-    @property
-    def type(self):
-        return 'PReLU'
-
-
     def parse(self):
         logger.debug("Parsing %s...", self.type)
+        self.layer_type = 'PReLU'
 
         self.parseInput()
         self.parseOutput()
@@ -29,6 +25,8 @@ class PReLU(Operator):
         self.parseAttributes()
         self.slope = np.squeeze(self.inputs_buf[1])
         self.inputs_shape[1] = self.slope.shape
+        assert(len(self.inputs_shape[1]) == 1)
+        assert(len(self.inputs_shape[1]) == 1)
 
         self.prelu_param = dict()
         self.prelu_param['channel_shared'] = True if self.slope.shape[0] == 1 else False

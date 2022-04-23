@@ -14,13 +14,9 @@ class Slice(Operator):
         self.setInited()
 
 
-    @property
-    def type(self):
-        return 'Slice'
-
-
     def parse(self):
         logger.debug("Parsing %s...", self.type)
+        self.layer_type = 'Slice'
 
         self.parseInput()
         self.parseOutput()

@@ -13,13 +13,9 @@ class Elu(Operator):
         self.setInited()
 
 
-    @property
-    def type(self):
-        return 'ELU'
-
-
     def parse(self):
         logger.debug("Parsing %s...", self.type)
+        self.layer_type = 'ELU'
 
         self.parseInput()
         self.parseOutput()

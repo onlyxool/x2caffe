@@ -15,13 +15,9 @@ class InstanceNormalization(Operator):
         self.setInited()
 
 
-    @property
-    def type(self):
-        return 'BatchNorm'
-
-
     def parse(self):
         logger.debug("Parsing %s...", self.type)
+        self.layer_type = 'BatchNorm'
 
         self.parseInput()
         self.parseOutput()

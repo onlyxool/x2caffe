@@ -13,13 +13,9 @@ class ReLU(Operator):
         self.setInited()
 
 
-    @property
-    def type(self):
-        return 'ReLU'
-
-
     def parse(self):
         logger.debug("Parsing %s...", self.type)
+        self.layer_type = 'ReLU'
 
         self.parseInput()
         self.parseOutput()

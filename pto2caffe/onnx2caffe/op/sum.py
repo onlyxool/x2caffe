@@ -14,13 +14,9 @@ class Sum(Operator):
         self.setInited()
 
 
-    @property
-    def type(self):
-        return 'Eltwise'
-
-
     def parse(self):
         logger.debug("Parsing %s...", self.type)
+        self.layer_type = 'Eltwise'
 
         self.parseInput()
         self.parseOutput()

@@ -14,13 +14,9 @@ class Exp(Operator):
         self.setInited()
 
 
-    @property
-    def type(self):
-        return 'Exp'
-
-
     def parse(self):
         logger.debug("Parsing %s...", self.type)
+        self.layer_type = 'Exp'
 
         self.parseInput()
         self.parseOutput()

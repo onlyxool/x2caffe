@@ -14,13 +14,9 @@ class Reduce(Operator):
         self.setInited()
 
 
-    @property
-    def type(self):
-        return 'Pooling'
-
-
     def parse(self):
         logger.debug("Parsing %s...", self.type)
+        self.layer_type = 'Pooling'
 
         self.parseInput()
         self.parseOutput()

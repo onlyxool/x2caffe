@@ -13,16 +13,6 @@ class Sub(Operator):
         self.setInited()
 
 
-    @property
-    def type(self):
-        if hasattr(self, 'eltwise_param'):
-            return 'Eltwise'
-        elif hasattr(self, 'scale_param'):
-            return 'Scale'
-        else:
-            return self.op_code
-
-
     def parse(self):
         logger.debug("Parsing %s...", self.type)
 
@@ -33,10 +23,14 @@ class Sub(Operator):
         self.parseAttributes()
 
         if self.inputs_buf[0] is None and self.inputs_buf[1] is None:
+            # Eltwise
+            self.layer_type = 'Eltwise'
             self.eltwise_param = dict()
             self.eltwise_param['operation'] = 3 # Caffe Eltwise SUB
             self.attrs = self.eltwise_param
         else:
+            # Scale
+            self.layer_type = 'Scale'
             if self.inputs_buf[0] is not None:
                 bias_index = 0
                 input_index = 1
@@ -62,10 +56,12 @@ class Sub(Operator):
 
 
     def convert(self):
-        if hasattr(self, 'eltwise_param'):
+        if self.layer_type == 'Eltwise':
             layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param)
-        elif hasattr(self, 'scale_param'):
+        elif self.layer_type == 'Scale':
             layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, scale_param=self.scale_param)
+        else:
+            raise NotImplementedError
 
         self.setConverted()
 

@@ -15,13 +15,9 @@ class Mish(Operator):
         self.setInited()
 
 
-    @property
-    def type(self):
-        return 'Mish'
-
-
     def parse(self):
         logger.debug("Parsing %s...", self.type)
+        self.layer_type = 'Mish'
 
         self.parseInput()
         self.parseOutput()

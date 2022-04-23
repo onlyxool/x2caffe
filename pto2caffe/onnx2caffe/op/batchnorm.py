@@ -15,13 +15,9 @@ class BatchNorm(Operator):
         self.setInited()
 
 
-    @property
-    def type(self):
-        return 'BatchNorm'
-
-
     def parse(self):
         logger.debug("Parsing %s...", self.type)
+        self.layer_type = 'BatchNorm'
 
         self.parseInput()
         self.parseOutput()
@@ -52,5 +48,7 @@ class BatchNorm(Operator):
     def convert(self):
         layer0 = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.mean, self.var, batch_norm_param=self.batch_norm_param)
         layer1 = caffe_layer('Scale', 'Scale'+str(self.index), self.outputs, self.inputs_buf, self.outputs, self.weight, self.bias, scale_param=self.scale_param)
+
         self.setConverted()
+
         return [layer0, layer1]

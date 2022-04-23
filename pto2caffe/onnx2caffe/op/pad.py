@@ -15,13 +15,9 @@ class Pad(Operator):
         self.setInited()
 
 
-    @property
-    def type(self):
-        return 'Pad'
-
-
     def parse(self):
         logger.debug("Parsing %s...", self.type)
+        self.layer_type = 'Pad'
 
         self.parseInput()
         self.parseOutput()

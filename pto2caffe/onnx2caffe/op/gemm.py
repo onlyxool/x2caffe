@@ -14,13 +14,9 @@ class InnerProduct(Operator):
         self.setInited()
 
 
-    @property
-    def type(self):
-        return 'InnerProduct'
-
-
     def parse(self):
         logger.debug("Parsing %s...", self.type)
+        self.layer_type = 'InnerProduct'
 
         self.parseInput()
         self.parseOutput()

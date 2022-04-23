@@ -14,13 +14,9 @@ class TanH(Operator):
         self.setInited()
 
 
-    @property
-    def type(self):
-        return 'TanH'
-
-
     def parse(self):
         logger.debug("Parsing %s...", self.type)
+        self.layer_type = 'TanH'
 
         self.parseInput()
         self.parseOutput()

@@ -14,13 +14,9 @@ class Dropout(Operator):
         self.setInited()
 
 
-    @property
-    def type(self):
-        return 'Dropout'
-
-
     def parse(self):
         logger.debug("Parsing %s...", self.type)
+        self.layer_type = 'Dropout'
 
         self.parseInput()
         self.parseOutput()

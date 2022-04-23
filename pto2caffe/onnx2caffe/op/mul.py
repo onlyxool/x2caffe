@@ -21,7 +21,7 @@ class Mul(Operator):
         elif hasattr(self, 'scale_param'):
             return 'Scale'
         else:
-            return self.op_code
+            return self.operator
 
 
     def parse(self):

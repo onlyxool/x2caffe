@@ -13,13 +13,9 @@ class ReLUX(Operator):
         self.setInited()
 
 
-    @property
-    def type(self):
-        return 'ReLUX'
-
-
     def parse(self):
         logger.debug("Parsing %s...", self.type)
+        self.layer_type = 'ReLUX'
 
         self.parseInput()
         self.parseOutput()

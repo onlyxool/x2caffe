@@ -13,13 +13,9 @@ class Sigmoid(Operator):
         self.setInited()
 
 
-    @property
-    def type(self):
-        return 'Sigmoid'
-
-
     def parse(self):
         logger.debug("Parsing %s...", self.type)
+        self.layer_type = 'Sigmoid'
 
         self.parseInput()
         self.parseOutput()

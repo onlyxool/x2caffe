@@ -13,14 +13,6 @@ class Unsqueeze(Operator):
         self.setInited()
 
 
-    @property
-    def type(self):
-        if hasattr(self, 'reshape_param'):
-            return 'Reshape'
-        else:
-            return 'Unsqueeze'
-
-
     def parse(self):
         logger.debug("Parsing %s...", self.type)
 
@@ -31,15 +23,17 @@ class Unsqueeze(Operator):
         self.parseAttributes()
 
         if self.inputs_buf[0] is not None:
+            self.layer_type = 'Unsqueeze'
             self.model.input_tensor[self.outputs[0]] = self.inputs_buf[0].reshape(self.outputs_shape[0])
         else:
+            self.layer_type = 'Reshape'
             self.reshape_param = dict(shape=dict(dim=self.outputs_shape[0]))
             self.attrs = self.reshape_param
             self.setParsed()
 
 
     def convert(self):
-        if hasattr(self, 'reshape_param'):
+        if self.type == 'Reshape':
             layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, reshape_param=self.reshape_param)
             self.setConverted()
             return [layer]

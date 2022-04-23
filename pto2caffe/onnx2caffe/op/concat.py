@@ -5,19 +5,16 @@ from onnx2caffe.op.operator import Operator
 
 logger = logging.getLogger('onnx2caffe')
 
+
 class Concat(Operator):
     def __init__(self, model, node, index):
         super().__init__(model, node, index)
         self.setInited()
 
 
-    @property
-    def type(self):
-        return 'Concat'
-
-
     def parse(self):
         logger.debug("Parsing %s...", self.shorty)
+        self.layer_type = 'Concat'
 
         self.parseInput()
         self.parseOutput()

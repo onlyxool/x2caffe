@@ -14,18 +14,6 @@ class Resize(Operator):
         self.setInited()
 
 
-    @property
-    def type(self):
-        if hasattr(self, 'convolution_param'):
-            return 'Deconvolution'
-        elif hasattr(self, 'upsample_param'):
-            return 'Upsample'
-        elif hasattr(self, 'interp_param'):
-            return 'Interp'
-        else:
-            return 'Resize'
-
-
     def parse(self):
         logger.debug("Parsing %s...", self.type)
 
@@ -58,6 +46,7 @@ class Resize(Operator):
         coordinate = str(self.attrs.get('coordinate_transformation_mode', b''), encoding = "utf8")
         if self.mode == 'nearest':
             if scale_factor % 1 == 0:
+                self.layer_type = 'Deconvolution'
                 self.convolution_param = dict()
                 self.convolution_param['bias_term'] = False
                 self.convolution_param['num_output'] = self.outputs_shape[0][1]
@@ -71,10 +60,12 @@ class Resize(Operator):
                 self.inputs_buf[1] = self.weight
                 self.inputs_shape[1] = self.inputs_buf[1].shape
             else:
+                self.layer_type = 'Upsample'
                 self.upsample_param = dict()
                 self.upsample_param['scale'] = scale_factor
                 self.attrs = self.upsample_param
         elif self.mode == 'linear':
+            self.layer_type = 'Interp'
             self.interp_param = dict()
             self.interp_param['align_corners'] = True if coordinate == 'align_corners' else False
             self.interp_param['height'] = self.outputs_shape[0][2]
@@ -86,14 +77,14 @@ class Resize(Operator):
 
     def convert(self):
         if self.mode == 'nearest':
-            if hasattr(self, 'convolution_param'):
+            if self.type == 'Deconvolution':
                 layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, None, convolution_param=self.convolution_param)
-            elif hasattr(self, 'upsample_param'):
+            elif self.type == 'Upsample':
                 layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, upsample_param=self.upsample_param)
             else:
                 raise NotImplementedError
         elif self.mode == 'linear':
-                layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, interp_param=self.interp_param)
+            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, interp_param=self.interp_param)
         else:
             raise NotImplementedError
 

@@ -7,7 +7,8 @@ class Operator(Base):
     def __init__(self, model, node, index):
         super().__init__(model, model.graph, index)
         self.node = node
-        self.op_code = node.op_type
+        self.operator = node.op_type
+        self.layer_type = None
         self.index = index
         self.inputs = []
         self.inputs_shape = []
@@ -22,7 +23,10 @@ class Operator(Base):
 
     @property
     def type(self):
-        raise NotImplementedError("Method Operator.type() must be overrided!")
+        if self.layer_type is None:
+            return self.operator
+        else:
+            return self.layer_type
 
 
     @property

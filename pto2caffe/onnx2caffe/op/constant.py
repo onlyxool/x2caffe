@@ -12,13 +12,9 @@ class Constant(Operator):
         self.setInited()
 
 
-    @property
-    def type(self):
-        return 'Constant'
-
-
     def parse(self):
         logger.debug("Parsing %s...", self.type)
+        self.layer_type = 'Constant'
 
         self.parseInput()
         self.parseOutput()

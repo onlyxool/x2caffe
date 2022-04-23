@@ -14,13 +14,9 @@ class LRN(Operator):
         self.setInited()
 
 
-    @property
-    def type(self):
-        return 'LRN'
-
-
     def parse(self):
         logger.debug("Parsing %s...", self.type)
+        self.layer_type = 'LRN'
 
         self.parseInput()
         self.parseOutput()

@@ -14,13 +14,9 @@ class Permute(Operator):
         self.setInited()
 
 
-    @property
-    def type(self):
-        return 'Permute'
-
-
     def parse(self):
         logger.debug("Parsing %s...", self.type)
+        self.layer_type = 'Permute'
 
         self.parseInput()
         self.parseOutput()

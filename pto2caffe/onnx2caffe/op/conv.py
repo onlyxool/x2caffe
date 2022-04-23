@@ -14,13 +14,9 @@ class Convolution(Operator):
         self.setInited()
 
 
-    @property
-    def type(self):
-        return 'Convolution'
-
-
     def parse(self):
         logger.debug("Parsing %s...", self.type)
+        self.layer_type = 'Convolution'
 
         self.parseInput()
         self.parseOutput()
@@ -71,7 +67,7 @@ class Convolution(Operator):
                     pad_l += 1
 
         for legacy in self.model.legacys:
-            if legacy.outputs[0] == self.inputs[0] and legacy.op_code == 'Pad':
+            if legacy.outputs[0] == self.inputs[0] and legacy.operator == 'Pad':
                 legacy_pad = legacy.pad
                 pad_l += legacy.pad['left']
                 pad_r += legacy.pad['right']

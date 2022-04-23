@@ -14,13 +14,9 @@ class Pooling(Operator):
         self.setInited()
 
 
-    @property
-    def type(self):
-        return 'Pooling'
-        
-
     def parse(self):
         logger.debug("Parsing %s...", self.type)
+        self.layer_type = 'Pooling'
 
         self.parseInput()
         self.parseOutput()
@@ -28,19 +24,19 @@ class Pooling(Operator):
         # Attributes
         self.parseAttributes()
 
-        if self.op_code == 'MaxPool':
+        if self.operator == 'MaxPool':
             self.pooling_param['pool'] = 0
             self.pooling_param['kernel_h'] = kernel_h = self.attrs['kernel_shape'][0]
             self.pooling_param['kernel_w'] = kernel_w = self.attrs['kernel_shape'][1]
-        elif self.op_code == 'AveragePool':
+        elif self.operator == 'AveragePool':
             self.pooling_param['pool'] = 1
             self.pooling_param['kernel_h'] = kernel_h = self.attrs['kernel_shape'][0]
             self.pooling_param['kernel_w'] = kernel_w = self.attrs['kernel_shape'][1]
-        elif self.op_code == 'GlobalAveragePool':
+        elif self.operator == 'GlobalAveragePool':
             self.pooling_param['pool'] = 1
             self.pooling_param['global_pooling'] = True
         else:
-            raise NotImplementedError(self.op_code)
+            raise NotImplementedError(self.operator)
 
         if 'dilations' in self.attrs and self.attrs['dilations'] != [1, 1]:
             raise NotImplementedError('Caffe Pooling don\'t support dilation')
@@ -73,7 +69,7 @@ class Pooling(Operator):
                     pad_l += 1
 
         for legacy in self.model.legacys:
-            if legacy.outputs[0] == self.inputs[0] and legacy.op_code == 'Pad':
+            if legacy.outputs[0] == self.inputs[0] and legacy.operator == 'Pad':
                 legacy_pad = legacy.pad
                 pad_l += legacy.pad['left']
                 pad_r += legacy.pad['right']

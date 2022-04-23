@@ -14,13 +14,9 @@ class Div(Operator):
         self.setInited()
 
 
-    @property
-    def type(self):
-        return 'Scale'
-
-
     def parse(self):
         logger.debug("Parsing %s...", self.type)
+        self.layer_type = 'Scale'
 
         self.parseInput()
         self.parseOutput()
@@ -42,7 +38,7 @@ class Div(Operator):
             self.weight = 1/self.inputs_buf[1]
             self.bias = None
         else:
-            raise NotImplementedError(self.op_code)
+            raise NotImplementedError(self.operator)
 
         self.setParsed()
 

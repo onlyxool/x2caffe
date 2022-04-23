@@ -13,14 +13,6 @@ class Reshape(Operator):
         self.setInited()
 
 
-    @property
-    def type(self):
-        if hasattr(self, 'reshape_param'):
-            return 'Reshape'
-        else:
-            return 'Constant'
-
-
     def parse(self):
         logger.debug("Parsing %s...", self.type)
 
@@ -31,8 +23,10 @@ class Reshape(Operator):
         self.parseAttributes()
 
         if self.inputs_buf[0] is not None:
+            self.layer_type = 'Constant'
             self.model.input_tensor[self.outputs[0]] = self.inputs_buf[0].reshape(self.outputs_shape[0])
         else:
+            self.layer_type = 'Reshape'
             if 'shape' in self.attrs:
                 self.reshape_param = dict(shape=dict(dim=self.attrs['shape']))
             else:
@@ -42,7 +36,7 @@ class Reshape(Operator):
 
 
     def convert(self):
-        if hasattr(self, 'reshape_param'):
+        if self.type == 'Reshape':
             layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, reshape_param=self.reshape_param)
             self.setConverted()
             return [layer]
