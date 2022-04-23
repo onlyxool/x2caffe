@@ -1,10 +1,7 @@
-import logging
 import numpy as np
 
 from caffe_transform import caffe_layer
 from onnx2caffe.op.operator import Operator
-
-logger = logging.getLogger('onnx2caffe')
 
 
 class Mul(Operator):
@@ -15,7 +12,6 @@ class Mul(Operator):
 
 
     def parse(self):
-        logger.debug("Parsing %s...", self.type)
         super().__parse__()
 
 

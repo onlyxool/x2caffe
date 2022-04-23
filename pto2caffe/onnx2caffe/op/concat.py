@@ -1,9 +1,5 @@
-import logging
-
 from caffe_transform import caffe_layer
 from onnx2caffe.op.operator import Operator
-
-logger = logging.getLogger('onnx2caffe')
 
 
 class Concat(Operator):
@@ -13,7 +9,6 @@ class Concat(Operator):
 
 
     def parse(self):
-        logger.debug("Parsing %s...", self.shorty)
         self.layer_type = 'Concat'
         super().__parse__()
 

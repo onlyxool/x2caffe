@@ -1,9 +1,5 @@
-import logging
-
 from caffe_transform import caffe_layer
 from onnx2caffe.op.operator import Operator
-
-logger = logging.getLogger('onnx2caffe')
 
 
 class InstanceNormalization(Operator):
@@ -16,7 +12,6 @@ class InstanceNormalization(Operator):
 
 
     def parse(self):
-        logger.debug("Parsing %s...", self.type)
         self.layer_type = 'BatchNorm'
         super().__parse__()
 

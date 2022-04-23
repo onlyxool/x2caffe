@@ -1,10 +1,7 @@
 import sys
-import logging
 import numpy as np
 
 from onnx2caffe.op.operator import Operator
-
-logger = logging.getLogger('onnx2caffe')
 
 
 class Pad(Operator):
@@ -16,7 +13,6 @@ class Pad(Operator):
 
 
     def parse(self):
-        logger.debug("Parsing %s...", self.type)
         self.layer_type = 'Pad'
         super().__parse__()
 

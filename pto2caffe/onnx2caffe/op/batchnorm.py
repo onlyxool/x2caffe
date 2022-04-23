@@ -1,9 +1,5 @@
-import logging
-
 from caffe_transform import caffe_layer
 from onnx2caffe.op.operator import Operator
-
-logger = logging.getLogger('onnx2caffe')
 
 
 class BatchNorm(Operator):

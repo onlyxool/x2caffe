@@ -1,13 +1,10 @@
 # This operator is deprecated in opset version 10
 # Ref: https://github.com/onnx/onnx/blob/master/docs/Operators.md#Upsample
 
-import logging
 import numpy as np
 
 from caffe_transform import caffe_layer
 from onnx2caffe.op.operator import Operator
-
-logger = logging.getLogger('onnx2caffe')
 
 
 class Upsample(Operator):
@@ -18,7 +15,6 @@ class Upsample(Operator):
 
 
     def parse(self):
-        logger.debug("Parsing %s...", self.type)
         super().__parse__()
 
         # scale_factor

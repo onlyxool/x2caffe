@@ -1,8 +1,4 @@
-import logging
-
 from onnx2caffe.op.operator import Operator
-
-logger = logging.getLogger('onnx2caffe')
 
 
 class Constant(Operator):
@@ -13,7 +9,6 @@ class Constant(Operator):
 
 
     def parse(self):
-        logger.debug("Parsing %s...", self.type)
         self.layer_type = 'Constant'
         super().__parse__()
 

@@ -1,25 +1,21 @@
-import logging
-
 from caffe_transform import caffe_layer
 from onnx2caffe.op.operator import Operator
-
-logger = logging.getLogger('onnx2caffe')
 
 
 class Split(Operator):
 
     def __init__(self, model, node, index):
         super().__init__(model, node, index)
-        self.slice_param = dict()
         self.setInited()
 
 
     def parse(self):
-        logger.debug("Parsing %s...", self.type)
         self.layer_type = 'Slice'
         super().__parse__()
 
         # Attributes
+        self.slice_param = dict()
+
         # Axis
         self.slice_param['axis'] = self.attrs['axis']
 

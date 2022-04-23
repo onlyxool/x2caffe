@@ -1,10 +1,5 @@
-import logging
-import numpy as np
-
 from caffe_transform import caffe_layer
 from onnx2caffe.op.operator import Operator
-
-logger = logging.getLogger('onnx2caffe')
 
 
 class Div(Operator):
@@ -15,12 +10,11 @@ class Div(Operator):
 
 
     def parse(self):
-        logger.debug("Parsing %s...", self.type)
         self.layer_type = 'Scale'
         super().__parse__()
 
+        # Attributes
         if self.inputs_buf[1] is not None:
-            # Attributes
             self.scale_param = dict()
             self.scale_param['bias_term'] = False
             for i in range(len(self.inputs_shape[0])):
