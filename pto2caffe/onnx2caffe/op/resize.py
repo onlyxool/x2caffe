@@ -16,9 +16,7 @@ class Resize(Operator):
 
     def parse(self):
         logger.debug("Parsing %s...", self.type)
-
-        self.parseInput()
-        self.parseOutput()
+        super().__parse__()
 
         scale = self.inputBuf_byName('scales')
         if scale is None:
@@ -41,12 +39,14 @@ class Resize(Operator):
         assert(scale_factor != 0)
 
         # Attributes
-        self.parseAttributes()
         self.mode = str(self.attrs['mode'], encoding = "utf8")
         coordinate = str(self.attrs.get('coordinate_transformation_mode', b''), encoding = "utf8")
         if self.mode == 'nearest':
             if scale_factor % 1 == 0:
+                # Deconvolution Layer
                 self.layer_type = 'Deconvolution'
+
+                # Attributes
                 self.convolution_param = dict()
                 self.convolution_param['bias_term'] = False
                 self.convolution_param['num_output'] = self.outputs_shape[0][1]
@@ -60,12 +60,18 @@ class Resize(Operator):
                 self.inputs_buf[1] = self.weight
                 self.inputs_shape[1] = self.inputs_buf[1].shape
             else:
+                # Upsample Layer
                 self.layer_type = 'Upsample'
+
+                # Attributes
                 self.upsample_param = dict()
                 self.upsample_param['scale'] = scale_factor
                 self.attrs = self.upsample_param
-        elif self.mode == 'linear':
+        elif self.mode == 'bilinear' or self.mode == 'linear':
+            # Interp Layer
             self.layer_type = 'Interp'
+
+            # Attributes
             self.interp_param = dict()
             self.interp_param['align_corners'] = True if coordinate == 'align_corners' else False
             self.interp_param['height'] = self.outputs_shape[0][2]

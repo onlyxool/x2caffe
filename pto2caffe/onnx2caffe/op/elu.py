@@ -16,12 +16,9 @@ class Elu(Operator):
     def parse(self):
         logger.debug("Parsing %s...", self.type)
         self.layer_type = 'ELU'
-
-        self.parseInput()
-        self.parseOutput()
+        super().__parse__()
 
         # Attributes
-        self.parseAttributes()
         self.elu_param = dict()
         self.elu_param['alpha'] = self.attrs.get('alpha', 1.0)
         self.attrs = self.elu_param

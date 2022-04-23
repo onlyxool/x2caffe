@@ -17,13 +17,9 @@ class Reduce(Operator):
     def parse(self):
         logger.debug("Parsing %s...", self.type)
         self.layer_type = 'Pooling'
-
-        self.parseInput()
-        self.parseOutput()
+        super().__parse__()
 
         # Attributes
-        self.parseAttributes()
-
         self.pooling_param['pool'] = 1 # Pooling.AVE
         self.pooling_param['kernel_h'] = self.inputs_shape[0][2]
         self.pooling_param['kernel_w'] = self.inputs_shape[0][3] if len(self.inputs_shape[0]) == 4 else 1

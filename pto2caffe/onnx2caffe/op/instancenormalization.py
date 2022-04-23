@@ -18,9 +18,7 @@ class InstanceNormalization(Operator):
     def parse(self):
         logger.debug("Parsing %s...", self.type)
         self.layer_type = 'BatchNorm'
-
-        self.parseInput()
-        self.parseOutput()
+        super().__parse__()
 
         # Weight
         self.weight = self.inputs_buf[1]
@@ -29,7 +27,6 @@ class InstanceNormalization(Operator):
         self.bias = self.inputs_buf[2]
 
         # Attributes
-        self.parseAttributes()
         self.batch_norm_param['eps'] = self.attrs.get('epsilon', 1e-5)
         self.batch_norm_param['use_global_stats'] = False
 

@@ -15,14 +15,12 @@ class Concat(Operator):
     def parse(self):
         logger.debug("Parsing %s...", self.shorty)
         self.layer_type = 'Concat'
-
-        self.parseInput()
-        self.parseOutput()
+        super().__parse__()
 
         # Attributes
-        self.parseAttributes()
         self.concat_param = dict()
         self.concat_param['axis'] = self.attrs['axis']
+
         self.attrs = self.concat_param
 
         self.setParsed()
@@ -30,5 +28,7 @@ class Concat(Operator):
 
     def convert(self):
         layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, concat_param=self.concat_param)
+
         self.setConverted()
+
         return [layer]

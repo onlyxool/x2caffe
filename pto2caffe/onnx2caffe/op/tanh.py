@@ -17,13 +17,9 @@ class TanH(Operator):
     def parse(self):
         logger.debug("Parsing %s...", self.type)
         self.layer_type = 'TanH'
-
-        self.parseInput()
-        self.parseOutput()
+        super().__parse__()
 
         # Attributes
-        self.parseAttributes()
-
         self.attrs = self.tanh_param
 
         self.setParsed()

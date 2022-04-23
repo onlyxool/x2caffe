@@ -17,12 +17,9 @@ class Sum(Operator):
     def parse(self):
         logger.debug("Parsing %s...", self.type)
         self.layer_type = 'Eltwise'
-
-        self.parseInput()
-        self.parseOutput()
+        super().__parse__()
 
         # Attributes
-        self.parseAttributes()
         self.eltwise_param = dict()
         self.eltwise_param['operation'] = 1 #Caffe Eltwise SUM
         self.attrs = self.eltwise_param

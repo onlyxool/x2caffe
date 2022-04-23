@@ -26,10 +26,7 @@ class MatMul(Operator):
     def parse(self):
         logger.debug("Parsing %s...", self.type)
         self.layer_type = 'Convolution'
-
-        self.parseInput()
-        self.parseOutput()
-        self.parseAttributes()
+        super().__parse__()
 
         if len(self.inputs_shape[0]) == 2 and len(self.inputs_shape[1]) == 2:
             assert(self.inputs_shape[0][1] == self.inputs_shape[1][0])

@@ -17,13 +17,11 @@ class Permute(Operator):
     def parse(self):
         logger.debug("Parsing %s...", self.type)
         self.layer_type = 'Permute'
-
-        self.parseInput()
-        self.parseOutput()
+        super().__parse__()
 
         # Attributes 
-        self.parseAttributes()
         self.permute_param['order'] = list(self.attrs['perm'])
+
         self.attrs = self.permute_param
 
         self.setParsed()

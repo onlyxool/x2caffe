@@ -17,12 +17,9 @@ class LRN(Operator):
     def parse(self):
         logger.debug("Parsing %s...", self.type)
         self.layer_type = 'LRN'
-
-        self.parseInput()
-        self.parseOutput()
+        super().__parse__()
 
         # Attributes
-        self.parseAttributes()
         self.lrn_param['alpha'] = self.attrs['alpha']
         self.lrn_param['beta'] = self.attrs['beta']
         self.lrn_param['local_size'] = self.attrs['size']

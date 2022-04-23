@@ -17,13 +17,9 @@ class Slice(Operator):
     def parse(self):
         logger.debug("Parsing %s...", self.type)
         self.layer_type = 'Slice'
+        super().__parse__()
 
-        self.parseInput()
-        self.parseOutput()
-
-        # Attributes
-        self.parseAttributes()
-
+        # num_slices, starts, ends, axes, steps
         if self.model.opset[0] < 10:
             num_slices = len(self.attrs['starts'])
             starts = self.attrs['starts']
@@ -43,6 +39,7 @@ class Slice(Operator):
         if ends[0] == 9223372036854775807: # int max
             ends[0] = self.inputs_shape[0][axes[0]]
 
+        # Attributes
         if max(steps) == 1:
             axis_length = self.inputs_shape[0][axes[0]]
             self.slice_param['axis'] = axes[0]

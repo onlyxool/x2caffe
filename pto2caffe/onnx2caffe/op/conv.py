@@ -17,9 +17,7 @@ class Convolution(Operator):
     def parse(self):
         logger.debug("Parsing %s...", self.type)
         self.layer_type = 'Convolution'
-
-        self.parseInput()
-        self.parseOutput()
+        super().__parse__()
 
         # Weight
         self.weight = self.inputs_buf[1]
@@ -28,8 +26,6 @@ class Convolution(Operator):
         self.bias = self.inputs_buf[2] if len(self.inputs_buf) == 3 else None
 
         # Attributes
-        self.parseAttributes()
-
         self.convolution_param['num_output'] = self.weight.shape[0]
 
         self.convolution_param['stride_h'] = stride_h = self.attrs.get('strides', [1, 1])[0]

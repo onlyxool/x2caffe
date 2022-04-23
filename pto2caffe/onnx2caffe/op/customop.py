@@ -18,12 +18,7 @@ class Mish(Operator):
     def parse(self):
         logger.debug("Parsing %s...", self.type)
         self.layer_type = 'Mish'
-
-        self.parseInput()
-        self.parseOutput()
-
-        # Attributes
-        self.parseAttributes()
+        super().__parse__()
 
         self.setParsed()
 

@@ -15,13 +15,9 @@ class Unsqueeze(Operator):
 
     def parse(self):
         logger.debug("Parsing %s...", self.type)
-
-        self.parseInput()
-        self.parseOutput()
+        super().__parse__()
 
         # Attributes
-        self.parseAttributes()
-
         if self.inputs_buf[0] is not None:
             self.layer_type = 'Unsqueeze'
             self.model.input_tensor[self.outputs[0]] = self.inputs_buf[0].reshape(self.outputs_shape[0])

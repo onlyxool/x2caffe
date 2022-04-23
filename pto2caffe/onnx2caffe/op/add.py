@@ -16,20 +16,20 @@ class Add(Operator):
 
     def parse(self):
         logger.debug("Parsing %s...", self.type)
-
-        self.parseInput()
-        self.parseOutput()
-
-        # Attributes
-        self.parseAttributes()
+        super().__parse__()
 
         if self.inputs_buf[0] is None and self.inputs_buf[1] is None:
+            # Eltwise Layer
             self.layer_type = 'Eltwise'
+
+            # Attributes
             self.eltwise_param = dict()
             self.eltwise_param['operation'] = 1 # Caffe Eltwise SUM
             self.attrs = self.eltwise_param
         else:
+            # Scale Layer
             self.layer_type = 'Scale'
+
             if self.inputs_buf[0] is not None:
                 bias_index = 0
                 input_index = 1
@@ -37,9 +37,13 @@ class Add(Operator):
                 bias_index = 1
                 input_index = 0
 
+            # Weight
             self.weight = np.ones(self.inputs_shape[bias_index], dtype=float, order='C')
+
+            # Bias
             self.bias = self.inputs_buf[bias_index]
 
+            # Attributes
             self.scale_param = dict()
             self.scale_param['bias_term'] = True
 

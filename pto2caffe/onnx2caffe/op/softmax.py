@@ -16,12 +16,9 @@ class Softmax(Operator):
     def parse(self):
         logger.debug("Parsing %s...", self.type)
         self.layer_type = 'Softmax'
-
-        self.parseInput()
-        self.parseOutput()
+        super().__parse__()
 
         # Attributes
-        self.parseAttributes()
         self.softmax_param = dict()
         self.softmax_param['axis'] = self.attrs.get('axis', 1)
         self.attrs = self.softmax_param

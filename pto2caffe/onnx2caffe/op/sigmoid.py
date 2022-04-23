@@ -16,12 +16,9 @@ class Sigmoid(Operator):
     def parse(self):
         logger.debug("Parsing %s...", self.type)
         self.layer_type = 'Sigmoid'
-
-        self.parseInput()
-        self.parseOutput()
+        super().__parse__()
 
         # Attributes
-        self.parseAttributes()
         self.sigmoid_param = dict()
         self.attrs = self.sigmoid_param
 

@@ -16,13 +16,9 @@ class ReLUX(Operator):
     def parse(self):
         logger.debug("Parsing %s...", self.type)
         self.layer_type = 'ReLUX'
-
-        self.parseInput()
-        self.parseOutput()
+        super().__parse__()
 
         # Attributes
-        self.parseAttributes()
-
         self.relux_param = dict()
         if 'max' in self.attrs and 'min' in self.attrs:
             self.relux_param['x'] = self.attrs['max']

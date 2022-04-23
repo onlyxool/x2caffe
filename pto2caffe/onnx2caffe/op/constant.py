@@ -15,12 +15,9 @@ class Constant(Operator):
     def parse(self):
         logger.debug("Parsing %s...", self.type)
         self.layer_type = 'Constant'
-
-        self.parseInput()
-        self.parseOutput()
+        super().__parse__()
 
         # Attributes
-        self.parseAttributes()
         self.model.input_tensor[self.node.output[0]] = self.attrs['value']
 
 

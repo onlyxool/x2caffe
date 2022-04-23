@@ -16,12 +16,9 @@ class ReLU(Operator):
     def parse(self):
         logger.debug("Parsing %s...", self.type)
         self.layer_type = 'ReLU'
-
-        self.parseInput()
-        self.parseOutput()
+        super().__parse__()
 
         # Attributes
-        self.parseAttributes()
         self.relu_param = dict()
         self.relu_param['negative_slope'] = self.attrs.get('alpha', 0)
         self.attrs = self.relu_param

@@ -17,15 +17,13 @@ class Dropout(Operator):
     def parse(self):
         logger.debug("Parsing %s...", self.type)
         self.layer_type = 'Dropout'
+        super().__parse__()
 
-        self.parseInput()
-        self.parseOutput()
         if len(self.outputs) == 2: # Remove output mask
             self.outputs.pop()
             self.outputs_shape.pop()
 
         # Attributes
-        self.parseAttributes()
         self.dropout_param['dropout_ratio'] = self.attrs['ratio']
         self.attrs = self.dropout_param
 

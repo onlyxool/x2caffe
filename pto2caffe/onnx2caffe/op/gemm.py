@@ -17,9 +17,7 @@ class InnerProduct(Operator):
     def parse(self):
         logger.debug("Parsing %s...", self.type)
         self.layer_type = 'InnerProduct'
-
-        self.parseInput()
-        self.parseOutput()
+        super().__parse__()
 
         if self.inputs_shape[0] is None or self.inputs_shape[1] is None:
             errorMsg = 'Input shape of Gemm is None. [' + self.name +']'
@@ -36,8 +34,6 @@ class InnerProduct(Operator):
         self.bias = self.inputs_buf[2] if len(self.inputs_buf) == 3 else None
 
         # Attributes
-        self.parseAttributes()
-
         alpha = self.attrs.get('alpha', 1.0)
         if alpha != 1.0:
             self.weight = self.weight * alpha

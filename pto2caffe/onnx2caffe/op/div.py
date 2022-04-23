@@ -17,14 +17,10 @@ class Div(Operator):
     def parse(self):
         logger.debug("Parsing %s...", self.type)
         self.layer_type = 'Scale'
-
-        self.parseInput()
-        self.parseOutput()
-
-        # Attributes
-        self.parseAttributes()
+        super().__parse__()
 
         if self.inputs_buf[1] is not None:
+            # Attributes
             self.scale_param = dict()
             self.scale_param['bias_term'] = False
             for i in range(len(self.inputs_shape[0])):
@@ -35,7 +31,11 @@ class Div(Operator):
                     self.scale_param['axis'] = i
                     break
             self.attrs = self.scale_param
+
+            # Weight
             self.weight = 1/self.inputs_buf[1]
+
+            # Bias
             self.bias = None
         else:
             raise NotImplementedError(self.operator)

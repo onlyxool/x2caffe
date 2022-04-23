@@ -17,13 +17,9 @@ class Pooling(Operator):
     def parse(self):
         logger.debug("Parsing %s...", self.type)
         self.layer_type = 'Pooling'
+        super().__parse__()
 
-        self.parseInput()
-        self.parseOutput()
-
-        # Attributes
-        self.parseAttributes()
-
+        # Pooling
         if self.operator == 'MaxPool':
             self.pooling_param['pool'] = 0
             self.pooling_param['kernel_h'] = kernel_h = self.attrs['kernel_shape'][0]
@@ -41,6 +37,7 @@ class Pooling(Operator):
         if 'dilations' in self.attrs and self.attrs['dilations'] != [1, 1]:
             raise NotImplementedError('Caffe Pooling don\'t support dilation')
 
+        # Attributes
         strides = self.attrs.get('strides', [1, 1])
         self.pooling_param['stride_h'] = strides[0]
         self.pooling_param['stride_w'] = strides[1]

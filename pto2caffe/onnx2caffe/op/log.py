@@ -17,12 +17,9 @@ class Log(Operator):
     def parse(self):
         logger.debug("Parsing %s...", self.type)
         self.layer_type = 'Log'
-
-        self.parseInput()
-        self.parseOutput()
+        super().__parse__()
 
         # Attributes
-        self.parseAttributes()
         # Leave all arguments in ExpParameter as default
         # base = -1.0 (base = e)
         # scale = 1.0

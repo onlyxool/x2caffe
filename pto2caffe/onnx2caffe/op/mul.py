@@ -14,32 +14,27 @@ class Mul(Operator):
         self.setInited()
 
 
-    @property
-    def type(self):
-        if hasattr(self, 'eltwise_param'):
-            return 'Eltwise'
-        elif hasattr(self, 'scale_param'):
-            return 'Scale'
-        else:
-            return self.operator
-
-
     def parse(self):
         logger.debug("Parsing %s...", self.type)
+        super().__parse__()
 
-        self.parseInput()
-        self.parseOutput()
-
-        # Attributes
-        self.parseAttributes()
 
         if self.inputs_buf[0] is None and self.inputs_buf[1] is None:
+            # Eltwise Layer
+            self.layer_type == 'Eltwise'
+
+            # Attributes
             self.eltwise_param = dict()
             self.eltwise_param['operation'] = 0 # Caffe Eltwise PROD
             self.attrs = self.eltwise_param
         else:
+            # Scale Layer
+            self.layer_type == 'Scale'
+
+            # Attributes
             self.scale_param = dict()
             self.scale_param['bias_term'] = False
+
             # Axis
             if self.model.opset[0] >= 7:
                 for i in range(len(self.inputs_shape[0])):
@@ -55,16 +50,20 @@ class Mul(Operator):
 
             self.scale_param['num_axes'] = len(self.inputs_shape[1])
             self.attrs = self.scale_param
+
+            # Weight
             self.weight = self.inputs_buf[1]
+
+            # Bias
             self.bias = None
 
         self.setParsed()
 
 
     def convert(self):
-        if hasattr(self, 'eltwise_param'):
+        if self.type == 'Eltwise':
             layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param)
-        elif hasattr(self, 'scale_param'):
+        elif self.type == 'Scale':
             layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, scale_param=self.scale_param)
 
         self.setConverted()

@@ -17,13 +17,9 @@ class Pow(Operator):
     def parse(self):
         logger.debug("Parsing %s...", self.type)
         self.layer_type = 'Power'
-
-        self.parseInput()
-        self.parseOutput()
+        super().__parse__()
 
         # Attributes
-        self.parseAttributes()
-
         self.power_param['power'] = self.inputs_buf[1]
         self.power_param['scale'] = 1
         self.power_param['shift'] = 0

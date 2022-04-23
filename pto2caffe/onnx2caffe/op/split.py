@@ -17,12 +17,10 @@ class Split(Operator):
     def parse(self):
         logger.debug("Parsing %s...", self.type)
         self.layer_type = 'Slice'
-
-        self.parseInput()
-        self.parseOutput()
+        super().__parse__()
 
         # Attributes
-        self.parseAttributes()
+        # Axis
         self.slice_param['axis'] = self.attrs['axis']
 
         # Slice Point

@@ -17,12 +17,9 @@ class Flatten(Operator):
     def parse(self):
         logger.debug("Parsing %s...", self.type)
         self.layer_type = 'Flatten'
-
-        self.parseInput()
-        self.parseOutput()
+        super().__parse__()
 
         # Attributes
-        self.parseAttributes()
         self.flatten_param['axis'] = self.attrs.get('axis', 1)
         self.attrs = self.flatten_param
 

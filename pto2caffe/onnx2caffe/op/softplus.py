@@ -15,13 +15,11 @@ class Softplus(Operator):
     def parse(self):
         logger.debug("Parsing %s...", self.type)
         self.layer_type = 'Softplus'
-
-        self.parseInput()
-        self.parseOutput()
+        super().__parse__()
 
         # Attributes
-        self.parseAttributes()
         self.softplus_param = dict()
+        self.attrs = self.softplus_param
 
         self.setParsed()
 
@@ -30,4 +28,5 @@ class Softplus(Operator):
         layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs)
 
         self.setConverted()
+
         return [layer]

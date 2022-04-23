@@ -15,18 +15,15 @@ class Reshape(Operator):
 
     def parse(self):
         logger.debug("Parsing %s...", self.type)
-
-        self.parseInput()
-        self.parseOutput()
-
-        # Attributes
-        self.parseAttributes()
+        super().__parse__()
 
         if self.inputs_buf[0] is not None:
             self.layer_type = 'Constant'
             self.model.input_tensor[self.outputs[0]] = self.inputs_buf[0].reshape(self.outputs_shape[0])
         else:
             self.layer_type = 'Reshape'
+
+            # Attributes
             if 'shape' in self.attrs:
                 self.reshape_param = dict(shape=dict(dim=self.attrs['shape']))
             else:

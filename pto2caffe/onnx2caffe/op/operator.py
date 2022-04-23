@@ -69,7 +69,7 @@ class Operator(Base):
         return '\n%s\n%s    %s -> %s' % (self.shorty, self.attrs2str, inames, onames)
 
 
-    def parseInput(self):
+    def __parseInput__(self):
         for input in self.node.input:
             self.inputs.append(input)
             self.inputs_buf.append(self.model.input_tensor.get(input, None))
@@ -81,13 +81,13 @@ class Operator(Base):
                 self.inputs_shape.append(None)
 
 
-    def parseOutput(self):
+    def __parseOutput__(self):
         for output in self.node.output:
             self.outputs.append(output)
             self.outputs_shape.append(self.model.shape.get(output, None))
 
 
-    def convertAttributeProto(self, attr):
+    def __convertAttributeProto__(self, attr):
         if attr.HasField('f'):
             return attr.f
         elif attr.HasField('i'):
@@ -106,9 +106,15 @@ class Operator(Base):
             raise ValueError("Unsupported ONNX attribute: {}".format(attr))
 
 
-    def parseAttributes(self):
+    def __parseAttributes__(self):
         for attr in self.node.attribute:
-            self.attrs[attr.name] = self.convertAttributeProto(attr)
+            self.attrs[attr.name] = self.__convertAttributeProto__(attr)
+
+
+    def __parse__(self):
+        self.__parseInput__()
+        self.__parseOutput__()
+        self.__parseAttributes__()
 
 
     def propagatableTensors(self):

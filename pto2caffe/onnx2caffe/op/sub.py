@@ -1,4 +1,5 @@
 import logging
+import numpy as np
 
 from caffe_transform import caffe_layer
 from onnx2caffe.op.operator import Operator
@@ -15,16 +16,13 @@ class Sub(Operator):
 
     def parse(self):
         logger.debug("Parsing %s...", self.type)
+        super().__parse__()
 
-        self.parseInput()
-        self.parseOutput()
-
-        # Attributes
-        self.parseAttributes()
 
         if self.inputs_buf[0] is None and self.inputs_buf[1] is None:
             # Eltwise
             self.layer_type = 'Eltwise'
+            # Attributes
             self.eltwise_param = dict()
             self.eltwise_param['operation'] = 3 # Caffe Eltwise SUB
             self.attrs = self.eltwise_param
@@ -38,8 +36,13 @@ class Sub(Operator):
                 bias_index = 1
                 input_index = 0
 
+            # Weight
+            self.weight = np.ones([1], dtype=int, order='C')
+
+            # Bias
             self.bias = -self.inputs_buf[bias_index]
 
+            # Attributes
             self.scale_param = dict()
             self.scale_param['bias_term'] = True
 
@@ -56,9 +59,9 @@ class Sub(Operator):
 
 
     def convert(self):
-        if self.layer_type == 'Eltwise':
+        if self.type == 'Eltwise':
             layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param)
-        elif self.layer_type == 'Scale':
+        elif self.type == 'Scale':
             layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, scale_param=self.scale_param)
         else:
             raise NotImplementedError

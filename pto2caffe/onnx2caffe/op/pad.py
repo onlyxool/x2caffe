@@ -18,12 +18,8 @@ class Pad(Operator):
     def parse(self):
         logger.debug("Parsing %s...", self.type)
         self.layer_type = 'Pad'
+        super().__parse__()
 
-        self.parseInput()
-        self.parseOutput()
-
-        # Attributes
-        self.parseAttributes()
         if self.attrs.get('value', 0.0) != 0.0 or self.attrs.get('mode', b'constant').decode() != 'constant':
             errorMsg = 'Caffe support constant Pad mode only.'
             print('Warning:', errorMsg)
