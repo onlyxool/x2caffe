@@ -1,4 +1,5 @@
 import logging
+import numpy as np
 
 from caffe_transform import caffe_layer
 from onnx2caffe.op.operator import Operator
@@ -26,12 +27,11 @@ class PReLU(Operator):
 
         # Attributes
         self.parseAttributes()
-        self.slope = self.inputs_buf[1]
+        self.slope = np.squeeze(self.inputs_buf[1])
+        self.inputs_shape[1] = self.slope.shape
+
         self.prelu_param = dict()
-        if self.slope.shape[0] == 1:
-            self.prelu_param['channel_shared'] = False
-        else:
-            self.prelu_param['channel_shared'] = False
+        self.prelu_param['channel_shared'] = True if self.slope.shape[0] == 1 else False
         self.attrs = self.prelu_param
 
         self.setParsed()
