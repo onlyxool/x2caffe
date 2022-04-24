@@ -14,12 +14,8 @@ class Concat(Operator):
         self.setInited()
 
 
-    @property
-    def type(self):
-        return 'Concat'
-
-
     def parse(self):
+        self.layer_type = 'Concat'
         logger.debug('Parsing %s...', self.type)
 
         self.parseInput()

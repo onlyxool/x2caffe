@@ -27,8 +27,6 @@ from pytorch2caffe.op.adaptavgpooling import AdaptiveAvgPooling
 from pytorch2caffe.op.debug import Debug
 
 
-
-
 logger = logging.getLogger('Pytorch2Caffe')
 
 
@@ -90,7 +88,6 @@ class Model(Base):
 
             op = OpMap[op_type](self, self.pnnx, op_type, index)
             op.parse()
-#print(op)
 
             if op.status.parsed:
                 self.operators.append(op)
@@ -115,7 +112,7 @@ class Model(Base):
         for op in self.operators:
             logger.debug(op)
             layers = op.convert()
-#print(layers, op.type)
+
             for layer in layers:
                 self.layers.append(layer)
 

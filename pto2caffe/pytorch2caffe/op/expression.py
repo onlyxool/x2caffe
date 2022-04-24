@@ -170,16 +170,6 @@ class Expression(Operator):
         self.setInited()
 
 
-    @property
-    def type(self):
-        if hasattr(self, 'eltwise_param'):
-            return 'Eltwise'
-        elif hasattr(self, 'scale_param'):
-            return 'Scale'
-        else:
-            return self.op_code
-
-
     def parse(self):
         logger.debug("Parsing %s...", self.type)
 
@@ -192,15 +182,20 @@ class Expression(Operator):
         expr = self.attrs['expr']
         if expr.find('add') != -1:
             if self.inputs_shape[0] == self.inputs_shape[1]:
+                self.layer_type = 'Eltwise'
                 self.eltwise_param = dict()
                 self.eltwise_param['operation'] = 1 # Caffe Eltwise SUM
                 self.attrs = self.eltwise_param
+            else:
+                raise NotImplementedError
         elif expr.find('mul') != -1:
             if self.inputs_shape[0] == self.inputs_shape[1]:
+                self.layer_type = 'Eltwise'
                 self.eltwise_param = dict()
                 self.eltwise_param['operation'] = 0 # Caffe Eltwise PROD
                 self.attrs = self.eltwise_param
             else:
+                self.layer_type = 'Scale'
                 self.scale_param = dict()
 
                 self.scale_param['bias_term'] = False
@@ -223,9 +218,11 @@ class Expression(Operator):
 
 
     def convert(self):
-        if hasattr(self, 'eltwise_param'):
+        if self.type == 'Eltwise':
             layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param)
-        elif hasattr(self, 'scale_param'):
+            self.setConverted()
+            return [layer]
+        elif self.type == 'Scale':
             if self.pre == ['reshape']:
                 reshape_param = dict(shape=dict(dim=self.inputs_shape[1]))
                 pre_layer = caffe_layer('Reshape', 'Reshape'+str(self.index), [self.inputs[1]], [None], ['reshape'+str(self.index)], reshape_param=reshape_param)
@@ -234,6 +231,4 @@ class Expression(Operator):
             self.setConverted()
             return [pre_layer, layer]
 
-        self.setConverted()
 
-        return [layer]

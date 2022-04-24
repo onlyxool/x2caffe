@@ -20,6 +20,7 @@ class Slice(Operator):
 
 
     def parse(self):
+        self.layer_type = 'Slice'
         logger.debug("Parsing %s...", self.type)
 
         self.parseInput()

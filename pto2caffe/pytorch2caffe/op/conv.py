@@ -14,12 +14,8 @@ class Convolution(Operator):
         self.setInited()
 
 
-    @property
-    def type(self):
-        return 'Convolution'
-
-
     def parse(self):
+        self.layer_type = 'Convolution'
         logger.debug("Parsing %s...", self.type)
         self.parseInput()
         self.parseOutput()

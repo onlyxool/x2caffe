@@ -14,28 +14,24 @@ class Pooling(Operator):
         self.setInited()
 
 
-    @property
-    def type(self):
-        return 'Pooling'
-
-
     def parse(self):
+        self.layer_type = 'Pooling'
         logger.debug("Parsing %s...", self.type)
 
         self.parseInput()
         self.parseOutput()
         self.parseAttributes()
 
-        if self.op_code == 'nn.MaxPool2d':
+        if self.operator == 'nn.MaxPool2d':
             self.pooling_param['pool'] = 0 
             self.pooling_param['kernel_h'] = kernel_h = self.attrs['kernel_size'][0]
             self.pooling_param['kernel_w'] = kernel_w = self.attrs['kernel_size'][1]
-        elif self.op_code == 'nn.AvgPool2d':
+        elif self.operator == 'nn.AvgPool2d':
             self.pooling_param['pool'] = 1
             self.pooling_param['kernel_h'] = kernel_h = self.attrs['kernel_size'][0]
             self.pooling_param['kernel_w'] = kernel_w = self.attrs['kernel_size'][1]
         else:
-            raise NotImplementedError(self.op_code)
+            raise NotImplementedError(self.operator)
 
         if 'dilations' in self.attrs and self.attrs['dilations'] != [1, 1]:
             errorMsg = 'Caffe Pooling don\'t support dilation' + self.attrs['dilations']
@@ -48,7 +44,6 @@ class Pooling(Operator):
         self.pooling_param['ceil_mode'] = self.attrs.get('ceil_mode', False)
         self.pooling_param['pad_h'] = self.attrs.get('padding', [0,0])[0]
         self.pooling_param['pad_w'] = self.attrs.get('padding', [0,0])[1]
-        #self.attrs['return_indices']:False
 
         self.attrs = self.pooling_param
 

@@ -14,12 +14,8 @@ class Flatten(Operator):
         self.setInited()
 
 
-    @property
-    def type(self):
-        return 'Flatten'
-
-
     def parse(self):
+        self.layer_type = 'Flatten'
         logger.debug("Parsing %s...", self.type)
 
         self.parseInput()

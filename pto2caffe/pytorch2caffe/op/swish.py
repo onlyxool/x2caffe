@@ -14,12 +14,8 @@ class Swish(Operator):
         self.setInited()
 
 
-    @property
-    def type(self):
-        return 'Swish'
-
-
     def parse(self):
+        self.layer_type = 'Swish'
         logger.debug("Parsing %s...", self.type)
 
         self.parseInput()
@@ -27,7 +23,7 @@ class Swish(Operator):
 
         # Attributes
         self.parseAttributes()
-        if self.op_code == 'nn.Hardswish':
+        if self.operator == 'nn.Hardswish':
             self.swish_param['beta'] = 1.0
 
         self.setParsed()

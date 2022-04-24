@@ -14,17 +14,13 @@ class Debug(Operator):
         self.setInited()
 
 
-    @property
-    def type(self):
-        return 'Debug'
-
-
     def parse(self):
+        self.layer_type = 'Debug'
         logger.debug('Parsing %s...', self.type)
 
         self.parseInput()
         self.parseOutput()
-        print(self.name, self.op_code)
+        print(self.name, self.operator)
         print(self.inputs)
         print(self.inputs_shape)
         print(self.inputs_buf)

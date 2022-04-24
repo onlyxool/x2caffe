@@ -14,12 +14,8 @@ class AdaptiveAvgPooling(Operator):
         self.setInited()
 
 
-    @property
-    def type(self):
-        return 'Pooling'
-
-
     def parse(self):
+        self.layer_type = 'Pooling'
         logger.debug("Parsing %s...", self.type)
 
         self.parseInput()

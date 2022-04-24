@@ -20,6 +20,7 @@ class Output(Operator):
 
 
     def parse(self):
+        self.layer_type = 'Output'
         logger.debug("Parsing %s...", self.type)
         self.parseInput()
         self.parseOutput()

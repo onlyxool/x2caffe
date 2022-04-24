@@ -1,12 +1,11 @@
-import torch
-import numpy as np
 from base import Base
 
 class Operator(Base):
 
     def __init__(self, model, pnnx, type_code, index):
         super().__init__(model, None, index)
-        self.op_code = type_code
+        self.operator = type_code
+        self.layer_type = str()
         self.pnnx = pnnx
 
         self.inputs = []
@@ -24,7 +23,7 @@ class Operator(Base):
 
     @property
     def type(self):
-        raise NotImplementedError("Method Operator.type() must be overrided!")        
+        return self.layer_type if self.layer_type is not None else self.operator
 
 
     @property
