@@ -1,9 +1,5 @@
-import logging
-
 from caffe_transform import caffe_layer
 from pytorch2caffe.op.operator import Operator
-
-logger = logging.getLogger('Pytorch2Caffe')
 
 
 class Dropout(Operator):
@@ -16,14 +12,9 @@ class Dropout(Operator):
 
     def parse(self):
         self.layer_type = 'Dropout'
-        logger.debug("Parsing %s...", self.type)
-
-        self.parseInput()
-        self.parseOutput()
+        super().__parse__()
 
         # Attributes
-        self.parseAttributes()
-
         self.dropout_param['dropout_ratio'] = 0.5
 
         self.attrs = self.dropout_param

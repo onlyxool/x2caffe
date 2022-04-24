@@ -1,9 +1,4 @@
-import logging
-
-from caffe_transform import caffe_layer
 from pytorch2caffe.op.operator import Operator
-
-logger = logging.getLogger('Pytorch2Caffe')
 
 
 class Output(Operator):
@@ -14,17 +9,9 @@ class Output(Operator):
         self.setInited()
 
 
-    @property
-    def type(self):
-        return 'Output'
-
-
     def parse(self):
         self.layer_type = 'Output'
-        logger.debug("Parsing %s...", self.type)
-        self.parseInput()
-        self.parseOutput()
-        self.parseAttributes()
+        super().__parse__()
 
 
     def convert(self):

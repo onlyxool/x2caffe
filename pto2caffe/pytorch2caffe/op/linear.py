@@ -1,9 +1,5 @@
-import logging
-
 from caffe_transform import caffe_layer
 from pytorch2caffe.op.operator import Operator
-
-logger = logging.getLogger('Pytorch2Caffe')
 
 
 class Linear(Operator):
@@ -16,11 +12,7 @@ class Linear(Operator):
 
     def parse(self):
         self.layer_type = 'InnerProduct'
-        logger.debug("Parsing %s...", self.type)
-
-        self.parseInput()
-        self.parseOutput()
-        self.parseAttributes()
+        super().__parse__()
 
         self.weight = self.inputs_buf[self.inputs.index('weight')]
         self.bias = self.inputs_buf[self.inputs.index('bias')] if self.attrs['bias'] else None

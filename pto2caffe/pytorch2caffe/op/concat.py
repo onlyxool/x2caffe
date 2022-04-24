@@ -1,9 +1,5 @@
-import logging
-
 from caffe_transform import caffe_layer
 from pytorch2caffe.op.operator import Operator
-
-logger = logging.getLogger('Pytorch2Caffe')
 
 
 class Concat(Operator):
@@ -15,14 +11,10 @@ class Concat(Operator):
 
 
     def parse(self):
+        super().__parse__()
         self.layer_type = 'Concat'
-        logger.debug('Parsing %s...', self.type)
-
-        self.parseInput()
-        self.parseOutput()
 
         # Attributes
-        self.parseAttributes()
         self.concat_param['axis'] = self.attrs['dim']
 
         self.attrs = self.concat_param

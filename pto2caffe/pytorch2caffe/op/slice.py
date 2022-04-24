@@ -1,9 +1,5 @@
-import logging
-
 from caffe_transform import caffe_layer
 from pytorch2caffe.op.operator import Operator
-
-logger = logging.getLogger('Pytorch2Caffe')
 
 
 class Slice(Operator):
@@ -21,13 +17,7 @@ class Slice(Operator):
 
     def parse(self):
         self.layer_type = 'Slice'
-        logger.debug("Parsing %s...", self.type)
-
-        self.parseInput()
-        self.parseOutput()
-
-        # Attributes
-        self.parseAttributes()
+        super().__parse__()
 
         self.setParsed()
 

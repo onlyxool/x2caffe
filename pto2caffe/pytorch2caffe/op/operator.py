@@ -46,7 +46,7 @@ class Operator(Base):
         return '%s attr%s: %s -> %s' % (self.shorty, self.attrs, inames, onames)
 
 
-    def parseInput(self):
+    def __parseInput__(self):
         self.inputs = self.pnnx.get_ops_inputs(self.index)
         for i, input_name in enumerate(self.inputs):
             self.inputs_shape.append(self.pnnx.get_ops_input_shape(self.index, i, input_name))
@@ -54,13 +54,13 @@ class Operator(Base):
             self.inputs_buf.append(tensor.reshape(self.inputs_shape[i]) if tensor is not None else None)
 
 
-    def parseOutput(self):
+    def __parseOutput__(self):
         self.outputs = self.pnnx.get_ops_outputs(self.index)
         for i, output_name in enumerate(self.outputs):
             self.outputs_shape.append(self.pnnx.get_ops_output_shape(self.index, i))
 
 
-    def parseAttributes(self):
+    def __parseAttributes__(self):
         params = self.pnnx.get_ops_param(self.index).split('|')
 
         for param in params:
@@ -95,3 +95,9 @@ class Operator(Base):
                 value_str_list = value_str.split(',')
                 for value_str_item in value_str_list:
                     self.attrs[key].append(value_str_item)
+
+
+    def __parse__(self):
+        self.__parseInput__()
+        self.__parseOutput__()
+        self.__parseAttributes__()

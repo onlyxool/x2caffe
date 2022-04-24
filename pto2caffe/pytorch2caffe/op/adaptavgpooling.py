@@ -1,9 +1,5 @@
-import logging
-
 from caffe_transform import caffe_layer
 from pytorch2caffe.op.operator import Operator
-
-logger = logging.getLogger('Pytorch2Caffe')
 
 
 class AdaptiveAvgPooling(Operator):
@@ -16,12 +12,7 @@ class AdaptiveAvgPooling(Operator):
 
     def parse(self):
         self.layer_type = 'Pooling'
-        logger.debug("Parsing %s...", self.type)
-
-        self.parseInput()
-        self.parseOutput()
-
-        self.parseAttributes()
+        super().__parse__()
 
         input_h = self.inputs_shape[0][2]
         input_w = self.inputs_shape[0][3]

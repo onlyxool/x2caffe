@@ -1,9 +1,5 @@
-import logging
-
 from caffe_transform import caffe_layer
 from pytorch2caffe.op.operator import Operator
-
-logger = logging.getLogger('Pytorch2Caffe')
 
 
 class Pooling(Operator):
@@ -16,11 +12,7 @@ class Pooling(Operator):
 
     def parse(self):
         self.layer_type = 'Pooling'
-        logger.debug("Parsing %s...", self.type)
-
-        self.parseInput()
-        self.parseOutput()
-        self.parseAttributes()
+        super().__parse__()
 
         if self.operator == 'nn.MaxPool2d':
             self.pooling_param['pool'] = 0 

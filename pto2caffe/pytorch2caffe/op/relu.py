@@ -1,9 +1,5 @@
-import logging
-
 from caffe_transform import caffe_layer
 from pytorch2caffe.op.operator import Operator
-
-logger = logging.getLogger('Pytorch2Caffe')
 
 
 class ReLU(Operator):
@@ -16,11 +12,7 @@ class ReLU(Operator):
 
     def parse(self):
         self.layer_type = 'ReLU'
-        logger.debug("Parsing %s...", self.type)
-
-        self.parseInput()
-        self.parseOutput()
-        self.parseAttributes()
+        super().__parse__()
 
         self.relu_param['negative_slope'] = 0
 

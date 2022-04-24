@@ -1,9 +1,5 @@
-import logging
-
 from caffe_transform import caffe_layer
 from pytorch2caffe.op.operator import Operator
-
-logger = logging.getLogger('Pytorch2Caffe')
 
 
 class Swish(Operator):
@@ -16,13 +12,9 @@ class Swish(Operator):
 
     def parse(self):
         self.layer_type = 'Swish'
-        logger.debug("Parsing %s...", self.type)
-
-        self.parseInput()
-        self.parseOutput()
+        super().__parse__()
 
         # Attributes
-        self.parseAttributes()
         if self.operator == 'nn.Hardswish':
             self.swish_param['beta'] = 1.0
 

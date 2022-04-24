@@ -1,9 +1,5 @@
-import logging
-
 from caffe_transform import caffe_layer
 from pytorch2caffe.op.operator import Operator
-
-logger = logging.getLogger('Pytorch2Caffe')
 
 
 class BatchNorm(Operator):
@@ -17,9 +13,7 @@ class BatchNorm(Operator):
 
     def parse(self):
         self.layer_type = 'BatchNorm'
-        logger.debug('Parsing %s...', self.type)
-        self.parseInput()
-        self.parseOutput()
+        super().__parse__()
 
         # Var
         self.var = self.inputs_buf[self.inputs.index('running_var')]
@@ -34,8 +28,6 @@ class BatchNorm(Operator):
         self.weight = self.inputs_buf[self.inputs.index('weight')]
 
         # Attributes
-        self.parseAttributes()
-#        print(self.attrs) {'affine': True, 'eps': 1e-05, 'num_features': 64}
         self.batch_norm_param['eps'] = self.attrs.get('eps', 1e-5)
         self.batch_norm_param['use_global_stats'] = True
 

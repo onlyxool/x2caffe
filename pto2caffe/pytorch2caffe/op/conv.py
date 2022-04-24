@@ -1,9 +1,5 @@
-import logging
-
 from caffe_transform import caffe_layer
 from pytorch2caffe.op.operator import Operator
-
-logger = logging.getLogger('Pytorch2Caffe')
 
 
 class Convolution(Operator):
@@ -16,15 +12,12 @@ class Convolution(Operator):
 
     def parse(self):
         self.layer_type = 'Convolution'
-        logger.debug("Parsing %s...", self.type)
-        self.parseInput()
-        self.parseOutput()
+        super().__parse__()
 
         # Weight
         self.weight = self.inputs_buf[self.inputs.index('weight')]
 
         # Attributes
-        self.parseAttributes()
         self.convolution_param['num_output'] = self.attrs['out_channels']#self.weight.shape[0]
         self.convolution_param['stride'] = stride = self.attrs.get('stride', [1, 1]) 
         self.convolution_param['dilation'] = self.attrs.get('dilation', [1, 1]) 
