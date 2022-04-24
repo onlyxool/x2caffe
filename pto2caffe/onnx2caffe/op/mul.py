@@ -14,10 +14,9 @@ class Mul(Operator):
     def parse(self):
         super().__parse__()
 
-
         if self.inputs_buf[0] is None and self.inputs_buf[1] is None:
             # Eltwise Layer
-            self.layer_type == 'Eltwise'
+            self.layer_type = 'Eltwise'
 
             # Attributes
             self.eltwise_param = dict()
@@ -25,7 +24,7 @@ class Mul(Operator):
             self.attrs = self.eltwise_param
         else:
             # Scale Layer
-            self.layer_type == 'Scale'
+            self.layer_type = 'Scale'
 
             # Attributes
             self.scale_param = dict()
