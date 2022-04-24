@@ -1,17 +1,14 @@
 import tflite
-import logging
 
 from caffe_transform import caffe_layer
 from tflite2caffe.op.operator import Operator
 from util import handleLegacyPad
 
-logger = logging.getLogger('tflite2caffe')
-
 
 class Convolution(Operator):
 
-    def __init__(self, model, tf_op, tf_op_code, index):
-        super().__init__(model, tf_op, tf_op_code, index)
+    def __init__(self, model, tf_op, tf_op_name, index):
+        super().__init__(model, tf_op, tf_op_name, index)
         self.convolution_param = dict()
         self.convolution_param['dilation'] = []
         self.convolution_param['group'] = 1
@@ -20,19 +17,13 @@ class Convolution(Operator):
 
 
     @property
-    def type(self):
-        return 'ConvolutionDepthwise' if self.isDepthwise else 'Convolution'
-
-
-    @property
     def isDepthwise(self):
-        return (self.op_code is tflite.BuiltinOperator.DEPTHWISE_CONV_2D)
+        return (self.operator == 'DEPTHWISE_CONV_2D')
 
 
     def parse(self):
-        logger.debug("Parsing %s...", self.type)
-
-        assert(self.op_code in (tflite.BuiltinOperator.CONV_2D, tflite.BuiltinOperator.DEPTHWISE_CONV_2D))
+        self.layer_type = 'ConvolutionDepthwise' if self.isDepthwise else 'Convolution'
+        assert(self.operator in ('CONV_2D', 'DEPTHWISE_CONV_2D'))
         assert(self.op.InputsLength() == 3), "TFLite Conv always has bias"
         assert(self.op.OutputsLength() == 1)
 
@@ -68,7 +59,7 @@ class Convolution(Operator):
         # Padding
         legacy_pad = {'left': 0, 'right': 0, 'top': 0, 'bottom': 0}
         for legacy in self.model.legacys:
-            if legacy.op_code == tflite.BuiltinOperator.PAD:
+            if legacy.operator == 'PAD':
                 if legacy.outputs[0] == self.inputs[0]:
                     legacy_pad = legacy.pad
                     self.inputs[0] = legacy.inputs[0]

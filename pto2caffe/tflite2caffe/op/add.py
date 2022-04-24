@@ -1,31 +1,20 @@
 import tflite
-import logging
 import numpy as np
 
 from caffe_transform import caffe_layer
 from tflite2caffe.op.operator import Operator
 
-logger = logging.getLogger('tflite2caffe')
-
 
 class Add(Operator):
 
-    def __init__(self, model, tf_op, tf_op_code, index):
-        super().__init__(model, tf_op, tf_op_code, index)
+    def __init__(self, model, tf_op, tf_op_name, index):
+        super().__init__(model, tf_op, tf_op_name, index)
         self.setInited()
-
-    @property
-    def type(self):
-        if hasattr(self, 'eltwise_param'):
-            return 'Eltwise'
-        elif hasattr(self, 'scale_param'):
-            return 'Scale'
 
 
     def parse(self):
-        logger.debug("Parsing %s...", self.type)
 
-        assert(self.op_code == tflite.BuiltinOperator.ADD)
+        assert(self.operator == 'ADD')
         assert(self.op.InputsLength() == 2)
         assert(self.op.OutputsLength() == 1)
 
@@ -37,6 +26,8 @@ class Add(Operator):
         opt = tflite.AddOptions()
         opt.Init(op_opt.Bytes, op_opt.Pos)
         if self.inputs_buf[1] is not None:
+            # Scale Layer
+            self.layer_type = 'Scale'
             self.scale_param = dict()
             self.weight = np.ones(self.inputs_shape[1], dtype=int, order='C')
             self.bias = self.inputs_buf[1]
@@ -45,6 +36,8 @@ class Add(Operator):
             self.scale_param['bias_term'] = True
             self.attrs = self.scale_param
         else:
+            # Eltwise Layer
+            self.layer_type = 'Eltwise'
             self.eltwise_param = dict()
             self.eltwise_param['operation'] = 1
             self.attrs = self.eltwise_param
@@ -57,9 +50,9 @@ class Add(Operator):
 
 
     def convert(self):
-        if hasattr(self, 'eltwise_param'):
+        if self.type == 'Eltwise':
             layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param)
-        elif hasattr(self, 'scale_param'):
+        elif self.type == 'Scale':
             layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, scale_param=self.scale_param)
 
         self.setConverted()

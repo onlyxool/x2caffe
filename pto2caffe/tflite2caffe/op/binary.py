@@ -1,12 +1,9 @@
 import copy
 import tflite
-import logging
 import numpy as np
 
 from caffe_transform import caffe_layer
 from tflite2caffe.op.operator import Operator
-
-logger = logging.getLogger('tflite2caffe')
 
 
 def trim_one(scale_shape):

@@ -1,39 +1,31 @@
 import tflite
-import logging
 import numpy as np
 from util import dim_map_nhwc2nchw
 
 from caffe_transform import caffe_layer
 from tflite2caffe.op.operator import Operator
 
-logger = logging.getLogger('tflite2caffe')
-
 
 class Slice(Operator):
 
-    def __init__(self, model, tf_op, tf_op_code, index):
-        super().__init__(model, tf_op, tf_op_code, index)
+    def __init__(self, model, tf_op, tf_op_name, index):
+        super().__init__(model, tf_op, tf_op_name, index)
         self.slice_param = dict()
 
         self.setInited()
 
 
-    @property
-    def type(self):
-        return 'Slice'
-
-
     def parse(self):
-        logger.debug("Parsing %s...", self.type)
+        self.layer_type = 'Slice'
 
-        assert(self.op_code in (tflite.BuiltinOperator.SPLIT, tflite.BuiltinOperator.STRIDED_SLICE))
+        assert(self.operator in ('SPLIT', 'STRIDED_SLICE'))
         assert(self.op.InputsLength() == 2 or self.op.InputsLength() == 4)
         assert(self.op.OutputsLength() == 1)
 
         self.parseInput()
         self.parseOutput()
 
-        if self.op_code == tflite.BuiltinOperator.STRIDED_SLICE:
+        if self.operator == 'STRIDED_SLICE':
             op_opt = self.op.BuiltinOptions()
             opt = tflite.StridedSliceOptions()
             opt.Init(op_opt.Bytes, op_opt.Pos)
@@ -47,8 +39,8 @@ class Slice(Operator):
 
             assert(len(self.inputs_buf[1]) == len(self.inputs_shape[0]))
 
-            raise NotImplementedError('STRIDED_SLICE', self.op_code)
-        elif self.op_code == tflite.BuiltinOperator.SPLIT:
+            raise NotImplementedError(self.operator)
+        elif self.operator == 'SPLIT':
             op_opt = self.op.BuiltinOptions()
             opt = tflite.SplitOptions()
             opt.Init(op_opt.Bytes, op_opt.Pos)

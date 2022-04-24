@@ -1,31 +1,23 @@
 import tflite
-import logging
 
 from caffe_transform import caffe_layer
 from tflite2caffe.op.operator import Operator
 from util import handleLegacyPad
 
-logger = logging.getLogger('tflite2caffe')
-
 
 class Deconvolution(Operator):
 
-    def __init__(self, model, tf_op, tf_op_code, index):
-        super().__init__(model, tf_op, tf_op_code, index)
+    def __init__(self, model, tf_op, tf_op_name, index):
+        super().__init__(model, tf_op, tf_op_name, index)
         self.convolution_param = dict()
         self.attrs = self.convolution_param
         self.setInited()
 
 
-    @property
-    def type(self):
-        return 'Deconvolution'
-
-
     def parse(self):
-        logger.debug("Parsing %s...", self.type)
+        self.layer_type = 'Deconvolution'
 
-        assert(self.op_code == tflite.BuiltinOperator.TRANSPOSE_CONV)
+        assert(self.operator == 'TRANSPOSE_CONV')
         assert(self.op.InputsLength() == 3), "TFLite Conv always has bias"
         assert(self.op.OutputsLength() == 1)
 
@@ -53,7 +45,7 @@ class Deconvolution(Operator):
         # Padding
         legacy_pad = {'left': 0, 'right': 0, 'top': 0, 'bottom': 0}
         for legacy in self.model.legacys:
-            if legacy.op_code == tflite.BuiltinOperator.PAD:
+            if legacy.operator == 'PAD':
                 if legacy.outputs[0] == self.inputs[0]:
                     legacy_pad = legacy.pad
                     self.inputs[0] = legacy.inputs[0]

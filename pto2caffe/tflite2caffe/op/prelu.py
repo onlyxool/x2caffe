@@ -1,27 +1,19 @@
 import tflite
-import logging
 
 from caffe_transform import caffe_layer
 from tflite2caffe.op.operator import Operator
 
-logger = logging.getLogger('tflite2caffe')
-
 
 class PReLU(Operator):
 
-    def __init__(self, model, tf_op, tf_op_code, index):
-        super().__init__(model, tf_op, tf_op_code, index)
+    def __init__(self, model, tf_op, tf_op_name, index):
+        super().__init__(model, tf_op, tf_op_name, index)
         self.setInited()
 
 
-    @property
-    def type(self):
-        return 'PReLU'
-
-
     def parse(self):
-        logger.debug("Parsing %s...", self.type)
-        assert(self.op_code == tflite.BuiltinOperator.PRELU)
+        self.layer_type = 'PReLU'
+        assert(self.operator == 'PRELU')
 
         self.parseInput()
         self.parseOutput()

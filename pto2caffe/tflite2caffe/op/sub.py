@@ -1,6 +1,5 @@
 import copy
 import tflite
-import logging
 import numpy as np
 
 from caffe_transform import caffe_layer
@@ -9,25 +8,18 @@ from tflite2caffe.op.operator import Operator
 from util import trim_one
 from util import compute_scale_axis
 
-logger = logging.getLogger('tflite2caffe')
-
 
 class Sub(Operator):
 
-    def __init__(self, model, tf_op, tf_op_code, index):
-        super().__init__(model, tf_op, tf_op_code, index)
+    def __init__(self, model, tf_op, tf_op_name, index):
+        super().__init__(model, tf_op, tf_op_name, index)
         self.setInited()
 
 
-    @property
-    def type(self):
-        return 'Scale'
-
-
     def parse(self):
-        logger.debug("Parsing %s...", self.type)
+        self.layer_type = 'Scale'
 
-        assert(self.op_code == tflite.BuiltinOperator.SUB)
+        assert(self.operator == 'SUB')
         assert(self.op.InputsLength() == 2)
         assert(self.op.OutputsLength() == 1)
 
@@ -58,7 +50,7 @@ class Sub(Operator):
             self.bias = np.multiply(-1, self.inputs_buf[1])
             self.attrs = self.scale_param
         else:
-            raise NotImplementedError('SubOptions')
+            raise NotImplementedError(self.operator)
 
 
         activ_type_code = opt.FusedActivationFunction()

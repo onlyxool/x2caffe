@@ -1,38 +1,31 @@
 import tflite
-import logging
 
 from caffe_transform import caffe_layer
 from tflite2caffe.op.operator import Operator
 
-logger = logging.getLogger('tflite2caffe')
 
 class Reshape(Operator):
 
-    def __init__(self, model, tf_op, tf_op_code, index):
-        super().__init__(model, tf_op, tf_op_code, index)
+    def __init__(self, model, tf_op, tf_op_name, index):
+        super().__init__(model, tf_op, tf_op_name, index)
         self.reshape_param = dict()
         self.setInited()
 
 
-    @property
-    def type(self):
-        return 'Reshape'
-
-
     def parse(self):
-        logger.debug("Parsing %s...", self.shorty)
+        self.layer_type = 'Reshape'
 
-        assert(self.op_code in (tflite.BuiltinOperator.RESHAPE, tflite.BuiltinOperator.SQUEEZE))
+        assert(self.operator in ('RESHAPE', 'SQUEEZE'))
 
         self.parseInput()
         self.parseOutput()
 
         # Attributes
         op_opt = self.op.BuiltinOptions()
-        if self.op_code == tflite.BuiltinOperator.RESHAPE:
+        if self.operator == 'RESHAPE':
             opt = tflite.ReshapeOptions()
             self.reshape_param = dict(shape=dict(dim=self.outputs_shape[0]))
-        elif self.op_code == tflite.BuiltinOperator.SQUEEZE:
+        elif self.operator == 'SQUEEZE':
             opt = tflite.SqueezeOptions()
             opt.Init(op_opt.Bytes, op_opt.Pos)
             self.reshape_param = dict(shape=dict(dim=self.outputs_shape[0]))

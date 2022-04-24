@@ -42,6 +42,7 @@ OpMap = {
     'RELU': ReLU,
     'MEAN': Reduce,
     'PRELU': PReLU,
+    'RELU6': ReLUX,
     'SPLIT': Slice,
     'RESHAPE': Reshape,
     'SQUEEZE': Reshape,
@@ -74,11 +75,11 @@ ignore_op = ['CUSTOM']
 
 def handleFusedActivation(preop):
     if preop.activ_type_code == tflite.ActivationFunctionType.RELU:
-        op = ReLU(preop.model, None, tflite.BuiltinOperator.RELU, preop.index)
+        op = ReLU(preop.model, None, 'RELU', preop.index)
     elif preop.activ_type_code == tflite.ActivationFunctionType.RELU_N1_TO_1:
         raise NotImplementedError('ReluN1To1 is not supported.')
     elif preop.activ_type_code == tflite.ActivationFunctionType.RELU6:
-        op = ReLUX(preop.model, None, tflite.BuiltinOperator.RELU6, preop.index)
+        op = ReLUX(preop.model, None, 'RELU6', preop.index)
     elif preop.activ_type_code == tflite.ActivationFunctionType.TANH:
          raise NotImplementedError('Tanh is not supported.')
     elif preop.activ_type_code == tflite.ActivationFunctionType.SIGN_BIT:
@@ -157,7 +158,7 @@ class Model(Base):
                 errorMsg = 'Error: Operator [' + tf_op_name + '] does not Support.\n'
                 sys.exit(errorMsg)
 
-            op = OpMap[tf_op_name](self, tf_op, tf_op_code.BuiltinCode(), index)
+            op = OpMap[tf_op_name](self, tf_op, tf_op_name, index)
             op.parse()
 
             logger.debug(op)

@@ -1,27 +1,17 @@
-import tflite
-import logging
-
 from caffe_transform import caffe_layer
 from tflite2caffe.op.operator import Operator
-
-logger = logging.getLogger('tflite2caffe')
 
 
 class ReLUX(Operator):
 
-    def __init__(self, model, tf_op, tf_op_code, index):
-        super().__init__(model, tf_op, tf_op_code, index)
+    def __init__(self, model, tf_op, tf_op_name, index):
+        super().__init__(model, tf_op, tf_op_name, index)
         self.setInited()
 
 
-    @property
-    def type(self):
-        return 'ReLUX'
-
-
     def parse(self):
-        logger.debug("Parsing %s...", self.type)
-        assert(self.op_code == tflite.BuiltinOperator.RELU6)
+        self.layer_type = 'ReLUX'
+        assert(self.operator == 'RELU6')
 
         if self.op is not None:
             self.parseInput()

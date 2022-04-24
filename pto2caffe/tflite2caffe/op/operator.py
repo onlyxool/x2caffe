@@ -9,10 +9,11 @@ logger = logging.getLogger('tflite2caffe')
 
 class Operator(Base):
 
-    def __init__(self, model, tf_op:tflite.Operator, tf_op_code, index):
+    def __init__(self, model, tf_op:tflite.Operator, tf_op_name:str, index:int):
         super().__init__(model, model.graph, index)
         self.op = tf_op
-        self.op_code = tf_op_code
+        self.operator = tf_op_name
+        self.layer_type = str()
         self.inputs = []
         self.inputs_shape = []
         self.inputs_buf = []
@@ -25,7 +26,7 @@ class Operator(Base):
 
     @property
     def type(self):
-        raise NotImplementedError("Method Operator.type() must be overrided!")
+        return self.layer_type if self.layer_type is not None else self.operator
 
 
     @property

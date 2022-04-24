@@ -1,31 +1,23 @@
 import tflite
-import logging
 
 from caffe_transform import caffe_layer
 from tflite2caffe.op.operator import Operator
 from util import handleLegacyPad
 
-logger = logging.getLogger('tflite2caffe')
-
 
 class Pooling(Operator):
 
-    def __init__(self, model, tf_op, tf_op_code, index):
-        super().__init__(model, tf_op, tf_op_code, index)
+    def __init__(self, model, tf_op, tf_op_name, index):
+        super().__init__(model, tf_op, tf_op_name, index)
         self.pooling_param = dict()
         self.attrs = self.pooling_param
         self.setInited()
 
 
-    @property
-    def type(self):
-        return 'Pooling'
-
-
     def parse(self):
-        logger.debug("Parsing %s...", self.type)
+        self.layer_type = 'Pooling'
 
-        assert(self.op_code in (tflite.BuiltinOperator.AVERAGE_POOL_2D, tflite.BuiltinOperator.MAX_POOL_2D))
+        assert(self.operator in ('AVERAGE_POOL_2D', 'MAX_POOL_2D'))
         assert(self.op.InputsLength() == 1)
         assert(self.op.OutputsLength() == 1)
 
@@ -36,7 +28,7 @@ class Pooling(Operator):
         op_opt = self.op.BuiltinOptions()
         opt = tflite.Pool2DOptions()
         opt.Init(op_opt.Bytes, op_opt.Pos)
-        self.pooling_param['pool'] = 1 if self.op_code == tflite.BuiltinOperator.AVERAGE_POOL_2D else 0
+        self.pooling_param['pool'] = 1 if self.operator == 'AVERAGE_POOL_2D' else 0
         self.pooling_param['kernel_h'] = opt.FilterHeight()
         self.pooling_param['kernel_w'] = opt.FilterWidth()
         self.pooling_param['stride_h'] = opt.StrideH()
@@ -46,7 +38,7 @@ class Pooling(Operator):
         # Padding
         legacy_pad = {'left': 0, 'right': 0, 'top': 0, 'bottom': 0}
         for legacy in self.model.legacys:
-            if legacy.op_code == tflite.BuiltinOperator.PAD:
+            if legacy.operator == 'PAD':
                 if legacy.outputs[0] == self.inputs[0]:
                     legacy_pad = legacy.pad
                     self.inputs[0] = legacy.inputs[0]

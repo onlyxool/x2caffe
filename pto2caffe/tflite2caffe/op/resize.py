@@ -1,36 +1,21 @@
 import tflite
-import logging
 import numpy as np
 
 from caffe_transform import caffe_layer
 from tflite2caffe.op.operator import Operator
 
-logger = logging.getLogger('tflite2caffe')
-
 
 class Resize(Operator):
 
-    def __init__(self, model, tf_op, tf_op_code, index):
-        super().__init__(model, tf_op, tf_op_code, index)
+    def __init__(self, model, tf_op, tf_op_name, index):
+        super().__init__(model, tf_op, tf_op_name, index)
 
         self.setInited()
 
 
-    @property
-    def type(self):
-        if self.op_code == tflite.BuiltinOperator.RESIZE_NEAREST_NEIGHBOR:
-            if hasattr(self, 'convolution_param'):
-                return 'Deconvolution'
-            else:
-                return 'Upsample'
-        elif self.op_code == tflite.BuiltinOperator.RESIZE_BILINEAR:
-            return 'Interp'
-
-
     def parse(self):
-        logger.debug("Parsing %s...", self.type)
 
-        assert(self.op_code in (tflite.BuiltinOperator.RESIZE_NEAREST_NEIGHBOR, tflite.BuiltinOperator.RESIZE_BILINEAR))
+        assert(self.operator in ('RESIZE_NEAREST_NEIGHBOR', 'RESIZE_BILINEAR'))
         assert(self.op.InputsLength() == 2), "TFLite has only two inputs"
         assert(self.op.OutputsLength() == 1)
 
@@ -47,9 +32,11 @@ class Resize(Operator):
 
         # Attributes
         scale_factor = output_h/input_h
-        if self.op_code == tflite.BuiltinOperator.RESIZE_NEAREST_NEIGHBOR:
+        if self.operator == 'RESIZE_NEAREST_NEIGHBOR':
             #if output_h/input_h == output_h//input_h and output_w/input_w == output_w//input_w:
             if scale_factor % 1 == 0:
+                # Deconvolution Layer
+                self.layer_type = 'Deconvolution'
                 self.convolution_param = dict()
                 self.convolution_param['bias_term'] = False
                 self.convolution_param['num_output'] = self.outputs_shape[0][1]
@@ -64,10 +51,14 @@ class Resize(Operator):
                 self.inputs_buf[1] = self.weight
                 self.inputs_shape[1] = self.inputs_buf[1].shape
             else:
+                # Upsample Layer
+                self.layer_type = 'Upsample'
                 self.upsample_param = dict()
                 self.upsample_param['scale'] = scale_factor
                 self.attrs = self.upsample_param
-        elif self.op_code == tflite.BuiltinOperator.RESIZE_BILINEAR:
+        elif self.operator == 'RESIZE_BILINEAR':
+            # Interp Layer
+            self.layer_type = 'Interp'
             op_opt = self.op.BuiltinOptions()
             opt = tflite.ResizeBilinearOptions()
             opt.Init(op_opt.Bytes, op_opt.Pos)
@@ -83,12 +74,11 @@ class Resize(Operator):
 
 
     def convert(self):
-        if self.op_code == tflite.BuiltinOperator.RESIZE_NEAREST_NEIGHBOR:
-            if hasattr(self, 'convolution_param'):
-                layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, None, convolution_param=self.convolution_param)
-            elif hasattr(self, 'upsample_param'):
-                layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, upsample_param=self.upsample_param)
-        elif self.op_code == tflite.BuiltinOperator.RESIZE_BILINEAR:
+        if self.type == 'Deconvolution':
+            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, convolution_param=self.convolution_param)
+        elif self.type == 'Upsample':
+            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, upsample_param=self.upsample_param)
+        elif self.type == 'Interp':
             layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, interp_param=self.interp_param)
 
         self.setConverted()

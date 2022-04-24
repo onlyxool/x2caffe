@@ -1,30 +1,21 @@
 import tflite
-import logging
 
 from caffe_transform import caffe_layer
 from tflite2caffe.op.operator import Operator
 
-logger = logging.getLogger('tflite2caffe')
-
 
 class InnerProduct(Operator):
 
-    def __init__(self, model, tf_op, tf_op_code, index):
-        super().__init__(model, tf_op, tf_op_code, index)
+    def __init__(self, model, tf_op, tf_op_name, index):
+        super().__init__(model, tf_op, tf_op_name, index)
         self.inner_product_param = dict()
         self.attrs = self.inner_product_param
         self.setInited()
 
 
-    @property
-    def type(self):
-        return 'InnerProduct'
-
-
     def parse(self):
-        logger.debug("Parsing %s...", self.type)
-
-        assert(self.op_code == tflite.BuiltinOperator.FULLY_CONNECTED)
+        self.layer_type = 'InnerProduct'
+        assert(self.operator == 'FULLY_CONNECTED')
         assert(self.op.InputsLength() == 3), "TFLite Fullly Connected always has bias"
         assert(self.op.OutputsLength() == 1)
 

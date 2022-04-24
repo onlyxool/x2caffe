@@ -1,29 +1,21 @@
 import tflite
-import logging
 
 from tflite2caffe.op.operator import Operator
-
-logger = logging.getLogger('tflite2caffe')
 
 
 class Pad(Operator):
 
-    def __init__(self, model, tf_op, tf_op_code, index):
-        super().__init__(model, tf_op, tf_op_code, index)
+    def __init__(self, model, tf_op, tf_op_name, index):
+        super().__init__(model, tf_op, tf_op_name, index)
         self.pad = dict()
         self.attrs = self.pad
         self.setInited()
 
 
-    @property
-    def type(self):
-        return 'Pad'
-
-
     def parse(self):
-        logger.debug("Parsing %s...", self.shorty)
+        self.layer_type = 'Pad'
 
-        assert(self.op_code in (tflite.BuiltinOperator.PAD, tflite.BuiltinOperator.MIRROR_PAD))
+        assert(self.operator in ('PAD', 'MIRROR_PAD'))
         assert(self.op.InputsLength() == 2)
         assert(self.op.OutputsLength() == 1)
 

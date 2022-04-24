@@ -1,30 +1,22 @@
 import tflite
-import logging
 
 from caffe_transform import caffe_layer
 from tflite2caffe.op.operator import Operator
 
-logger = logging.getLogger('tflite2caffe')
-
 
 class Permute(Operator):
 
-    def __init__(self, model, tf_op, tf_op_code, index):
-        super().__init__(model, tf_op, tf_op_code, index)
+    def __init__(self, model, tf_op, tf_op_name, index):
+        super().__init__(model, tf_op, tf_op_name, index)
         self.permute_param = dict()
 
         self.setInited()
 
 
-    @property
-    def type(self):
-        return 'Permute'
-
-
     def parse(self):
-        logger.debug("Parsing %s...", self.type)
+        self.layer_type = 'Permute'
 
-        assert(self.op_code == tflite.BuiltinOperator.TRANSPOSE)
+        assert(self.operator == 'TRANSPOSE')
         assert(self.op.InputsLength() == 2)
         assert(self.op.OutputsLength() == 1)
 
