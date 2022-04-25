@@ -23,10 +23,7 @@ class Operator(Base):
 
     @property
     def type(self):
-        if self.layer_type is None:
-            return self.operator
-        else:
-            return self.layer_type
+        return self.layer_type if self.layer_type is not None else self.operator
 
 
     @property
