@@ -35,28 +35,29 @@ def np_nhwc2nchw(array):
         return array
 
 
+def checkBatchNum(shape:list):
+    if len(shape) > 0 and (shape[0] == 0 or shape[0] == None or shape[0] == -1):
+        shape[0] = 1
+    return shape
+
+
 def shape_map_nhwc2nchw(shape):
     if isinstance(shape, np.ndarray) or isinstance(shape, list): #TFLite
         if len(shape) == 4:
             return [shape[0], shape[3], shape[1], shape[2]]
-        elif len(shape) == 3:
-            return [shape[0], shape[1], shape[2]]
-        elif len(shape) == 2:
-            return [shape[0], shape[1]]
-        elif len(shape) == 1:
-            return [shape[0]]
-        elif len(shape) == 0:
-            return []
+        elif len(shape) <= 3 and len(shape) >= 0:
+            return list(shape)
         else:
             print(shape, shape.size, len(shape))
             raise NotImplementedError(shape)
-    elif isinstance(shape, tf.TensorShape): # Tensorflow Frozen Graph
+    elif isinstance(shape, tf.TensorShape): # Tensorflow GraphDef
         if shape.rank == None:
             return None
         elif shape.rank == 4:
-            return [shape.as_list()[0], shape.as_list()[3], shape.as_list()[1], shape.as_list()[2]]
-        elif shape.rank >= 0 and shape.rank <= 3:
-            return shape.as_list()
+            shape_list = shape.as_list()
+            return checkBatchNum([shape_list[0], shape_list[3], shape_list[1], shape_list[2]])
+        elif shape.rank >= 0 and shape.rank < 3:
+            return checkBatchNum(shape.as_list())
         else:
             print('Shape Error:', shape)
             raise NotImplementedError
