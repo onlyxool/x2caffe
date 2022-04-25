@@ -12,23 +12,23 @@ class Mul(Operator):
 
     def __init__(self, model, tf_op, tf_op_name, index):
         super().__init__(model, tf_op, tf_op_name, index)
-        self.setInited()
-
-
-    def parse(self):
 
         assert(self.operator == 'MUL')
         assert(self.op.InputsLength() == 2)
         assert(self.op.OutputsLength() == 1)
 
-        self.parseInput()
-        self.parseOutput()
+        self.setInited()
 
-        # Attributes
+
+    def parse(self):
+
         op_opt = self.op.BuiltinOptions()
         opt = tflite.MulOptions()
         opt.Init(op_opt.Bytes, op_opt.Pos)
 
+        self.parseInputOutput()
+
+        # Attributes
         if self.inputs_shape[0] != self.inputs_shape[1] or self.inputs_buf[1] is not None:
             # Scale Layer
             self.layer_type = 'Scale'

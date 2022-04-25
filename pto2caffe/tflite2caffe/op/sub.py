@@ -13,23 +13,22 @@ class Sub(Operator):
 
     def __init__(self, model, tf_op, tf_op_name, index):
         super().__init__(model, tf_op, tf_op_name, index)
+        assert(self.operator == 'SUB')
+        assert(self.op.InputsLength() == 2)
+        assert(self.op.OutputsLength() == 1)
         self.setInited()
 
 
     def parse(self):
         self.layer_type = 'Scale'
 
-        assert(self.operator == 'SUB')
-        assert(self.op.InputsLength() == 2)
-        assert(self.op.OutputsLength() == 1)
-
-        self.parseInput()
-        self.parseOutput()
-
-        # Attributes
         op_opt = self.op.BuiltinOptions()
         opt = tflite.SubOptions()
         opt.Init(op_opt.Bytes, op_opt.Pos)
+
+        self.parseInputOutput()
+
+        # Attributes
         if self.inputs_shape[0] != self.inputs_shape[1] or self.inputs_buf[1] is not None:
             self.scale_param = dict()
 

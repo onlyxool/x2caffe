@@ -9,10 +9,11 @@ class Convolution(Operator):
 
     def __init__(self, model, tf_op, tf_op_name, index):
         super().__init__(model, tf_op, tf_op_name, index)
-        self.convolution_param = dict()
-        self.convolution_param['dilation'] = []
-        self.convolution_param['group'] = 1
-        self.attrs = self.convolution_param
+
+        assert(self.operator in ('CONV_2D', 'DEPTHWISE_CONV_2D'))
+        assert(self.op.InputsLength() == 3), "TFLite Conv always has bias"
+        assert(self.op.OutputsLength() == 1)
+
         self.setInited()
 
 
@@ -23,13 +24,13 @@ class Convolution(Operator):
 
     def parse(self):
         self.layer_type = 'ConvolutionDepthwise' if self.isDepthwise else 'Convolution'
-        assert(self.operator in ('CONV_2D', 'DEPTHWISE_CONV_2D'))
-        assert(self.op.InputsLength() == 3), "TFLite Conv always has bias"
-        assert(self.op.OutputsLength() == 1)
+
+        op_opt = self.op.BuiltinOptions()
+        opt = tflite.DepthwiseConv2DOptions() if self.isDepthwise else tflite.Conv2DOptions()
+        opt.Init(op_opt.Bytes, op_opt.Pos)
 
         # Input & OutPut
-        self.parseInput()
-        self.parseOutput()
+        self.parseInputOutput()
 
         # Weight
         self.weight = self.inputs_buf[1].transpose(3, 0, 1, 2) if self.isDepthwise else self.inputs_buf[1].transpose(0, 3, 1, 2)
@@ -44,9 +45,7 @@ class Convolution(Operator):
         self.inputs_buf[2] = self.bias
 
         # Attributes
-        op_opt = self.op.BuiltinOptions()
-        opt = tflite.DepthwiseConv2DOptions() if self.isDepthwise else tflite.Conv2DOptions()
-        opt.Init(op_opt.Bytes, op_opt.Pos)
+        self.convolution_param = dict()
         self.convolution_param['num_output'] = self.outputs_shape[0][1]
         self.convolution_param['stride_h'] = opt.StrideH()
         self.convolution_param['stride_w'] = opt.StrideW()
@@ -84,6 +83,8 @@ class Convolution(Operator):
         activ_type_code = opt.FusedActivationFunction()
         if activ_type_code is not tflite.ActivationFunctionType.NONE:
             self.activ_type_code = activ_type_code
+
+        self.attrs = self.convolution_param
 
         self.setParsed()
 

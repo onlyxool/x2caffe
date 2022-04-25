@@ -9,24 +9,24 @@ class Concat(Operator):
 
     def __init__(self, model, tf_op, tf_op_name, index):
         super().__init__(model, tf_op, tf_op_name, index)
+
+        assert(self.operator == 'CONCATENATION')
+        assert(self.op.InputsLength() >= 2)
+        assert(self.op.OutputsLength() == 1)
+
         self.setInited()
 
 
     def parse(self):
         self.layer_type = 'Concat'
 
-        assert(self.operator == 'CONCATENATION')
-        assert(self.op.InputsLength() >= 2)
-        assert(self.op.OutputsLength() == 1)
-
-        self.parseInput()
-        self.parseOutput()
-
-        # Attributes
         op_opt = self.op.BuiltinOptions()
         opt = tflite.ConcatenationOptions()
         opt.Init(op_opt.Bytes, op_opt.Pos)
 
+        self.parseInputOutput()
+
+        # Attributes
         self.concat_param = dict()
         self.concat_param['axis'] = dim_map_nhwc2nchw[opt.Axis()] if len(self.outputs_shape[0]) == 4 else opt.Axis()
         self.attrs = self.concat_param

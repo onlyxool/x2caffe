@@ -10,17 +10,16 @@ class Resize(Operator):
     def __init__(self, model, tf_op, tf_op_name, index):
         super().__init__(model, tf_op, tf_op_name, index)
 
+        assert(self.operator in ('RESIZE_NEAREST_NEIGHBOR', 'RESIZE_BILINEAR'))
+        assert(self.op.InputsLength() == 2), "TFLite has only two inputs"
+        assert(self.op.OutputsLength() == 1)
+
         self.setInited()
 
 
     def parse(self):
 
-        assert(self.operator in ('RESIZE_NEAREST_NEIGHBOR', 'RESIZE_BILINEAR'))
-        assert(self.op.InputsLength() == 2), "TFLite has only two inputs"
-        assert(self.op.OutputsLength() == 1)
-
-        self.parseInput()
-        self.parseOutput()
+        self.parseInputOutput()
 
         # Output shape
         output_h = self.outputs_shape[0][2]

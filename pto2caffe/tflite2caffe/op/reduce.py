@@ -11,7 +11,9 @@ class Reduce(Operator):
     def __init__(self, model, tf_op, tf_op_name, index):
         super().__init__(model, tf_op, tf_op_name, index)
 
-        self.pooling_param = dict()
+        assert(self.operator in ('MEAN', 'REDUCE_MAX'))
+        assert(self.op.InputsLength() == 2)
+        assert(self.op.OutputsLength() == 1)
 
         self.setInited()
 
@@ -19,25 +21,21 @@ class Reduce(Operator):
     def parse(self):
         self.layer_type = 'Pooling'
 
-        assert(self.operator in ('MEAN', 'REDUCE_MAX'))
-        assert(self.op.InputsLength() == 2)
-        assert(self.op.OutputsLength() == 1)
-
-        self.parseInput()
-        self.parseOutput()
-        assert(len(self.inputs_shape[0]) == 4)
-
-        # Attributes
         op_opt = self.op.BuiltinOptions()
         opt = tflite.ReducerOptions()
         opt.Init(op_opt.Bytes, op_opt.Pos)
         if opt.KeepDims():
             sys.exit('Reduce: Attributes KeepDims Not Supported.\n')
 
+        self.parseInputOutput()
+        assert(len(self.inputs_shape[0]) == 4)
+
+        # Attributes
         axis = []
         for i in range(len(self.inputs_buf[1])):
             axis.append(dim_map_nhwc2nchw[self.inputs_buf[1][i]])
 
+        self.pooling_param = dict()
         if self.operator == 'REDUCE_MAX':
             if axis == [2,3]:
                 self.pooling_param['pool'] = 0

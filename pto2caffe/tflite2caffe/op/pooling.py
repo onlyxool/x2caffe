@@ -9,25 +9,25 @@ class Pooling(Operator):
 
     def __init__(self, model, tf_op, tf_op_name, index):
         super().__init__(model, tf_op, tf_op_name, index)
-        self.pooling_param = dict()
-        self.attrs = self.pooling_param
+
+        assert(self.operator in ('AVERAGE_POOL_2D', 'MAX_POOL_2D'))
+        assert(self.op.InputsLength() == 1)
+        assert(self.op.OutputsLength() == 1)
+
         self.setInited()
 
 
     def parse(self):
         self.layer_type = 'Pooling'
 
-        assert(self.operator in ('AVERAGE_POOL_2D', 'MAX_POOL_2D'))
-        assert(self.op.InputsLength() == 1)
-        assert(self.op.OutputsLength() == 1)
-
-        self.parseInput()
-        self.parseOutput()
-
-        # Attributes
         op_opt = self.op.BuiltinOptions()
         opt = tflite.Pool2DOptions()
         opt.Init(op_opt.Bytes, op_opt.Pos)
+
+        self.parseInputOutput()
+
+        # Attributes
+        self.pooling_param = dict()
         self.pooling_param['pool'] = 1 if self.operator == 'AVERAGE_POOL_2D' else 0
         self.pooling_param['kernel_h'] = opt.FilterHeight()
         self.pooling_param['kernel_w'] = opt.FilterWidth()
@@ -63,6 +63,8 @@ class Pooling(Operator):
         activ_type_code = opt.FusedActivationFunction()
         if activ_type_code is not tflite.ActivationFunctionType.NONE:
             self.activ_type_code = activ_type_code
+
+        self.attrs = self.pooling_param
 
         self.setParsed()
 

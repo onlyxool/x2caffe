@@ -9,20 +9,22 @@ class Deconvolution(Operator):
 
     def __init__(self, model, tf_op, tf_op_name, index):
         super().__init__(model, tf_op, tf_op_name, index)
-        self.convolution_param = dict()
-        self.attrs = self.convolution_param
+
+        assert(self.operator == 'TRANSPOSE_CONV')
+        assert(self.op.InputsLength() == 3), "TFLite Conv always has bias"
+        assert(self.op.OutputsLength() == 1)
+
         self.setInited()
 
 
     def parse(self):
         self.layer_type = 'Deconvolution'
 
-        assert(self.operator == 'TRANSPOSE_CONV')
-        assert(self.op.InputsLength() == 3), "TFLite Conv always has bias"
-        assert(self.op.OutputsLength() == 1)
+        op_opt = self.op.BuiltinOptions()
+        opt = tflite.TransposeConvOptions()
+        opt.Init(op_opt.Bytes, op_opt.Pos)
 
-        self.parseInput()
-        self.parseOutput()
+        self.parseInputOutput()
 
         # Weight
         self.weight = self.inputs_buf[1].transpose(0, 3, 1, 2)
@@ -30,9 +32,7 @@ class Deconvolution(Operator):
         self.inputs_shape[1] = list(self.inputs_buf[1].shape)
 
         # Attributes
-        op_opt = self.op.BuiltinOptions()
-        opt = tflite.TransposeConvOptions()
-        opt.Init(op_opt.Bytes, op_opt.Pos)
+        self.convolution_param = dict()
         self.convolution_param['num_output'] = self.outputs_shape[0][1]
         self.convolution_param['stride_h'] = opt.StrideH()
         self.convolution_param['stride_w'] = opt.StrideW()
@@ -65,6 +65,8 @@ class Deconvolution(Operator):
             self.convolution_param['pad_r'] = padding[1]
             self.convolution_param['pad_t'] = padding[2]
             self.convolution_param['pad_b'] = padding[3]
+
+        self.attrs = self.convolution_param
 
         self.setParsed()
 

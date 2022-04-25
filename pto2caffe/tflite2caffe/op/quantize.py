@@ -9,15 +9,14 @@ class Quantize(Operator):
     def __init__(self, model, tf_op, tf_op_name, index):
         super().__init__(model, tf_op, tf_op_name, index)
 
+        assert(self.operator in ('QUANTIZE', 'DEQUANTIZE'))
+
         self.setInited()
 
 
     def parse(self):
 
-        assert(self.operator in ('QUANTIZE', 'DEQUANTIZE'))
-
-        self.parseInput()
-        self.parseOutput()
+        self.parseInputOutput()
 
         if self.inputs_buf[0] is None:
             self.layer_type = 'Reshape'

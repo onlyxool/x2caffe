@@ -8,16 +8,15 @@ class ReLU(Operator):
 
     def __init__(self, model, tf_op, tf_op_name, index):
         super().__init__(model, tf_op, tf_op_name, index)
+        assert(self.operator in ('RELU', 'LEAKY_RELU'))
         self.setInited()
 
 
     def parse(self):
         self.layer_type = 'ReLU'
-        assert(self.operator in ('RELU', 'LEAKY_RELU'))
 
         if self.op is not None:
-            self.parseInput()
-            self.parseOutput()
+            self.parseInputOutput()
 
         # Attributes
         if self.operator == 'LEAKY_RELU':

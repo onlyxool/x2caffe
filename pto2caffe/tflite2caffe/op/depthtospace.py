@@ -9,28 +9,28 @@ class DepthToSpace(Operator):
 
     def __init__(self, model, tf_op, tf_op_name, index):
         super().__init__(model, tf_op, tf_op_name, index)
-        self.convolution_param = dict()
+
+        assert(self.operator == 'DEPTH_TO_SPACE')
+        assert(self.op.InputsLength() == 1)
+        assert(self.op.OutputsLength() == 1)
+
         self.setInited()
 
 
     def parse(self):
         self.layer_type = 'Deconvolution'
-        assert(self.operator == 'DEPTH_TO_SPACE')
-        assert(self.op.InputsLength() == 1)
-        assert(self.op.OutputsLength() == 1)
 
-        self.parseInput()
-        self.parseOutput()
-
-        # Attributes
         op_opt = self.op.BuiltinOptions()
         opt = tflite.DepthToSpaceOptions()
         opt.Init(op_opt.Bytes, op_opt.Pos)
+
+        self.parseInputOutput()
 
         scale_factor = opt.BlockSize()
         ic = out_channel = self.outputs_shape[0][1]
         in_channel = self.inputs_shape[0][1]
 
+        # Weight
         weight = np.zeros((in_channel, out_channel, scale_factor, scale_factor), dtype='int')
         if scale_factor == 2:
             for i in range(in_channel):
@@ -57,6 +57,8 @@ class DepthToSpace(Operator):
 
         self.weight = weight
 
+        # Attributes
+        self.convolution_param = dict()
         self.convolution_param['num_output'] = out_channel
         self.convolution_param['stride_h'] = scale_factor
         self.convolution_param['stride_w'] = scale_factor

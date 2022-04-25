@@ -11,19 +11,16 @@ class Slice(Operator):
     def __init__(self, model, tf_op, tf_op_name, index):
         super().__init__(model, tf_op, tf_op_name, index)
         self.slice_param = dict()
-
+        assert(self.operator in ('SPLIT', 'STRIDED_SLICE'))
+        assert(self.op.InputsLength() == 2 or self.op.InputsLength() == 4)
+        assert(self.op.OutputsLength() == 1)
         self.setInited()
 
 
     def parse(self):
         self.layer_type = 'Slice'
 
-        assert(self.operator in ('SPLIT', 'STRIDED_SLICE'))
-        assert(self.op.InputsLength() == 2 or self.op.InputsLength() == 4)
-        assert(self.op.OutputsLength() == 1)
-
-        self.parseInput()
-        self.parseOutput()
+        self.parseInputOutput()
 
         if self.operator == 'STRIDED_SLICE':
             op_opt = self.op.BuiltinOptions()

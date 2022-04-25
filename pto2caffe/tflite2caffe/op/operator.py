@@ -49,7 +49,7 @@ class Operator(Base):
         return '%s attr%s: %s -> %s' % (self.shorty, self.attrs, inames, onames)
 
 
-    def parseInput(self):
+    def __parseInput__(self):
         for i in range(self.op.InputsLength()):
             if self.op.Inputs(i) >= 0:
                 self.inputs.append(self.op.Inputs(i))
@@ -59,8 +59,13 @@ class Operator(Base):
                 self.inputs_buf.append(None)
 
 
-    def parseOutput(self):
+    def __parseOutput__(self):
         for i in range(self.op.OutputsLength()):
             if self.op.Outputs(i) >= 0:
                 self.outputs.append(self.op.Outputs(i))
                 self.outputs_shape.append(shape_map_nhwc2nchw(self.graph.Tensors(self.outputs[0]).ShapeAsNumpy()))
+
+
+    def parseInputOutput(self):
+        self.__parseInput__()
+        self.__parseOutput__()

@@ -8,19 +8,26 @@ class InnerProduct(Operator):
 
     def __init__(self, model, tf_op, tf_op_name, index):
         super().__init__(model, tf_op, tf_op_name, index)
-        self.inner_product_param = dict()
-        self.attrs = self.inner_product_param
+
+        assert(self.operator == 'FULLY_CONNECTED')
+        assert(self.op.InputsLength() == 3), "TFLite Fullly Connected always has bias"
+        assert(self.op.OutputsLength() == 1)
+
         self.setInited()
 
 
     def parse(self):
         self.layer_type = 'InnerProduct'
-        assert(self.operator == 'FULLY_CONNECTED')
-        assert(self.op.InputsLength() == 3), "TFLite Fullly Connected always has bias"
-        assert(self.op.OutputsLength() == 1)
 
-        self.parseInput()
-        self.parseOutput()
+        op_opt = self.op.BuiltinOptions()
+        opt = tflite.FullyConnectedOptions()
+        opt.Init(op_opt.Bytes, op_opt.Pos)
+        #opt.WeightsFormat()
+        #opt.KeepNumDims()
+        #opt.FusedActivationFunction()
+        #opt.AsymmetricQuantizeInputs())
+
+        self.parseInputOutput()
 
         # Weight
         weight = self.inputs_buf[1]
@@ -39,11 +46,7 @@ class InnerProduct(Operator):
         self.inputs_buf[2] = self.bias
 
         # Attributes
-        op_opt = self.op.BuiltinOptions()
-        opt = tflite.FullyConnectedOptions()
-        opt.Init(op_opt.Bytes, op_opt.Pos)
-#        print(opt.WeightsFormat(), opt.KeepNumDims(), opt.FusedActivationFunction(), opt.AsymmetricQuantizeInputs())
-
+        self.inner_product_param = dict()
         self.inner_product_param['num_output'] = self.outputs_shape[0][1]
         self.inner_product_param['weight_filler'] = dict()
         self.inner_product_param['weight_filler']['type'] = 'xavier'
@@ -58,6 +61,8 @@ class InnerProduct(Operator):
         activ_type_code = opt.FusedActivationFunction()
         if activ_type_code is not tflite.ActivationFunctionType.NONE:
             self.activ_type_code = activ_type_code
+
+        self.attrs = self.inner_product_param
 
         self.setParsed()
 

@@ -6,16 +6,15 @@ class ReLUX(Operator):
 
     def __init__(self, model, tf_op, tf_op_name, index):
         super().__init__(model, tf_op, tf_op_name, index)
+        assert(self.operator == 'RELU6')
         self.setInited()
 
 
     def parse(self):
         self.layer_type = 'ReLUX'
-        assert(self.operator == 'RELU6')
 
         if self.op is not None:
-            self.parseInput()
-            self.parseOutput()
+            self.parseInputOutput()
 
         # Attributes
         self.relux_param = dict()

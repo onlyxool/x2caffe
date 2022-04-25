@@ -1,36 +1,28 @@
 import tflite
-import logging
 
 from caffe_transform import caffe_layer
 from tflite2caffe.op.operator import Operator
 
-logger = logging.getLogger('tflite2caffe')
-
 
 class Softmax(Operator):
 
-    def __init__(self, model, tf_op, tf_op_code, index):
-        super().__init__(model, tf_op, tf_op_code, index)
-        self.softmax_param = dict()
-        self.softmax_param['axis'] = 1
-        self.attrs = self.softmax_param
+    def __init__(self, model, tf_op, tf_op_name, index):
+        super().__init__(model, tf_op, tf_op_name, index)
+        assert(self.operator == 'SOFTMAX')
+        assert(self.op.InputsLength() == 1)
+        assert(self.op.OutputsLength() == 1)
         self.setInited()
 
 
-    @property
-    def type(self):
-        return 'Softmax'
-
-
     def parse(self):
-        logger.debug("Parsing %s...", self.type)
+        self.layer_type = 'Softmax'
 
-        assert(self.op_code == tflite.BuiltinOperator.SOFTMAX)
-        assert(self.op.InputsLength() == 1)
-        assert(self.op.OutputsLength() == 1)
+        self.parseInputOutput()
 
-        self.parseInput()
-        self.parseOutput()
+        self.softmax_param = dict()
+        self.softmax_param['axis'] = 1
+
+        self.attrs = self.softmax_param
 
         self.setParsed()
 

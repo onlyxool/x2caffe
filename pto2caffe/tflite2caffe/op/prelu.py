@@ -8,15 +8,14 @@ class PReLU(Operator):
 
     def __init__(self, model, tf_op, tf_op_name, index):
         super().__init__(model, tf_op, tf_op_name, index)
+        assert(self.operator == 'PRELU')
         self.setInited()
 
 
     def parse(self):
         self.layer_type = 'PReLU'
-        assert(self.operator == 'PRELU')
 
-        self.parseInput()
-        self.parseOutput()
+        self.parseInputOutput()
 
         self.slope = self.inputs_buf[1].transpose(2, 0, 1)
 

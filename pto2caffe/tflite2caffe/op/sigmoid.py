@@ -8,15 +8,14 @@ class Sigmoid(Operator):
 
     def __init__(self, model, tf_op, tf_op_name, index):
         super().__init__(model, tf_op, tf_op_name, index)
+        assert(self.operator == 'LOGISTIC')
         self.setInited()
 
 
     def parse(self):
         self.layer_type = 'Sigmoid'
-        assert(self.operator == 'LOGISTIC')
 
-        self.parseInput()
-        self.parseOutput()
+        self.parseInputOutput()
 
         # Attributes
         self.sigmoid_param = dict()
