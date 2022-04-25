@@ -59,12 +59,16 @@ def CheckParam(param):
     # platform
     errorMsg = '\nArgument Check Failed: '
     param['platform'] = param['platform'].lower()
-    if param['platform'] not in ['tensorflow', 'onnx', 'pytorch', 'tflite']:
-        errorMsg = errorMsg + 'argument -platform: invalid choice: ' + param['platform'] + ' (choose from TensorFlow, ONNX, TFLite)'
+    if param['platform'] not in ['tensorflow', 'pytorch', 'tflite', 'onnx']:
+        errorMsg = errorMsg + 'argument -platform: invalid choice: ' + param['platform'] + ' (choose from TensorFlow, Pytorch, TFLite, ONNX)'
         sys.exit(errorMsg)
 
     # model
-    if not os.path.isfile(param['model']):
+    if param['platform'] == 'tensorflow':
+        if not os.path.isfile(param['model']) and not os.path.isdir(param['model']):
+            errorMsg = errorMsg + 'Model File not exist  ' + param['model']
+            sys.exit(errorMsg)
+    elif not os.path.isfile(param['model']):
         errorMsg = errorMsg + 'Model File not exist  ' + param['model']
         sys.exit(errorMsg)
     param['model'] = os.path.abspath(os.path.normpath(param['model']))
