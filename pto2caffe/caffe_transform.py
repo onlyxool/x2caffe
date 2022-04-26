@@ -1,8 +1,14 @@
-import caffe_path
-import caffe
+import os
+import sys
 import numpy as np
-from util import *
+
+envroot = os.environ.get('MCHOME', os.environ['PWD'])
+sys.path.append(envroot + '/toolchain/caffe/python')
+sys.path.append(envroot + '/toolchain/caffe/python/caffe')
+import caffe
 from caffe.proto import caffe_pb2
+
+from util import *
 
 
 def param_name_dict():
