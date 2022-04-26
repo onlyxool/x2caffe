@@ -19,7 +19,6 @@ pre-job:
     - echo "This job runs in the .pre stage, before all other stages."
     - env
     - hostname
-    - ifconfig
 
 build-job:
   stage: build
