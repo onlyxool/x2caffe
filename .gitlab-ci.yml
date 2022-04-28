@@ -1,0 +1,55 @@
+---
+image: onlyxool/vimicro-ai:gpu
+
+stages:
+  - build
+  - test
+
+variables:
+  CONDA_EXE: "/usr/local/bin/conda"
+  CONDA_PREFIX: "/usr/local/envs/mc"
+  CONDA_PREFIX_1: "/usr/local"
+  CONDA_PYTHON_EXE: "/usr/local/bin/python"
+  CONDA_DEFAULT_ENV: "mc"
+  PATH: "/usr/local/envs/mc/bin:/usr/local/condabin:/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
+pre-job:
+  stage: .pre
+  script:
+    - echo "This job runs in the .pre stage, before all other stages."
+    - env
+    - hostname
+
+build-job:
+  stage: build
+  timeout: 30m
+  before_script:
+    - TZ=UTC-8 date "+%Y-%m-%d %H:%M:%S"
+  script:
+    - echo "This job builds the target of pto2caffe"
+    - pushd pto2caffe
+    - python3 compile.py
+    - popd
+  after_script:
+    - TZ=UTC-8 date "+%Y-%m-%d %H:%M:%S"
+  artifacts:
+    paths:
+      - release
+
+test-job:
+  stage: test
+  before_script:
+    - TZ=UTC-8 date "+%Y-%m-%d %H:%M:%S"
+  script:
+    - echo "This job tests pto2caffe."
+    - mkdir tests
+  after_script:
+    - TZ=UTC-8 date "+%Y-%m-%d %H:%M:%S"
+  artifacts:
+    paths:
+      - tests
+
+post-job:
+  stage: .post
+  script:
+    - echo "This job runs in the .post stage, after all other stages."
