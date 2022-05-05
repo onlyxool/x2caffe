@@ -1,9 +1,6 @@
-import copy
-import logging
-import numpy as np
+import os
 import tensorflow as tf
-
-logger = logging.getLogger('TensorFlow2Caffe')
+from tensorflow import keras
 
 
 def wrap_frozen_graph(graph_def, inputs, outputs, print_graph=False):
@@ -18,7 +15,7 @@ def wrap_frozen_graph(graph_def, inputs, outputs, print_graph=False):
         tf.nest.map_structure(import_graph.as_graph_element, outputs))
 
 
-def get_output(model, input_tensor, blob_name):
+def get_output_frozenmodel(model, input_tensor, blob_name):
     if blob_name.find('split') >= 0:
         return None
 
@@ -30,4 +27,21 @@ def get_output(model, input_tensor, blob_name):
 
     output = frozen_func(image_input=tf.constant(list(input_tensor)))
 
-    return output[0].numpy().transpose(0, 3, 1, 2) if len(output[0].numpy().shape) == 4 else output
+    return output[0].numpy().transpose(0, 3, 1, 2) if len(output[0].numpy().shape) == 4 else output[0].numpy()
+
+
+
+def get_output_savedmodel(model, input_tensor, blob_name):
+    if blob_name.find('split') >= 0:
+        return None
+
+    if model.model is None:
+        modelpath = model.model_file.split(os.path.basename(model.model_file))[0]
+        model.model = tf.saved_model.load(modelpath)
+
+    input_name = model.model.signatures['default'].inputs[0].name
+
+    pruned = model.model.prune(input_name, blob_name)
+    output = pruned(tf.constant(input_tensor)).numpy()
+
+    return output.transpose(0, 3, 1, 2) if len(output.shape) == 4 else output
