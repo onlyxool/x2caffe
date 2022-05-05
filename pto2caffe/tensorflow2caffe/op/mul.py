@@ -1,3 +1,4 @@
+import numpy as np
 import copy
 import logging
 
@@ -24,16 +25,20 @@ class Scale(Operator):
 
     def parse(self):
         logger.debug('Parsing %s...', self.type)
+
         self.parseInput()
         self.parseOutput()
+
         self.parseAttributes()
 
         if self.op_code == 'BiasAdd':
+            self.weight = np.ones(self.inputs_shape[1], dtype=float, order='C')
             self.bias = self.inputs_buf[1]
             if self.inputs_shape[1] != []:
                 self.scale_param['axis'] = self.inputs_shape[0].index(self.inputs_shape[1][0])
             self.scale_param['bias_term'] = True
             self.attrs = self.scale_param
+            self.setParsed()
         elif self.op_code == 'Mul':
             if self.inputs_buf[0] is not None and self.inputs_buf[1] is not None:
                 self.model.constant[self.outputs[0]] = self.inputs_buf[0] * self.inputs_buf[1]
@@ -69,7 +74,7 @@ class Scale(Operator):
 
     def convert(self):
         if hasattr(self, 'scale_param'):
-            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, None, self.bias, scale_param=self.scale_param)
+            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, scale_param=self.scale_param)
         elif hasattr(self, 'eltwise_param'):
             layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param)
 
