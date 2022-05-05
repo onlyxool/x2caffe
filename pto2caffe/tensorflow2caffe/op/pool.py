@@ -28,8 +28,11 @@ class Pool(Operator):
         # Attribute
         if self.op_code == 'MaxPool':
             self.pooling_param['pool'] = 0
+        elif self.op_code == 'AvgPool':
+            self.pooling_param['pool'] = 1
         else:
             raise NotImplementedError(self.op_code)
+
 
         self.pooling_param['kernel_h'] = self.attrs['ksize'][self.ndim('H')]
         self.pooling_param['kernel_w'] = self.attrs['ksize'][self.ndim('W')]
