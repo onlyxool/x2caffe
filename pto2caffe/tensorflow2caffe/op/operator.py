@@ -1,8 +1,6 @@
 import logging
-import numpy as np
-import tensorflow as tf
 from base import Base
-from util import *
+from util import shape_map_nhwc2nchw
 
 logger = logging.getLogger('TensorFlow2caffe')
 
