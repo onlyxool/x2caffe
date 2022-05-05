@@ -5,6 +5,7 @@ from tensorflow2caffe.op.operator import Operator
 
 logger = logging.getLogger('TensorFlow2Caffe')
 
+
 class BatchNorm(Operator):
 
     def __init__(self, model, tf_op, tf_op_code, index):
@@ -13,14 +14,18 @@ class BatchNorm(Operator):
         self.scale_param = dict()
         self.setInited()
 
+
     @property
     def type(self):
         return 'BatchNorm'
 
+
     def parse(self):
         logger.debug('Parsing %s...', self.type)
+
         self.parseInput()
         self.parseOutput()
+
         self.parseAttributes()
 
         # Weight Bias Mean Variance
@@ -34,10 +39,9 @@ class BatchNorm(Operator):
             elif 'variance' in input_name:
                 self.var = self.inputs_buf[index]
 
-        # FusedBatchNormV3
-        if self.op_code == 'FusedBatchNormV3':
-            if len(self.outputs) > 1: 
-                self.outputs = self.outputs[0:1]
+        # FusedBatchNorm
+        if len(self.outputs) > 1:
+            self.outputs = self.outputs[0:1]
 
         # Attribute
         self.batch_norm_param['eps'] = self.attrs.get('epsilon', 1e-5)
