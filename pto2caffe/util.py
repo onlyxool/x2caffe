@@ -56,7 +56,7 @@ def shape_map_nhwc2nchw(shape):
         elif shape.rank == 4:
             shape_list = shape.as_list()
             return checkBatchNum([shape_list[0], shape_list[3], shape_list[1], shape_list[2]])
-        elif shape.rank >= 0 and shape.rank < 3:
+        elif shape.rank >= 0 and shape.rank <= 3:
             return checkBatchNum(shape.as_list())
         else:
             print('Shape Error:', shape)

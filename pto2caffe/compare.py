@@ -89,13 +89,14 @@ def compare(platform, target_model, caffe_path, input_tensor, level=-1):
         from tflite2caffe.tflite import get_output
     elif platform == 'onnx':
         from onnx2caffe.onnx import get_output
-    elif platform == 'tensorflow':
+    elif platform == 'FrozenModel':
         input_tensor = input_tensor.transpose(0, 2, 3, 1)
-        from tensorflow2caffe.tensorflow import get_output
+        from tensorflow2caffe.tensorflow import get_output_frozenmodel as get_output
+    elif platform == 'SavedModel':
+        input_tensor = input_tensor.transpose(0, 2, 3, 1)
+        from tensorflow2caffe.tensorflow import get_output_savedmodel as get_output
     elif platform == 'pytorch':
         from pytorch2caffe.pytorch import get_output
-    else:
-        raise NotImplementedError(paltform)
 
     for blob_name in caffe_output_dict:
         target_output = get_output(target_model, input_tensor, blob_name if platform != 'pytorch' else blob2layer_map[blob_name])
@@ -119,4 +120,4 @@ def compare(platform, target_model, caffe_path, input_tensor, level=-1):
         print('  cmax_err: %8f'% max_err)
         print('  max_ratio: %8f'% max_ratio, '\n')
 
-    return (cosin_simi, max_err, max_ratio)
+#    return (cosin_simi, max_err, max_ratio)
