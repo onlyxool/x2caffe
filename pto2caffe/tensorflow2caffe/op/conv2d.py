@@ -13,6 +13,7 @@ class Convolution(Operator):
         self.convolution_param = dict()
         self.setInited()
 
+
     @property
     def type(self):
         return 'Convolution'
@@ -25,10 +26,12 @@ class Convolution(Operator):
 
         # Weight HWIO -> OIHW
         self.weight = self.inputs_buf[1].transpose(3, 2, 0, 1)
+        self.inputs_buf[1] = self.weight
 
         # Bias
         if len(self.inputs) >= 3:
             self.bias = self.inputs_buf[2]
+            self.inputs_buf[2] = self.bias
         else:
             self.bias = None
 
@@ -37,7 +40,7 @@ class Convolution(Operator):
         self.convolution_param['stride_h'] = self.attrs['strides'][self.ndim('H')]
         self.convolution_param['stride_w'] = self.attrs['strides'][self.ndim('W')]
         self.convolution_param['dilation'] = [self.attrs['dilations'][self.ndim('H')], self.attrs['dilations'][self.ndim('W')]]
-        self.convolution_param['group'] = 1
+        self.convolution_param['group'] = int(self.inputs_shape[0][1] / self.weight.shape[1])
         self.convolution_param['kernel_h'] = self.weight.shape[2]
         self.convolution_param['kernel_w'] = self.weight.shape[3]
         self.convolution_param['bias_term'] = True if self.bias is not None else False
