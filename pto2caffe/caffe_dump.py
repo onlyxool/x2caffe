@@ -1,10 +1,8 @@
 import os
-import sys
-envroot = os.environ.get('MCHOME', os.environ['PWD'])
-sys.path.append(envroot + '/toolchain/caffe/python')
-sys.path.append(envroot + '/toolchain/caffe/python/caffe')
-import caffe
 import numpy as np
+
+import caffe_path
+import caffe
 from caffe.proto import caffe_pb2
 from google.protobuf import text_format
 

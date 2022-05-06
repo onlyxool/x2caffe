@@ -1,10 +1,6 @@
-import os
-import sys
 import numpy as np
 
-envroot = os.environ.get('MCHOME', os.environ['PWD'])
-sys.path.append(envroot + '/toolchain/caffe/python')
-sys.path.append(envroot + '/toolchain/caffe/python/caffe')
+import caffe_path
 import caffe
 from caffe.proto import caffe_pb2
 
@@ -187,8 +183,11 @@ def make_caffe_input_layer(input, input_shape, index, param):
         transform_param['scale'] = caffe_scale.tolist()
 
     if param.get('auto_crop', 0) == 1:
-        param['crop_h'] = input_shape[2]
-        param['crop_w'] = input_shape[3]
+        if len(input_shape) == 4:
+            param['crop_h'] = input_shape[2]
+            param['crop_w'] = input_shape[3]
+        else:
+            return
 
     if param['crop_h'] is not None:
         transform_param['crop_h'] = param['crop_h']
