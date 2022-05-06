@@ -138,7 +138,7 @@ python convert.py -platform=pytorch -model=/path/to/torchscript/model.pt -root_f
 | Div                   |      |
 | Slice                 |      |
 | Split                 |      |
-| MatMul                |      |
+| MatMul                | Only support input dimentions == 2 |
 | Concat                |      |
 | Resize                |      |
 | Dropout               |      |
