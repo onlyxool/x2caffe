@@ -17,8 +17,8 @@ class Concat(Operator):
 
         self.concat_param = dict()
         for index, input_buf in enumerate(self.inputs_buf):
-            if input_buf is not None:
-                self.concat_param['axis'] = dim_map_nhwc2nchw[self.inputs_buf[index]]
+            if input_buf is not None and input_buf.size > 0:
+                self.concat_param['axis'] = dim_map_nhwc2nchw[input_buf]
 
         self.attrs = self.concat_param
 
