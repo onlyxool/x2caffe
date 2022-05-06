@@ -54,6 +54,7 @@ OpMap = {
     'DepthwiseConv2dNative': ConvolutionDepthwise,
 }
 
+#ignore_op = ['Enter', 'Merge', 'Cast']
 
 class Model(Base):
 
@@ -82,7 +83,7 @@ class Model(Base):
         for op in graph.get_operations():
             if op.type == 'Const':
                 self.constant[op.outputs[0].name] = tf.get_static_value(op.outputs[0])
-            elif op.type == 'Identity':
+            elif op.type == 'Identity':# or op.type == 'Cast':
                 self.indentity[op.outputs[0].name] = self.indentity.get(op.inputs[0].name, op.inputs[0].name)
             elif op.type == 'Placeholder':
                 input_shape = []
@@ -95,17 +96,24 @@ class Model(Base):
                 self.tf_ops.append(op)
         self.param['inputs_shape'] = self.inputs_shape
 
+        if len(self.tf_ops) == 0:
+            sys.exit('Error: Model file is not Tensorflow Model.\n')
+
         print('Tensorflow GraphDef Input size: (graph version=%d)' %graph.version)
         for i, shape in enumerate(self.inputs_shape):
             print(self.inputs[i], shape)
 
         # Parse all operations
         for index, tf_op in enumerate(self.tf_ops):
+#            print(tf_op.type)
+#            if tf_op.type in ignore_op:
+#                continue
+
             if tf_op.type not in OpMap:
                 errorMsg = 'Error: Operator [' + tf_op.type + '] does not Support.\n'
                 sys.exit(errorMsg)
 
-            op = OpMap[tf_op.type](self, tf_op, tf_op.type, index)
+            op = OpMap[tf_op.type](self, tf_op, index)
             op.parse()
 
             if op.status.parsed:

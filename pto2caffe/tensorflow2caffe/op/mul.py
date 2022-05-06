@@ -1,6 +1,5 @@
 import numpy as np
 import copy
-import logging
 
 from caffe_transform import caffe_layer
 from tensorflow2caffe.op.operator import Operator
@@ -8,30 +7,20 @@ from tensorflow2caffe.op.operator import Operator
 from util import trim_one
 from util import compute_scale_axis
 
-logger = logging.getLogger('TensorFlow2Caffe')
-
 class Scale(Operator):
 
-    def __init__(self, model, tf_op, tf_op_code, index):
-        super().__init__(model, tf_op, tf_op_code, index)
-        self.scale_param = dict()
+    def __init__(self, model, tf_op, index):
+        super().__init__(model, tf_op, index)
+        assert(self.operator == 'Mul' or self.operator == 'BiasAdd')
         self.setInited()
 
 
-    @property
-    def type(self):
-        return 'Scale'
-
-
     def parse(self):
-        logger.debug('Parsing %s...', self.type)
+        super().__parse__()
 
-        self.parseInput()
-        self.parseOutput()
-
-        self.parseAttributes()
-
-        if self.op_code == 'BiasAdd':
+        self.scale_param = dict()
+        if self.operator == 'BiasAdd':
+            self.layer_type = 'Scale'
             self.weight = np.ones(self.inputs_shape[1], dtype=float, order='C')
             self.bias = self.inputs_buf[1]
             if self.inputs_shape[1] != []:
@@ -39,7 +28,8 @@ class Scale(Operator):
             self.scale_param['bias_term'] = True
             self.attrs = self.scale_param
             self.setParsed()
-        elif self.op_code == 'Mul':
+        elif self.operator == 'Mul':
+            self.layer_type = 'Scale'
             if self.inputs_buf[0] is not None and self.inputs_buf[1] is not None:
                 self.model.constant[self.outputs[0]] = self.inputs_buf[0] * self.inputs_buf[1]
             elif self.inputs_shape[0] != self.inputs_shape[1] or self.inputs_buf[1] is not None:
@@ -63,19 +53,20 @@ class Scale(Operator):
                 self.attrs = self.scale_param
                 self.setParsed()
             else:
+                self.layer_type = 'Eltwise'
                 self.eltwise_param = dict()
                 self.eltwise_param['operation'] = 0
                 self.attrs = self.eltwise_param
                 self.setParsed()
         else:
-            print(self.op_code)
+            print(self.operator)
             raise NotImplementedError
 
 
     def convert(self):
-        if hasattr(self, 'scale_param'):
+        if self.layer_type == 'Scale':
             layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, scale_param=self.scale_param)
-        elif hasattr(self, 'eltwise_param'):
+        elif self.layer_type == 'Eltwise':
             layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param)
 
         self.setConverted()

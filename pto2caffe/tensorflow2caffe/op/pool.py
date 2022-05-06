@@ -1,38 +1,28 @@
-import logging
-
 from caffe_transform import caffe_layer
 from tensorflow2caffe.op.operator import Operator
 from util import handleLegacyPad
 
-logger = logging.getLogger('TensorFlow2Caffe')
 
 class Pool(Operator):
 
-    def __init__(self, model, tf_op, tf_op_code, index):
-        super().__init__(model, tf_op, tf_op_code, index)
-        self.pooling_param = dict()
+    def __init__(self, model, tf_op, index):
+        super().__init__(model, tf_op, index)
+        assert(self.operator == 'MaxPool' or self.operator == 'AvgPool')
         self.setInited()
 
 
-    @property
-    def type(self):
-        return 'Pooling'
-
-
     def parse(self):
-        logger.debug('Parsing %s...', self.type)
-        self.parseInput()
-        self.parseOutput()
-        self.parseAttributes()
+        self.layer_type = 'Pooling'
+        super().__parse__()
 
         # Attribute
-        if self.op_code == 'MaxPool':
+        self.pooling_param = dict()
+        if self.operator == 'MaxPool':
             self.pooling_param['pool'] = 0
-        elif self.op_code == 'AvgPool':
+        elif self.operator == 'AvgPool':
             self.pooling_param['pool'] = 1
         else:
-            raise NotImplementedError(self.op_code)
-
+            raise NotImplementedError(self.operator)
 
         self.pooling_param['kernel_h'] = self.attrs['ksize'][self.ndim('H')]
         self.pooling_param['kernel_w'] = self.attrs['ksize'][self.ndim('W')]
@@ -43,7 +33,7 @@ class Pool(Operator):
         # Padding
         legacy_pad = {'left': 0, 'right': 0, 'top': 0, 'bottom': 0}
         for legacy in self.model.legacys:
-            if legacy.op_code == 'Pad':
+            if legacy.operator == 'Pad':
                 if legacy.outputs[0] == self.inputs[0]:
                     legacy_pad = legacy.pad
                     self.inputs[0] = legacy.inputs[0]

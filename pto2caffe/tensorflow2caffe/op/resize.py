@@ -1,37 +1,19 @@
-import logging
 import numpy as np
 
 from caffe_transform import caffe_layer
 from tensorflow2caffe.op.operator import Operator
 
-logger = logging.getLogger('TensorFlow2Caffe')
 
 class Resize(Operator):
 
-    def __init__(self, model, tf_op, tf_op_code, index):
-        super().__init__(model, tf_op, tf_op_code, index)
-
+    def __init__(self, model, tf_op, index):
+        super().__init__(model, tf_op, index)
+        assert(self.operator == 'ResizeNearestNeighbor')
         self.setInited()
 
 
-    @property
-    def type(self):
-        if self.op_code == 'ResizeNearestNeighbor':
-            if hasattr(self, 'convolution_param'):
-                return 'Deconvolution'
-            else:
-                return 'Upsample'
-        elif self.op_code == 'ResizeBilinear':
-            return 'Interp'
-        else:
-            raise NotImplementedError
-
-
     def parse(self):
-        logger.debug('Parsing %s...', self.type)
-        self.parseInput()
-        self.parseOutput()
-        self.parseAttributes()
+        super().__parse__()
 
         # Output shape
         output_h = self.inputs_buf[1][0]
@@ -42,8 +24,9 @@ class Resize(Operator):
         input_w = self.inputs_shape[0][3]
 
         scale_factor = output_h/input_h
-        if self.op_code == 'ResizeNearestNeighbor':
+        if self.operator == 'ResizeNearestNeighbor':
             if scale_factor % 1 == 0:
+                self.layer_type = 'Deconvolution'
                 self.convolution_param = dict()
                 self.convolution_param['bias_term'] = False
                 self.convolution_param['num_output'] = self.outputs_shape[0][1]
@@ -59,29 +42,19 @@ class Resize(Operator):
 
                 self.attrs = self.convolution_param
             else:
+                self.layer_type = 'Upsample'
                 self.upsample_param = dict()
                 self.upsample_param['scale'] = scale_factor
                 self.attrs = self.upsample_param
-        elif self.op_code == 'ResizeBilinear':
-            self.interp_param = dict()
-            self.interp_param['align_corners'] = self.attrs['align_corners']
-            self.interp_param['height'] = self.inputs_buf[1][0]
-            self.interp_param['width'] = self.inputs_buf[1][1]
-        else:
-            raise NotImplementedError
-
 
         self.setParsed()
 
 
     def convert(self):
-        if self.op_code == 'ResizeNearestNeighbor':
-            if hasattr(self, 'convolution_param'):
-                layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, None, convolution_param=self.convolution_param)
-            elif hasattr(self, 'upsample_param'):
-                layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, upsample_param=self.upsample_param)
-        elif self.op_code == 'ResizeBilinear':
-            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, interp_param=self.interp_param)
+        if self.layer_type == 'Deconvolution':
+            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, None, convolution_param=self.convolution_param)
+        elif self.layer_type == 'Upsample':
+            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, upsample_param=self.upsample_param)
 
         self.setConverted()
 

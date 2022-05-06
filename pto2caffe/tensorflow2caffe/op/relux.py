@@ -1,32 +1,20 @@
-import logging
-
 from caffe_transform import caffe_layer
 from tensorflow2caffe.op.operator import Operator
-
-logger = logging.getLogger('TensorFlow2Caffe')
 
 
 class ReLUX(Operator):
 
-    def __init__(self, model, tf_op, tf_op_code, index):
-        super().__init__(model, tf_op, tf_op_code, index)
-        self.relux_param = dict()
+    def __init__(self, model, tf_op, index):
+        super().__init__(model, tf_op, index)
+        assert(self.operator == 'Relu6')
         self.setInited()
 
 
-    @property
-    def type(self):
-        return 'ReLUX'
-
-
     def parse(self):
-        logger.debug('Parsing %s...', self.type)
+        self.layer_type = 'ReLUX'
+        super().__parse__()
 
-        self.parseInput()
-        self.parseOutput()
-
-        self.parseAttributes()
-
+        self.relux_param = dict()
         self.relux_param['negative_slope'] = 0
         self.relux_param['x'] = 6
 

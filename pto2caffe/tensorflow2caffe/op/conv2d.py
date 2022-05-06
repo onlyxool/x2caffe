@@ -1,28 +1,19 @@
-import logging
-
 from caffe_transform import caffe_layer
 from tensorflow2caffe.op.operator import Operator
 from util import handleLegacyPad
 
-logger = logging.getLogger('TensorFlow2Caffe')
 
 class Convolution(Operator):
 
-    def __init__(self, model, tf_op, tf_op_code, index):
-        super().__init__(model, tf_op, tf_op_code, index)
-        self.convolution_param = dict()
+    def __init__(self, model, tf_op, index):
+        super().__init__(model, tf_op, index)
+        assert(self.operator == 'Conv2D')
         self.setInited()
 
 
-    @property
-    def type(self):
-        return 'Convolution'
-
     def parse(self):
-        logger.debug('Parsing %s...', self.type)
-        self.parseInput()
-        self.parseOutput()
-        self.parseAttributes()
+        self.layer_type = 'Convolution'
+        super().__parse__()
 
         # Weight HWIO -> OIHW
         self.weight = self.inputs_buf[1].transpose(3, 2, 0, 1)
@@ -36,6 +27,7 @@ class Convolution(Operator):
             self.bias = None
 
         # Attribute
+        self.convolution_param = dict()
         self.convolution_param['num_output'] = self.outputs_shape[0][1]
         self.convolution_param['stride_h'] = self.attrs['strides'][self.ndim('H')]
         self.convolution_param['stride_w'] = self.attrs['strides'][self.ndim('W')]
@@ -48,7 +40,7 @@ class Convolution(Operator):
         # Padding
         legacy_pad = {'left': 0, 'right': 0, 'top': 0, 'bottom': 0}
         for legacy in self.model.legacys:
-            if legacy.op_code == 'Pad':
+            if legacy.operator == 'Pad':
                 if legacy.outputs[0] == self.inputs[0]:
                     legacy_pad = legacy.pad
                     self.inputs[0] = legacy.inputs[0]

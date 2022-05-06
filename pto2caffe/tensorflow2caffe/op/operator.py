@@ -1,16 +1,14 @@
-import logging
 from base import Base
 from util import shape_map_nhwc2nchw
-
-logger = logging.getLogger('TensorFlow2caffe')
 
 
 class Operator(Base):
 
-    def __init__(self, model, tf_op, op_type, index):
+    def __init__(self, model, tf_op, index):
         super().__init__(model, model.graph, index)
         self.op = tf_op
-        self.op_code = op_type
+        self.operator = tf_op.type
+        self.layer_type = None
         self.inputs = []
         self.inputs_shape = []
         self.inputs_buf = []
@@ -23,7 +21,7 @@ class Operator(Base):
 
     @property
     def type(self):
-        raise NotImplementedError("Method Operator.type() must be overrided!")
+        return self.layer_type if self.layer_type is not None else self.operator
 
 
     @property
@@ -50,20 +48,20 @@ class Operator(Base):
         return self.layout.find(dim)
 
 
-    def parseInput(self):
+    def __parseInput__(self):
         for i in range(len(self.op.inputs)):
             self.inputs.append(self.model.indentity.get(self.op.inputs[i].name, self.op.inputs[i].name))
             self.inputs_shape.append(shape_map_nhwc2nchw(self.op.inputs[i].shape))
             self.inputs_buf.append(self.model.constant.get(self.inputs[i], None))
 
 
-    def parseOutput(self):
+    def __parseOutput__(self):
         for i in range(len(self.op.outputs)):
             self.outputs.append(self.op.outputs[i].name)
             self.outputs_shape.append(shape_map_nhwc2nchw(self.op.outputs[i].shape))
 
 
-    def convertAttributeProto(self, attr, name):
+    def __convertAttributeProto__(self, attr, name):
         if attr[name].HasField('b'):
             return attr[name].b
         elif attr[name].HasField('f'):
@@ -86,7 +84,13 @@ class Operator(Base):
             raise ValueError("Unsupported TensorFlow attribute: {}".format(attr))
 
 
-    def parseAttributes(self):
+    def __parseAttributes__(self):
         for op_attr in self.op.op_def.attr:
-            self.attrs[op_attr.name] = self.convertAttributeProto(self.op.node_def.attr, op_attr.name)
+            self.attrs[op_attr.name] = self.__convertAttributeProto__(self.op.node_def.attr, op_attr.name)
         self.layout = self.attrs.get('data_format', 'NHWC')
+
+
+    def __parse__(self):
+        self.__parseInput__()
+        self.__parseOutput__()
+        self.__parseAttributes__()

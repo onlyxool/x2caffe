@@ -1,44 +1,26 @@
-import copy
-import logging
-
 from caffe_transform import caffe_layer
 from tensorflow2caffe.op.operator import Operator
-
-from util import trim_one
-from util import compute_scale_axis
-
-logger = logging.getLogger('TensorFlow2Caffe')
 
 
 class Sub(Operator):
 
-    def __init__(self, model, tf_op, tf_op_code, index):
-        super().__init__(model, tf_op, tf_op_code, index)
+    def __init__(self, model, tf_op, index):
+        super().__init__(model, tf_op, index)
+        assert(self.operator == 'Sub')
         self.setInited()
 
 
-    @property
-    def type(self):
-        if hasattr(self, 'eltwise_param'):
-            return 'Eltwise'
-        elif hasattr(self, 'scale_param'):
-            return 'Scale'
-        else:
-            return 'Sub'
-
-
     def parse(self):
-        logger.debug('Parsing %s...', self.type)
+        super().__parse__()
 
-        self.parseInput()
-        self.parseOutput()
-
-        self.parseAttributes()
         if self.inputs_buf[0] is None and self.inputs_buf[1] is None:
+            self.layer_type = 'Eltwise'
             self.eltwise_param = dict()
             self.eltwise_param['operation'] = 3 # Caffe Eltwise SUB
             self.attrs = self.eltwise_param
         else:
+            self.layer_type = 'Scale'
+
             self.bias = -self.inputs_buf[1]
 
             self.scale_param = dict()
@@ -57,10 +39,10 @@ class Sub(Operator):
 
 
     def convert(self):
-        if hasattr(self, 'scale_param'):
-            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, None, self.bias, scale_param=self.scale_param)
-        elif hasattr(self, 'eltwise_param'):
+        if self.layer_type == 'Eltwise':
             layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param)
+        if self.layer_type == 'Scale':
+            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, None, self.bias, scale_param=self.scale_param)
 
         self.setConverted()
 
