@@ -15,7 +15,6 @@ from tflite2caffe.op.prelu import PReLU
 from tflite2caffe.op.swish import Swish
 from tflite2caffe.op.split import Slice #TODO
 from tflite2caffe.op.reduce import Reduce
-from tflite2caffe.op.resize import Resize
 from tflite2caffe.op.concat import Concat
 from tflite2caffe.op.reshape import Reshape
 from tflite2caffe.op.pooling import Pooling
@@ -27,6 +26,8 @@ from tflite2caffe.op.transpose import Permute
 from tflite2caffe.op.deconv import Deconvolution
 from tflite2caffe.op.depthtospace import DepthToSpace
 from tflite2caffe.op.fullyconnected import InnerProduct
+from tflite2caffe.op.resizenearest import ResizeNearest
+from tflite2caffe.op.resizebilinear import ResizeBilinear
 
 from caffe_transform import save_caffe_model
 from caffe_transform import make_caffe_input_layer
@@ -58,13 +59,13 @@ OpMap = {
     'MAX_POOL_2D': Pooling,
 #    'STRIDED_SLICE': Slice,
     'CONCATENATION': Concat,
-    'RESIZE_BILINEAR': Resize,
     'AVERAGE_POOL_2D': Pooling,
     'DEPTH_TO_SPACE': DepthToSpace,
     'TRANSPOSE_CONV': Deconvolution,
     'FULLY_CONNECTED': InnerProduct,
     'DEPTHWISE_CONV_2D': Convolution,
-    'RESIZE_NEAREST_NEIGHBOR': Resize,
+    'RESIZE_BILINEAR': ResizeBilinear,
+    'RESIZE_NEAREST_NEIGHBOR': ResizeNearest,
 #    'DIV': Binary,
 #   'POW': Binary,
 #    'MIRROR_PAD': Pad,
