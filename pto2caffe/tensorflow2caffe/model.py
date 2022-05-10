@@ -7,7 +7,7 @@ import tensorflow as tf
 from tensorflow2caffe.op.pad import Pad
 from tensorflow2caffe.op.add import Add
 from tensorflow2caffe.op.sub import Sub
-from tensorflow2caffe.op.mul import Scale
+from tensorflow2caffe.op.mul import Mul
 from tensorflow2caffe.op.pool import Pool
 from tensorflow2caffe.op.relux import ReLUX
 from tensorflow2caffe.op.resize import Resize
@@ -15,6 +15,7 @@ from tensorflow2caffe.op.concat import Concat
 from tensorflow2caffe.op.matmul import MatMul
 from tensorflow2caffe.op.reshape import Reshape
 from tensorflow2caffe.op.softmax import Softmax
+from tensorflow2caffe.op.biasadd import BiasAdd
 from tensorflow2caffe.op.placeholder import Input
 from tensorflow2caffe.op.conv2d import Convolution
 from tensorflow2caffe.op.batchnorm import BatchNorm
@@ -33,13 +34,13 @@ OpMap = {
     'Pad': Pad,
     'Add': Add,
     'Sub': Sub,
-    'Mul': Scale,
+    'Mul': Mul,
     'AddV2': Add,
     'Relu6': ReLUX,
     'MaxPool': Pool,
     'AvgPool': Pool,
     'MatMul': MatMul,
-    'BiasAdd': Scale,
+    'BiasAdd': BiasAdd,
     'Squeeze': Reshape,
     'Reshape': Reshape,
     'Softmax': Softmax,
