@@ -15,8 +15,8 @@ class Operator(Base):
         self.inputs_buf = []
         self.outputs = []
         self.outputs_shape = []
-        self.pre = []  # ops that before this op which to enable TFLite op
-        self.post = []  # ops that after this op which to enable TFLite op
+        self.pre = []  # ops that before this op which to enable ONNX op
+        self.post = []  # ops that after this op which to enable ONNX op
         self.attrs = dict()
         self.isLegacy = False
 

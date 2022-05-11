@@ -167,6 +167,7 @@ class Model(Base):
                     self.graph.node.remove(self.graph.node[0])
                     self.layout = 'NHWC'
 
+
     def parse(self):
         logger.debug("Parsing the ONNX Model...")
 

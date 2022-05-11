@@ -1,13 +1,22 @@
 import numpy as np
 
+from util import trim_one
+from util import compute_scale_axis
 from caffe_transform import caffe_layer
 from onnx2caffe.op.operator import Operator
+
+
+def switch(items:list):
+    temp = items[0]
+    items[0] = items[1]
+    items[1] = temp
 
 
 class Add(Operator):
 
     def __init__(self, model, node, index):
         super().__init__(model, node, index)
+        assert(self.operator == 'Add')
         self.setInited()
 
 
@@ -15,13 +24,31 @@ class Add(Operator):
         super().__parse__()
 
         if self.inputs_buf[0] is None and self.inputs_buf[1] is None:
-            # Eltwise Layer
-            self.layer_type = 'Eltwise'
+            if self.inputs_shape[0] == self.inputs_shape[1]:
+                # Eltwise Layer
+                self.layer_type = 'Eltwise'
 
-            # Attributes
-            self.eltwise_param = dict()
-            self.eltwise_param['operation'] = 1 # Caffe Eltwise SUM
-            self.attrs = self.eltwise_param
+                # Attributes
+                self.eltwise_param = dict()
+                self.eltwise_param['operation'] = 1 # Caffe Eltwise SUM
+                self.attrs = self.eltwise_param
+            else:
+                self.layer_type = 'Bias'
+                self.bias_param = dict()
+
+                if self.inputs_shape[0].count(1) > self.inputs_shape[1].count(1):
+                    switch(self.inputs)
+                    switch(self.inputs_shape)
+
+                self.inputs_shape[1] = trim_one(self.inputs_shape[1])
+                self.bias_param['axis'] = compute_scale_axis(self.inputs_shape[0], self.inputs_shape[1])
+
+                # Pre-Layer: Reshape
+                self.pre_input = self.inputs[1]
+                self.inputs[1] = 'reshape' + str(self.index)
+                self.reshape_param = dict(shape=dict(dim=self.inputs_shape[1]))
+
+                self.attrs = self.bias_param
         else:
             # Scale Layer
             self.layer_type = 'Scale'
@@ -56,13 +83,15 @@ class Add(Operator):
 
 
     def convert(self):
+        pre_layer = None
         if self.type == 'Eltwise':
             layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param)
         elif self.type == 'Scale':
             layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, scale_param=self.scale_param)
-        else:
-            raise NotImplementedError
+        elif self.type == 'Bias':
+            pre_layer = caffe_layer('Reshape', 'Reshape'+str(self.index), [self.pre_input], [None], ['reshape'+str(self.index)], reshape_param=self.reshape_param)
+            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, bias_param=self.bias_param)
 
         self.setConverted()
 
-        return [layer]
+        return [layer] if pre_layer is None else [pre_layer, layer]
