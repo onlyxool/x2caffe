@@ -37,13 +37,21 @@ class Operator(Base):
 
 
     def str(self):
-        return '[' + self.name + '] (' + self.type + ')'
+        return '[' + self.name + ']  (' + self.type + ')'
+
+
+    @property
+    def attrs2str(self):
+        attrstr = ''
+        for key, value in self.attrs.items():
+            attrstr = attrstr + '    ' + str(key) + ': ' + str(value) + '\n'
+        return attrstr
 
 
     def __str__(self):
         inames = str([t for t in self.inputs])
         onames = str([t for t in self.outputs])
-        return '%s attr%s: %s -> %s' % (self.shorty, self.attrs, inames, onames)
+        return '\n%s\n%s    %s -> %s' % (self.shorty, self.attrs2str, inames, onames)
 
 
     def __parseInput__(self):

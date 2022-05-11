@@ -95,7 +95,6 @@ class Model(Base):
                 if op.isLegacy:
                     self.legacys.append(op)
 
-
         print('Pytorch Model Input size:')
         for i, name in enumerate(self.inputs):
             print(name, self.inputs_shape[i])
