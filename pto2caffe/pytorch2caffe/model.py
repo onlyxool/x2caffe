@@ -17,6 +17,9 @@ from pytorch2caffe.op.linear import Linear
 from pytorch2caffe.op.output import Output
 from pytorch2caffe.op.pooling import Pooling
 from pytorch2caffe.op.flatten import Flatten
+from pytorch2caffe.op.permute import Permute
+from pytorch2caffe.op.reshape import Reshape
+from pytorch2caffe.op.softmax import Softmax
 from pytorch2caffe.op.dropout import Dropout
 from pytorch2caffe.op.sigmoid import Sigmoid
 from pytorch2caffe.op.conv import Convolution
@@ -38,13 +41,17 @@ OpMap = {
     'pnnx.Input': Input,
     'pnnx.Output': Output,
     'nn.Dropout': Dropout,
+    'nn.Softmax': Softmax,
     'nn.Hardswish': Swish,
     'Tensor.slice': Slice,
+    'Tensor.view': Reshape,
     'nn.AvgPool2d': Pooling,
     'nn.MaxPool2d': Pooling,
     'nn.Conv2d': Convolution,
     'F.hardsigmoid': Sigmoid,
     'torch.flatten': Flatten,
+    'torch.permute': Permute,
+    'Tensor.reshape': Reshape,
     'nn.BatchNorm2d': BatchNorm,
     'pnnx.Expression': Expression,
     'nn.AdaptiveAvgPool2d': AdaptiveAvgPooling,
@@ -53,6 +60,7 @@ OpMap = {
 #'nn.ChannelShuffle': Debug,
 }
 
+ignore_op = ['prim::TupleConstruct']
 
 class Model(Base):
 
@@ -82,6 +90,9 @@ class Model(Base):
 
         ops_types = self.pnnx.get_ops_type()
         for index, op_type in enumerate(ops_types):
+            if op_type in ignore_op:
+                continue
+
             if op_type not in OpMap:
                 errorMsg = 'Error: Operator [' + op_type + '] does not Support.\n'
                 sys.exit(errorMsg)
