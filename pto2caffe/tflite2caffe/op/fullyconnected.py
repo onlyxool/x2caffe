@@ -9,7 +9,7 @@ class InnerProduct(Operator):
     def __init__(self, model, tf_op, tf_op_name, index):
         super().__init__(model, tf_op, tf_op_name, index)
 
-        assert(self.operator == 'FULLY_CONNECTED')
+        assert(self.operator_code == 'FULLY_CONNECTED')
         assert(self.op.InputsLength() == 3), "TFLite Fullly Connected always has bias"
         assert(self.op.OutputsLength() == 1)
 

@@ -9,7 +9,7 @@ class ResizeBilinear(Operator):
     def __init__(self, model, tf_op, tf_op_name, index):
         super().__init__(model, tf_op, tf_op_name, index)
 
-        assert(self.operator == 'RESIZE_BILINEAR')
+        assert(self.operator_code == 'RESIZE_BILINEAR')
         assert(self.op.InputsLength() == 2), "TFLite has only two inputs"
         assert(self.op.OutputsLength() == 1)
 

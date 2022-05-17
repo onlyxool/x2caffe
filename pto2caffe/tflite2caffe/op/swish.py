@@ -6,7 +6,7 @@ class Swish(Operator):
 
     def __init__(self, model, tf_op, tf_op_name, index):
         super().__init__(model, tf_op, tf_op_name, index)
-        assert(self.operator == 'HARD_SWISH')
+        assert(self.operator_code == 'HARD_SWISH')
         assert(self.op.InputsLength() == 1)
         assert(self.op.OutputsLength() == 1)
 

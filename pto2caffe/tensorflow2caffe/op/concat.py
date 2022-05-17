@@ -7,7 +7,7 @@ class Concat(Operator):
 
     def __init__(self, model, tf_op, index):
         super().__init__(model, tf_op, index)
-        assert(self.operator == 'ConcatV2')
+        assert(self.operator_code == 'ConcatV2')
         self.setInited()
 
 

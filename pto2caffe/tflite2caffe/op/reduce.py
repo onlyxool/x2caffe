@@ -11,7 +11,7 @@ class Reduce(Operator):
     def __init__(self, model, tf_op, tf_op_name, index):
         super().__init__(model, tf_op, tf_op_name, index)
 
-        assert(self.operator in ('MEAN', 'REDUCE_MAX'))
+        assert(self.operator_code in ('MEAN', 'REDUCE_MAX'))
         assert(self.op.InputsLength() == 2)
         assert(self.op.OutputsLength() == 1)
 
@@ -36,7 +36,7 @@ class Reduce(Operator):
             axis.append(dim_map_nhwc2nchw[self.inputs_buf[1][i]])
 
         self.pooling_param = dict()
-        if self.operator == 'REDUCE_MAX':
+        if self.operator_code == 'REDUCE_MAX':
             if axis == [2,3]:
                 self.pooling_param['pool'] = 0
                 self.pooling_param['kernel_h'] = self.inputs_shape[0][2]
@@ -47,7 +47,7 @@ class Reduce(Operator):
             else:
                 errorMsg = 'ReduceMax\'s axis: ' + axis + ' Not support'
                 sys.exit(errorMsg)
-        elif self.operator == 'MEAN':
+        elif self.operator_code == 'MEAN':
             if axis == [2,3]:
                 self.pooling_param['pool'] = 1
                 self.pooling_param['kernel_h'] = self.inputs_shape[0][2]

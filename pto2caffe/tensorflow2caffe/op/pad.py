@@ -4,7 +4,7 @@ class Pad(Operator):
 
     def __init__(self, model, tf_op, index):
         super().__init__(model, tf_op, index)
-        assert(self.operator == 'Pad')
+        assert(self.operator_code == 'Pad')
         self.setInited()
 
 
@@ -19,6 +19,7 @@ class Pad(Operator):
         self.pad['right'] = pad_tensor[2][1]
         self.pad['top'] = pad_tensor[1][0]
         self.pad['bottom'] = pad_tensor[1][1]
+        self.attrs = self.pad
 
 
     def convert(self):

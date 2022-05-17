@@ -11,7 +11,7 @@ class Slice(Operator):
     def __init__(self, model, tf_op, tf_op_name, index):
         super().__init__(model, tf_op, tf_op_name, index)
         self.slice_param = dict()
-        assert(self.operator in ('SPLIT', 'STRIDED_SLICE'))
+        assert(self.operator_code in ('SPLIT', 'STRIDED_SLICE'))
         assert(self.op.InputsLength() == 2 or self.op.InputsLength() == 4)
         assert(self.op.OutputsLength() == 1)
         self.setInited()
@@ -22,7 +22,7 @@ class Slice(Operator):
 
         self.parseInputOutput()
 
-        if self.operator == 'STRIDED_SLICE':
+        if self.operator_code == 'STRIDED_SLICE':
             op_opt = self.op.BuiltinOptions()
             opt = tflite.StridedSliceOptions()
             opt.Init(op_opt.Bytes, op_opt.Pos)
@@ -36,8 +36,8 @@ class Slice(Operator):
 
             assert(len(self.inputs_buf[1]) == len(self.inputs_shape[0]))
 
-            raise NotImplementedError(self.operator)
-        elif self.operator == 'SPLIT':
+            raise NotImplementedError(self.operator_code)
+        elif self.operator_code == 'SPLIT':
             op_opt = self.op.BuiltinOptions()
             opt = tflite.SplitOptions()
             opt.Init(op_opt.Bytes, op_opt.Pos)

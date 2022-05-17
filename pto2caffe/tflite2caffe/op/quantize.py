@@ -9,7 +9,7 @@ class Quantize(Operator):
     def __init__(self, model, tf_op, tf_op_name, index):
         super().__init__(model, tf_op, tf_op_name, index)
 
-        assert(self.operator in ('QUANTIZE', 'DEQUANTIZE'))
+        assert(self.operator_code in ('QUANTIZE', 'DEQUANTIZE'))
 
         self.setInited()
 

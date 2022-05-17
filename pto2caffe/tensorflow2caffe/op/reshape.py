@@ -6,7 +6,7 @@ class Reshape(Operator):
 
     def __init__(self, model, tf_op, index):
         super().__init__(model, tf_op, index)
-        assert(self.operator == 'Reshape' or self.operator == 'Squeeze')
+        assert(self.operator_code in ('Reshape', 'Squeeze'))
         self.setInited()
 
 

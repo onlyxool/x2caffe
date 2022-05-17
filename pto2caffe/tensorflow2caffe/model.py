@@ -55,7 +55,7 @@ OpMap = {
     'DepthwiseConv2dNative': ConvolutionDepthwise,
 }
 
-#ignore_op = ['Enter', 'Merge', 'Cast']
+#ignore_op = ['Enter', 'Merge', 'Cast', 'VarHandleOp', 'ReadVariableOp', 'NoOp', 'StatefulPartitionedCall']
 
 class Model(Base):
 

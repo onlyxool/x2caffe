@@ -6,7 +6,7 @@ class Input(Operator):
 
     def __init__(self, model, tf_op, index):
         super().__init__(model, tf_op, index)
-        assert(self.operator == 'Placeholder')
+        assert(self.operator_code == 'Placeholder')
         self.setInited()
 
 

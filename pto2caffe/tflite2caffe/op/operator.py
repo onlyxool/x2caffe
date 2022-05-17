@@ -12,7 +12,7 @@ class Operator(Base):
     def __init__(self, model, tf_op:tflite.Operator, tf_op_name:str, index:int):
         super().__init__(model, model.graph, index)
         self.op = tf_op
-        self.operator = tf_op_name
+        self.operator_code = tf_op_name
         self.layer_type = str()
         self.inputs = []
         self.inputs_shape = []
@@ -26,7 +26,7 @@ class Operator(Base):
 
     @property
     def type(self):
-        return self.layer_type if self.layer_type is not None else self.operator
+        return self.layer_type if self.layer_type is not None else self.operator_code
 
 
     @property

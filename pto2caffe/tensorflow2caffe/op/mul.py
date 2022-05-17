@@ -10,7 +10,7 @@ class Mul(Operator):
 
     def __init__(self, model, tf_op, index):
         super().__init__(model, tf_op, index)
-        assert(self.operator == 'Mul')
+        assert(self.operator_code == 'Mul')
         self.setInited()
 
 

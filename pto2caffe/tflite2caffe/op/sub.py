@@ -13,7 +13,7 @@ class Sub(Operator):
 
     def __init__(self, model, tf_op, tf_op_name, index):
         super().__init__(model, tf_op, tf_op_name, index)
-        assert(self.operator == 'SUB')
+        assert(self.operator_code == 'SUB')
         assert(self.op.InputsLength() == 2)
         assert(self.op.OutputsLength() == 1)
         self.setInited()
@@ -49,7 +49,7 @@ class Sub(Operator):
             self.bias = np.multiply(-1, self.inputs_buf[1])
             self.attrs = self.scale_param
         else:
-            raise NotImplementedError(self.operator)
+            raise NotImplementedError(self.operator_code)
 
 
         activ_type_code = opt.FusedActivationFunction()

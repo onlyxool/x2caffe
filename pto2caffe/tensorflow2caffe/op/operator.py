@@ -7,7 +7,7 @@ class Operator(Base):
     def __init__(self, model, tf_op, index):
         super().__init__(model, model.graph, index)
         self.op = tf_op
-        self.operator = tf_op.type
+        self.operator_code = tf_op.type
         self.layer_type = None
         self.inputs = []
         self.inputs_shape = []
@@ -21,7 +21,7 @@ class Operator(Base):
 
     @property
     def type(self):
-        return self.layer_type if self.layer_type is not None else self.operator
+        return self.layer_type if self.layer_type is not None else self.operator_code
 
 
     @property

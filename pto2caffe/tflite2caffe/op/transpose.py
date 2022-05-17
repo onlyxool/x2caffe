@@ -8,22 +8,20 @@ class Permute(Operator):
 
     def __init__(self, model, tf_op, tf_op_name, index):
         super().__init__(model, tf_op, tf_op_name, index)
-        self.permute_param = dict()
-
+        assert(self.operator_code == 'TRANSPOSE')
+        assert(self.op.InputsLength() == 2)
+        assert(self.op.OutputsLength() == 1)
         self.setInited()
 
 
     def parse(self):
         self.layer_type = 'Permute'
 
-        assert(self.operator == 'TRANSPOSE')
-        assert(self.op.InputsLength() == 2)
-        assert(self.op.OutputsLength() == 1)
+        self.parseInputOutput()
 
-        self.parseInput()
-        self.parseOutput()
-
+        self.permute_param = dict()
         self.permute_param['order'] = list(self.inputs_buf[1])
+
         self.attrs = self.permute_param
 
         self.setParsed()

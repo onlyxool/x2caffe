@@ -6,7 +6,7 @@ class BatchNorm(Operator):
 
     def __init__(self, model, tf_op, index):
         super().__init__(model, tf_op, index)
-        assert(self.operator == 'FusedBatchNorm' or self.operator == 'FusedBatchNormV3')
+        assert(self.operator_code in ('FusedBatchNorm', 'FusedBatchNormV3'))
         self.setInited()
 
 

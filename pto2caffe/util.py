@@ -100,9 +100,9 @@ def asymmetric_pad(pad):
 def handleLegacyPad(padding_mode, input_size, output_size, proto_param:dict, legacy_pad, layer_type):
     if padding_mode == 'VALID':
         if legacy_pad['left'] == legacy_pad['right'] and legacy_pad['top'] == legacy_pad['bottom']:
-            return (int(legacy_pad['left']), int(legacy_pad['top']))
+            return {'pad_w': int(legacy_pad['left']), 'pad_h': int(legacy_pad['top'])}
         else:
-            return (int(legacy_pad['left']), int(legacy_pad['right']), int(legacy_pad['top']), int(legacy_pad['bottom']))
+            return {'pad_l': int(legacy_pad['left']), 'pad_r': int(legacy_pad['right']), 'pad_t': int(legacy_pad['top']), 'pad_b': int(legacy_pad['bottom'])}
 
     # Horizontal
     input_h = input_size[2]
@@ -131,9 +131,20 @@ def handleLegacyPad(padding_mode, input_size, output_size, proto_param:dict, leg
     pad_b = int(pad_b + legacy_pad['bottom'])
 
     if pad_l == pad_r and pad_t == pad_b:
-        return (pad_l, pad_t)
+        return {'pad_w': pad_l, 'pad_h': pad_t}
     else:
-        return (pad_l, pad_r, pad_t, pad_b)
+        return {'pad_l': pad_l, 'pad_r': pad_r, 'pad_t': pad_t, 'pad_b': pad_b}
+
+
+def getLegacyAttrs(operator, legacy_type):
+    for legacy in operator.model.legacys:
+        if legacy.operator_code == legacy_type:
+            if legacy.outputs[0] == operator.inputs[0]:
+                operator.inputs[0] = legacy.inputs[0]
+                operator.inputs_shape[0] = legacy.inputs_shape[0]
+                return legacy.attrs
+
+    return {'left': 0, 'right': 0, 'top': 0, 'bottom': 0}
 
 
 # Scale Axis
@@ -181,9 +192,8 @@ def compute_scale_axis(bottom_shape, scale_shape):
     shapeB = np.array(scale_shape)
 
     for i in range(len(shapeA)):
-        shape_map = (shapeA[i:(len(shapeB)+i)] == shapeB)
+        shape_map = list(shapeA[i:(len(shapeB)+i)] == shapeB)
 
         if isinstance(shape_map, list) and shape_map.count(True) == len(shapeB):
             return i
-
     return None

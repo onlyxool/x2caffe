@@ -2,7 +2,7 @@ import tflite
 
 from caffe_transform import caffe_layer
 from tflite2caffe.op.operator import Operator
-from util import handleLegacyPad
+from util import handleLegacyPad, getLegacyAttrs
 
 
 class Deconvolution(Operator):
@@ -10,7 +10,7 @@ class Deconvolution(Operator):
     def __init__(self, model, tf_op, tf_op_name, index):
         super().__init__(model, tf_op, tf_op_name, index)
 
-        assert(self.operator == 'TRANSPOSE_CONV')
+        assert(self.operator_code == 'TRANSPOSE_CONV')
         assert(self.op.InputsLength() == 3), "TFLite Conv always has bias"
         assert(self.op.OutputsLength() == 1)
 
@@ -43,28 +43,14 @@ class Deconvolution(Operator):
         self.convolution_param['bias_term'] = False
 
         # Padding
-        legacy_pad = {'left': 0, 'right': 0, 'top': 0, 'bottom': 0}
-        for legacy in self.model.legacys:
-            if legacy.operator == 'PAD':
-                if legacy.outputs[0] == self.inputs[0]:
-                    legacy_pad = legacy.pad
-                    self.inputs[0] = legacy.inputs[0]
-                    self.inputs_shape[0] = legacy.inputs_shape[0]
-
         if opt.Padding() == tflite.Padding.VALID:
             padding_mode = 'VALID'
         elif opt.Padding() == tflite.Padding.SAME:
             padding_mode = 'SAME'
 
+        legacy_pad = getLegacyAttrs(self, 'PAD')
         padding = handleLegacyPad(padding_mode, self.inputs_shape[2], self.outputs_shape[0], self.convolution_param, legacy_pad, self.type)
-        if len(padding) == 2:
-            self.convolution_param['pad_w'] = padding[0]
-            self.convolution_param['pad_h'] = padding[1]
-        elif len(padding) == 4:
-            self.convolution_param['pad_l'] = padding[0]
-            self.convolution_param['pad_r'] = padding[1]
-            self.convolution_param['pad_t'] = padding[2]
-            self.convolution_param['pad_b'] = padding[3]
+        self.convolution_param.update(padding)
 
         self.attrs = self.convolution_param
 

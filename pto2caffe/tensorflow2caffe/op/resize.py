@@ -8,7 +8,7 @@ class Resize(Operator):
 
     def __init__(self, model, tf_op, index):
         super().__init__(model, tf_op, index)
-        assert(self.operator == 'ResizeNearestNeighbor')
+        assert(self.operator_code == 'ResizeNearestNeighbor')
         self.setInited()
 
 

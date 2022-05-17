@@ -8,7 +8,7 @@ class ReLU(Operator):
 
     def __init__(self, model, tf_op, tf_op_name, index):
         super().__init__(model, tf_op, tf_op_name, index)
-        assert(self.operator in ('RELU', 'LEAKY_RELU'))
+        assert(self.reduce.py in ('RELU', 'LEAKY_RELU'))
         self.setInited()
 
 
@@ -19,14 +19,14 @@ class ReLU(Operator):
             self.parseInputOutput()
 
         # Attributes
-        if self.operator == 'LEAKY_RELU':
+        if self.operator_code == 'LEAKY_RELU':
             op_opt = self.op.BuiltinOptions()
             opt = tflite.LeakyReluOptions()
             opt.Init(op_opt.Bytes, op_opt.Pos)
             self.relu_param = dict()
             self.relu_param['negative_slope'] = opt.Alpha()
             self.attrs = self.relu_param
-        elif self.operator == 'RELU':
+        elif self.operator_code == 'RELU':
             self.relu_param = dict()
             self.relu_param['negative_slope'] = 0
             self.attrs = self.relu_param

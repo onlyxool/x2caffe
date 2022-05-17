@@ -8,7 +8,7 @@ class PReLU(Operator):
 
     def __init__(self, model, tf_op, tf_op_name, index):
         super().__init__(model, tf_op, tf_op_name, index)
-        assert(self.operator == 'PRELU')
+        assert(self.operator_code == 'PRELU')
         self.setInited()
 
 

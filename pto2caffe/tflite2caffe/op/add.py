@@ -10,7 +10,7 @@ class Add(Operator):
     def __init__(self, model, tf_op, tf_op_name, index):
         super().__init__(model, tf_op, tf_op_name, index)
 
-        assert(self.operator == 'ADD')
+        assert(self.operator_code == 'ADD')
         assert(self.op.InputsLength() == 2)
         assert(self.op.OutputsLength() == 1)
 
