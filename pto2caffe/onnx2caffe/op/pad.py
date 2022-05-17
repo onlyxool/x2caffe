@@ -8,7 +8,7 @@ class Pad(Operator):
 
     def __init__(self, model, node, index):
         super().__init__(model, node, index)
-        self.pad = dict()
+        assert(self.operator_code == 'Pad')
         self.setInited()
 
 
@@ -26,6 +26,7 @@ class Pad(Operator):
         else:
             pad = np.array(self.attrs['pads']).reshape(-1, len(self.inputs_shape[0]))
 
+        self.pad = dict()
         if len(self.inputs_shape[0]) == 4:
             self.pad['left']    = pad[0][3]
             self.pad['right']   = pad[1][3]

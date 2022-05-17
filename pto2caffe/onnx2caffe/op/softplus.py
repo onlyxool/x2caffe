@@ -5,6 +5,7 @@ from onnx2caffe.op.operator import Operator
 class Softplus(Operator):
     def __init__(self, model, node, index):
         super().__init__(model, node, index)
+        assert(self.operator_code == 'Softplus')
         self.setInited()
 
 

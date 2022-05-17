@@ -11,6 +11,7 @@ class Upsample(Operator):
 
     def __init__(self, model, node, index):
         super().__init__(model, node, index)
+        assert(self.operator_code == 'Upsample')
         self.setInited()
 
 

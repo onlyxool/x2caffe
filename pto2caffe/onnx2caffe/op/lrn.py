@@ -6,7 +6,7 @@ class LRN(Operator):
 
     def __init__(self, model, node, index):
         super().__init__(model, node, index)
-        self.lrn_param = dict()
+        assert(self.operator_code == 'LRN')
         self.setInited()
 
 
@@ -15,6 +15,7 @@ class LRN(Operator):
         super().__parse__()
 
         # Attributes
+        self.lrn_param = dict()
         self.lrn_param['alpha'] = self.attrs['alpha']
         self.lrn_param['beta'] = self.attrs['beta']
         self.lrn_param['local_size'] = self.attrs['size']

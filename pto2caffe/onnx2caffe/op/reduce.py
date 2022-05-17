@@ -6,7 +6,7 @@ class Reduce(Operator):
 
     def __init__(self, model, node, index):
         super().__init__(model, node, index)
-        self.pooling_param = dict()
+        assert(self.operator_code == 'ReduceMean')
         self.setInited()
 
 
@@ -15,6 +15,7 @@ class Reduce(Operator):
         super().__parse__()
 
         # Attributes
+        self.pooling_param = dict()
         self.pooling_param['pool'] = 1 # Pooling.AVE
         self.pooling_param['kernel_h'] = self.inputs_shape[0][2]
         self.pooling_param['kernel_w'] = self.inputs_shape[0][3] if len(self.inputs_shape[0]) == 4 else 1

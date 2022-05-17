@@ -6,7 +6,7 @@ class Permute(Operator):
 
     def __init__(self, model, node, index):
         super().__init__(model, node, index)
-        self.permute_param = dict()
+        assert(self.operator_code == 'Transpose')
         self.setInited()
 
 
@@ -15,6 +15,7 @@ class Permute(Operator):
         super().__parse__()
 
         # Attributes 
+        self.permute_param = dict()
         self.permute_param['order'] = list(self.attrs['perm'])
 
         self.attrs = self.permute_param

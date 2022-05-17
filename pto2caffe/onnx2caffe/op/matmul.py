@@ -15,7 +15,7 @@ class MatMul(Operator):
 
     def __init__(self, model, node, index):
         super().__init__(model, node, index)
-        self.convolution_param = dict()
+        assert(self.operator_code == 'MatMul')
         self.setInited()
 
 
@@ -38,6 +38,7 @@ class MatMul(Operator):
             self.bias = None
 
             # Attributes
+            self.convolution_param = dict()
             self.convolution_param['num_output'] = self.weight.shape[0]
             self.convolution_param['stride_h'] = weight_size
             self.convolution_param['stride_w'] = weight_size

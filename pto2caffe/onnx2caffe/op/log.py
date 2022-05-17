@@ -6,7 +6,7 @@ class Log(Operator):
 
     def __init__(self, model, node, index):
         super().__init__(model, node, index)
-        self.log_param = dict()
+        assert(self.operator_code == 'Log')
         self.setInited()
 
 
@@ -20,6 +20,7 @@ class Log(Operator):
         # scale = 1.0
         # shift = 0.0
 
+        self.log_param = dict()
         self.attrs = self.log_param
 
         self.setParsed()

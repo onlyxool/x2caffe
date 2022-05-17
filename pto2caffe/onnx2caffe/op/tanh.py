@@ -6,7 +6,7 @@ class TanH(Operator):
 
     def __init__(self, model, node, index):
         super().__init__(model, node, index)
-        self.tanh_param = dict()
+        assert(self.operator_code == 'Tanh')
         self.setInited()
 
 
@@ -15,6 +15,7 @@ class TanH(Operator):
         super().__parse__()
 
         # Attributes
+        self.tanh_param = dict()
         self.attrs = self.tanh_param
 
         self.setParsed()

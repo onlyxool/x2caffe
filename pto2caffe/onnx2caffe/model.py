@@ -42,7 +42,7 @@ from onnx2caffe.op.transpose import Permute
 from onnx2caffe.op.batchnorm import BatchNorm
 from onnx2caffe.op.deconv import Deconvolution
 
-from onnx2caffe.op.customop import Mish
+from onnx2caffe.op.mish import Mish
 from onnx2caffe.op.upsample import Upsample #Deprecated
 from onnx2caffe.op.instancenormalization import InstanceNormalization # Not test yet
 

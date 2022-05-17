@@ -6,7 +6,7 @@ class Pooling(Operator):
 
     def __init__(self, model, node, index):
         super().__init__(model, node, index)
-        self.pooling_param = dict()
+        assert(self.operator_code in ('MaxPool', 'AveragePool', 'GlobalAveragePool'))
         self.setInited()
 
 
@@ -15,19 +15,20 @@ class Pooling(Operator):
         super().__parse__()
 
         # Pooling
-        if self.operator == 'MaxPool':
+        self.pooling_param = dict()
+        if self.operator_code == 'MaxPool':
             self.pooling_param['pool'] = 0
             self.pooling_param['kernel_h'] = kernel_h = self.attrs['kernel_shape'][0]
             self.pooling_param['kernel_w'] = kernel_w = self.attrs['kernel_shape'][1]
-        elif self.operator == 'AveragePool':
+        elif self.operator_code == 'AveragePool':
             self.pooling_param['pool'] = 1
             self.pooling_param['kernel_h'] = kernel_h = self.attrs['kernel_shape'][0]
             self.pooling_param['kernel_w'] = kernel_w = self.attrs['kernel_shape'][1]
-        elif self.operator == 'GlobalAveragePool':
+        elif self.operator_code == 'GlobalAveragePool':
             self.pooling_param['pool'] = 1
             self.pooling_param['global_pooling'] = True
         else:
-            raise NotImplementedError(self.operator)
+            raise NotImplementedError(self.operator_code)
 
         if 'dilations' in self.attrs and self.attrs['dilations'] != [1, 1]:
             raise NotImplementedError('Caffe Pooling don\'t support dilation')
@@ -61,7 +62,7 @@ class Pooling(Operator):
                     pad_l += 1
 
         for legacy in self.model.legacys:
-            if legacy.outputs[0] == self.inputs[0] and legacy.operator == 'Pad':
+            if legacy.outputs[0] == self.inputs[0] and legacy.operator_code == 'Pad':
                 legacy_pad = legacy.pad
                 pad_l += legacy.pad['left']
                 pad_r += legacy.pad['right']

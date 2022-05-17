@@ -16,7 +16,7 @@ class Add(Operator):
 
     def __init__(self, model, node, index):
         super().__init__(model, node, index)
-        assert(self.operator == 'Add')
+        assert(self.operator_code == 'Add')
         self.setInited()
 
 

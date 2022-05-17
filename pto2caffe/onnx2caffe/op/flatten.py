@@ -6,7 +6,7 @@ class Flatten(Operator):
 
     def __init__(self, model, node, index):
         super().__init__(model, node, index)
-        self.flatten_param = dict()
+        assert(self.operator_code == 'Flatten')
         self.setInited()
 
 
@@ -15,7 +15,9 @@ class Flatten(Operator):
         super().__parse__()
 
         # Attributes
+        self.flatten_param = dict()
         self.flatten_param['axis'] = self.attrs.get('axis', 1)
+
         self.attrs = self.flatten_param
 
         self.setParsed()

@@ -7,7 +7,7 @@ class Operator(Base):
     def __init__(self, model, node, index):
         super().__init__(model, model.graph, index)
         self.node = node
-        self.operator = node.op_type
+        self.operator_code = node.op_type
         self.layer_type = None
         self.index = index
         self.inputs = []
@@ -23,7 +23,7 @@ class Operator(Base):
 
     @property
     def type(self):
-        return self.layer_type if self.layer_type is not None else self.operator
+        return self.layer_type if self.layer_type is not None else self.operator_code
 
 
     @property

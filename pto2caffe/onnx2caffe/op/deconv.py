@@ -6,7 +6,7 @@ class Deconvolution(Operator):
 
     def __init__(self, model, node, index):
         super().__init__(model, node, index)
-        self.convolution_param = dict()
+        assert(self.operator_code == 'ConvTranspose')
         self.setInited()
 
 
@@ -21,6 +21,7 @@ class Deconvolution(Operator):
         self.bias = self.inputs_buf[2] if len(self.inputs_buf) == 3 else None
 
         # Attributes
+        self.convolution_param = dict()
         self.convolution_param['num_output'] = self.outputs_shape[0][1]
 
         self.convolution_param['stride_h'] = stride_h = self.attrs.get('strides', [1, 1])[0]
@@ -58,7 +59,7 @@ class Deconvolution(Operator):
                     pad_l += 1
 
         for legacy in self.model.legacys:
-            if legacy.outputs[0] == self.inputs[0] and legacy.operator == 'Pad':
+            if legacy.outputs[0] == self.inputs[0] and legacy.operator_code == 'Pad':
                 legacy_pad = legacy.pad
                 pad_l += legacy.pad['left']
                 pad_r += legacy.pad['right']

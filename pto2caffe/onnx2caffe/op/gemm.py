@@ -6,7 +6,7 @@ class InnerProduct(Operator):
 
     def __init__(self, model, node, index):
         super().__init__(model, node, index)
-        self.inner_product_param = dict()
+        assert(self.operator_code == 'Gemm')
         self.setInited()
 
 
@@ -45,6 +45,7 @@ class InnerProduct(Operator):
         if transB == 0:
             self.weight = self.weight.transpose(1,0)
 
+        self.inner_product_param = dict()
         self.inner_product_param['num_output'] = self.weight.shape[0]
         self.inner_product_param['transpose'] = False
 

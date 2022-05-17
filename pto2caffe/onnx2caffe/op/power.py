@@ -6,7 +6,7 @@ class Pow(Operator):
 
     def __init__(self, model, node, index):
         super().__init__(model, node, index)
-        self.power_param = dict()
+        assert(self.operator_code == 'Pow')
         self.setInited()
 
 
@@ -15,9 +15,11 @@ class Pow(Operator):
         super().__parse__()
 
         # Attributes
+        self.power_param = dict()
         self.power_param['power'] = self.inputs_buf[1]
         self.power_param['scale'] = 1
         self.power_param['shift'] = 0
+
         self.attrs = self.power_param
 
         self.setParsed()

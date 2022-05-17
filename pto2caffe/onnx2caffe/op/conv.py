@@ -7,6 +7,7 @@ class Convolution(Operator):
     def __init__(self, model, node, index):
         super().__init__(model, node, index)
         self.convolution_param = dict()
+        assert(self.operator_code == 'Conv')
         self.setInited()
 
 

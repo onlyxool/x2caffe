@@ -6,7 +6,7 @@ class Slice(Operator):
 
     def __init__(self, model, node, index):
         super().__init__(model, node, index)
-        self.slice_param = dict()
+        assert(self.operator_code == 'Slice')
         self.setInited()
 
 
@@ -37,6 +37,7 @@ class Slice(Operator):
         # Attributes
         if max(steps) == 1:
             axis_length = self.inputs_shape[0][axes[0]]
+            self.slice_param = dict()
             self.slice_param['axis'] = axes[0]
 
             if starts[0] == 0:

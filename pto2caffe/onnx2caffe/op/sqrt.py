@@ -6,7 +6,7 @@ class Sqrt(Operator):
 
     def __init__(self, model, node, index):
         super().__init__(model, node, index)
-        self.power_param = dict()
+        assert(self.operator_code == 'Sqrt')
         self.setInited()
 
 
@@ -15,6 +15,7 @@ class Sqrt(Operator):
         super().__parse__()
 
         # Attributes
+        self.power_param = dict()
         self.power_param['power'] = 0.5
         self.power_param['scale'] = 1
         self.power_param['shift'] = 0

@@ -6,14 +6,17 @@ class Mish(Operator):
 
     def __init__(self, model, node, index):
         super().__init__(model, node, index)
-        self.mish_param = dict()
-        self.attrs = self.mish_param
+        assert(self.operator_code == 'Mish')
         self.setInited()
 
 
     def parse(self):
         self.layer_type = 'Mish'
         super().__parse__()
+
+        self.mish_param = dict()
+
+        self.attrs = self.mish_param
 
         self.setParsed()
 

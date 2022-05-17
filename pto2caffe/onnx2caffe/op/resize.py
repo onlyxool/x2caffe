@@ -8,6 +8,7 @@ class Resize(Operator):
 
     def __init__(self, model, node, index):
         super().__init__(model, node, index)
+        assert(self.operator_code == 'Resize')
         self.setInited()
 
 
@@ -78,17 +79,24 @@ class Resize(Operator):
 
 
     def convert(self):
-        if self.mode == 'nearest':
-            if self.type == 'Deconvolution':
-                layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, None, convolution_param=self.convolution_param)
-            elif self.type == 'Upsample':
-                layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, upsample_param=self.upsample_param)
-            else:
-                raise NotImplementedError
-        elif self.mode == 'linear':
+        if self.type == 'Deconvolution':
+            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, None, convolution_param=self.convolution_param)
+        elif self.type == 'Upsample':
+            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, upsample_param=self.upsample_param)
+        elif self.type == 'Interp':
             layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, interp_param=self.interp_param)
-        else:
-            raise NotImplementedError
+
+#        if self.mode == 'nearest':
+#            if self.type == 'Deconvolution':
+#                layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, None, convolution_param=self.convolution_param)
+#            elif self.type == 'Upsample':
+#                layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, upsample_param=self.upsample_param)
+#            else:
+#                raise NotImplementedError
+#        elif self.mode == 'linear':
+#            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, interp_param=self.interp_param)
+#        else:
+#            raise NotImplementedError
 
         self.setConverted()
 

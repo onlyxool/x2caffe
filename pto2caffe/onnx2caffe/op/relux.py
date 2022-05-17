@@ -6,6 +6,7 @@ class ReLUX(Operator):
 
     def __init__(self, model, node, index):
         super().__init__(model, node, index)
+        assert(self.operator_code == 'Clip')
         self.setInited()
 
 

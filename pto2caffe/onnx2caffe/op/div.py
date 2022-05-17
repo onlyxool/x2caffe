@@ -6,6 +6,7 @@ class Div(Operator):
 
     def __init__(self, model, node, index):
         super().__init__(model, node, index)
+        assert(self.operator_code == 'Div')
         self.setInited()
 
 
@@ -32,7 +33,7 @@ class Div(Operator):
             # Bias
             self.bias = None
         else:
-            raise NotImplementedError(self.operator)
+            raise NotImplementedError(self.operator_code)
 
         self.setParsed()
 

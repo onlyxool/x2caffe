@@ -6,7 +6,7 @@ class Exp(Operator):
 
     def __init__(self, model, node, index):
         super().__init__(model, node, index)
-        self.exp_param = dict()
+        assert(self.operator_code == 'Exp')
         self.setInited()
 
 
@@ -20,6 +20,7 @@ class Exp(Operator):
         # scale = 1.0
         # shift = 0.0
 
+        self.exp_param = dict()
         self.attrs = self.exp_param
 
         self.setParsed()
