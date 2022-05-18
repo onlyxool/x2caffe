@@ -13,17 +13,19 @@ from tflite2caffe.op.relu import ReLU
 from tflite2caffe.op.relux import ReLUX
 from tflite2caffe.op.prelu import PReLU
 from tflite2caffe.op.swish import Swish
-from tflite2caffe.op.split import Slice #TODO
-from tflite2caffe.op.reduce import Reduce
+from tflite2caffe.op.split import Slice
 from tflite2caffe.op.concat import Concat
 from tflite2caffe.op.reshape import Reshape
 from tflite2caffe.op.pooling import Pooling
 from tflite2caffe.op.sigmoid import Sigmoid
 from tflite2caffe.op.softmax import Softmax
+from tflite2caffe.op.leakyrelu import LeakyReLU
 from tflite2caffe.op.conv import Convolution
 from tflite2caffe.op.quantize import Quantize
 from tflite2caffe.op.transpose import Permute
+from tflite2caffe.op.reducemax import ReduceMax
 from tflite2caffe.op.deconv import Deconvolution
+from tflite2caffe.op.reducemean import ReduceMean
 from tflite2caffe.op.depthtospace import DepthToSpace
 from tflite2caffe.op.fullyconnected import InnerProduct
 from tflite2caffe.op.resizenearest import ResizeNearest
@@ -41,23 +43,22 @@ OpMap = {
     'MUL': Mul,
     'SUB': Sub,
     'RELU': ReLU,
-    'MEAN': Reduce,
     'PRELU': PReLU,
     'RELU6': ReLUX,
     'SPLIT': Slice,
+    'MEAN': ReduceMean,
     'RESHAPE': Reshape,
     'SQUEEZE': Reshape,
     'SOFTMAX': Softmax,
-    'LEAKY_RELU': ReLU,
+    'LEAKY_RELU': LeakyReLU,
     'LOGISTIC': Sigmoid,
     'HARD_SWISH': Swish,
     'QUANTIZE': Quantize,
     'TRANSPOSE': Permute,
-    'REDUCE_MAX': Reduce,
     'CONV_2D': Convolution,
     'DEQUANTIZE': Quantize,
     'MAX_POOL_2D': Pooling,
-#    'STRIDED_SLICE': Slice,
+    'REDUCE_MAX': ReduceMax,
     'CONCATENATION': Concat,
     'AVERAGE_POOL_2D': Pooling,
     'DEPTH_TO_SPACE': DepthToSpace,
@@ -66,6 +67,7 @@ OpMap = {
     'DEPTHWISE_CONV_2D': Convolution,
     'RESIZE_BILINEAR': ResizeBilinear,
     'RESIZE_NEAREST_NEIGHBOR': ResizeNearest,
+#    'STRIDED_SLICE': Slice,
 #    'DIV': Binary,
 #   'POW': Binary,
 #    'MIRROR_PAD': Pad,
