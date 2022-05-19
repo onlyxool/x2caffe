@@ -15,7 +15,7 @@ class MatMul(Operator):
         super().__parse__()
 
         if len(self.inputs_shape[0]) != 2 or len(self.inputs_shape[1]) != 2:
-            raise NotImplementedError('MatMul don\'t support input dimentions > 2')
+            raise NotImplementedError('MatMul only support input dimentions == 2')
 
         # Weight
         self.weight = self.inputs_buf[1].transpose(1,0)

@@ -36,6 +36,8 @@ class Pad(Operator):
             errorMsg = 'Input tensor has' + len(self.inputs_shape[0]) + 'dimentions'
             sys.exit(errorMsg)
 
+        self.attrs = self.pad
+
         self.isLegacy = True
 
     def convert(self):
