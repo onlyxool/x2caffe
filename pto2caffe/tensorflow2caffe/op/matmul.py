@@ -14,27 +14,27 @@ class MatMul(Operator):
         self.layer_type = 'InnerProduct'
         super().__parse__()
 
-        if len(self.inputs_shape[0]) == 2 and len(self.inputs_shape[1]) == 2:
-            if not self.attrs.get('transpose_b', False):
-                self.weight = self.inputs_buf[1].transpose(1,0)
-            else:
-                self.weight = self.inputs_buf[1]
-            self.bias = None
+        if len(self.inputs_shape[0]) != 2 or len(self.inputs_shape[1]) != 2:
+            raise NotImplementedError('MatMul only support input dimentions == 2')
 
-            self.inner_product_param = dict()
-            self.inner_product_param['num_output'] = self.weight.shape[0]
-            self.inner_product_param['transpose'] = False
-
-            self.inner_product_param['weight_filler'] = dict()
-            self.inner_product_param['weight_filler']['type'] = 'constant' 
-
-            self.inner_product_param['bias_term'] = False
-
-            self.attrs = self.inner_product_param
-
-            self.setParsed()
+        if not self.attrs.get('transpose_b', False):
+            self.weight = self.inputs_buf[1].transpose(1,0)
         else:
-            raise NotImplementedError('MatMul don\'t support input dimentions > 2')
+            self.weight = self.inputs_buf[1]
+        self.bias = None
+
+        self.inner_product_param = dict()
+        self.inner_product_param['num_output'] = self.weight.shape[0]
+        self.inner_product_param['transpose'] = False
+
+        self.inner_product_param['weight_filler'] = dict()
+        self.inner_product_param['weight_filler']['type'] = 'constant'
+
+        self.inner_product_param['bias_term'] = False
+
+        self.attrs = self.inner_product_param
+
+        self.setParsed()
 
 
     def convert(self):
