@@ -2,3 +2,5 @@
 __pycache__/
 __init__.py
 tags
+pytorch2caffe/libpnnx.so
+pytorch2caffe/pnnx/build/
