@@ -6,7 +6,7 @@ class Convolution(Operator):
 
     def __init__(self, model, pnnx, type_code, index):
         super().__init__(model, pnnx, type_code, index)
-        self.convolution_param = dict()
+        assert(self.operator_code == 'nn.Conv2d')
         self.setInited()
 
 
@@ -14,11 +14,9 @@ class Convolution(Operator):
         self.layer_type = 'Convolution'
         super().__parse__()
 
-        # Weight
-        self.weight = self.inputs_buf[self.inputs.index('weight')]
-
         # Attributes
-        self.convolution_param['num_output'] = self.attrs['out_channels']#self.weight.shape[0]
+        self.convolution_param = dict()
+        self.convolution_param['num_output'] = self.attrs['out_channels']
         self.convolution_param['stride'] = stride = self.attrs.get('stride', [1, 1]) 
         self.convolution_param['dilation'] = self.attrs.get('dilation', [1, 1]) 
         self.convolution_param['group'] = self.attrs.get('groups', 1)
@@ -26,7 +24,11 @@ class Convolution(Operator):
         self.convolution_param['bias_term'] = self.attrs.get('bias', False)
         self.convolution_param['pad_h'] = self.attrs.get('padding', [0,0])[0]
         self.convolution_param['pad_w'] = self.attrs.get('padding', [0,0])[1]
+        self.convolution_param['ceil_mode'] = False
         #self.attrs['in_channels']
+
+        # Weight
+        self.weight = self.inputs_buf[self.inputs.index('weight')]
 
         # Bias
         self.bias = self.inputs_buf[self.inputs.index('bias')] if self.convolution_param['bias_term'] else None

@@ -6,7 +6,7 @@ class Linear(Operator):
 
     def __init__(self, model, pnnx, type_code, index):
         super().__init__(model, pnnx, type_code, index)
-        self.inner_product_param = dict()
+        assert(self.operator_code == 'nn.Linear')
         self.setInited()
 
 
@@ -17,6 +17,7 @@ class Linear(Operator):
         self.weight = self.inputs_buf[self.inputs.index('weight')]
         self.bias = self.inputs_buf[self.inputs.index('bias')] if self.attrs['bias'] else None
 
+        self.inner_product_param = dict()
         self.inner_product_param['num_output'] = self.attrs['out_features']
         self.inner_product_param['axis'] = self.inputs_shape[0].index(self.weight.shape[1])
         self.inner_product_param['transpose'] = False

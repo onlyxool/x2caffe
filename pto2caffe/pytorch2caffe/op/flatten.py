@@ -6,7 +6,7 @@ class Flatten(Operator):
 
     def __init__(self, model, pnnx, type_code, index):
         super().__init__(model, pnnx, type_code, index)
-        self.flatten_param = dict()
+        assert(self.operator_code == 'torch.flatten')
         self.setInited()
 
 
@@ -14,6 +14,7 @@ class Flatten(Operator):
         self.layer_type = 'Flatten'
         super().__parse__()
 
+        self.flatten_param = dict()
         self.flatten_param['axis'] = self.attrs['start_dim']
         self.flatten_param['end_axis'] = self.attrs['end_dim']
 

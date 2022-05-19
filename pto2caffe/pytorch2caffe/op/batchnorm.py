@@ -6,8 +6,7 @@ class BatchNorm(Operator):
 
     def __init__(self, model, pnnx, type_code, index):
         super().__init__(model, pnnx, type_code, index)
-        self.batch_norm_param = dict()
-        self.scale_param = dict()
+        assert(self.operator_code == 'nn.BatchNorm2d')
         self.setInited()
 
 
@@ -28,9 +27,11 @@ class BatchNorm(Operator):
         self.weight = self.inputs_buf[self.inputs.index('weight')]
 
         # Attributes
+        self.batch_norm_param = dict()
         self.batch_norm_param['eps'] = self.attrs.get('eps', 1e-5)
         self.batch_norm_param['use_global_stats'] = True
 
+        self.scale_param = dict()
         self.scale_param['bias_term'] = True
 
         self.attrs = self.batch_norm_param

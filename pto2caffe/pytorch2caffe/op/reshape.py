@@ -6,7 +6,7 @@ class Reshape(Operator):
 
     def __init__(self, model, pnnx, type_code, index):
         super().__init__(model, pnnx, type_code, index)
-        assert(self.operator in ('Tensor.reshape', 'Tensor.view'))
+        assert(self.operator_code in ('Tensor.reshape', 'Tensor.view'))
         self.setInited()
 
 

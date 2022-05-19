@@ -6,13 +6,17 @@ class Sigmoid(Operator):
 
     def __init__(self, model, pnnx, type_code, index):
         super().__init__(model, pnnx, type_code, index)
-        self.sigmoid_param = dict()
+        assert(self.operator_code in ('nn.Sigmoid', 'F.sigmoid', 'F.hardsigmoid'))
         self.setInited()
 
 
     def parse(self):
         self.layer_type = 'Sigmoid'
         super().__parse__()
+
+        self.sigmoid_param = dict()
+
+        self.attrs = self.sigmoid_param
 
         self.setParsed()
 

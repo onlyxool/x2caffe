@@ -6,7 +6,7 @@ class Debug(Operator):
 
     def __init__(self, model, pnnx, type_code, index):
         super().__init__(model, pnnx, type_code, index)
-        self.debug_param = dict()
+        assert(self.operator_code == '')
         self.setInited()
 
 
@@ -14,13 +14,16 @@ class Debug(Operator):
         self.layer_type = 'Debug'
         super().__parse__()
 
-        print(self.name, self.operator)
-        print(self.inputs)
-        print(self.inputs_shape)
-        print(self.inputs_buf)
-        print(self.outputs, self.outputs_shape)
+        print('Debug---------')
+        print(self.name, self.operator_code)
+        print('input', self.inputs)
+        print('input_shape', self.inputs_shape)
+        print('input_buf', self.inputs_buf)
+        print('output', self.outputs, 'output_shape',self.outputs_shape)
         # Attributes
+        self.debug_param = dict()
         print(self.attrs)
+        print('Debug')
 
         self.setParsed()
 

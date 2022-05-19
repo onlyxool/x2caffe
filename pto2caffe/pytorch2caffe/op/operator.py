@@ -4,7 +4,7 @@ class Operator(Base):
 
     def __init__(self, model, pnnx, type_code, index):
         super().__init__(model, None, index)
-        self.operator = type_code
+        self.operator_code = type_code
         self.layer_type = str()
         self.pnnx = pnnx
 
@@ -23,7 +23,7 @@ class Operator(Base):
 
     @property
     def type(self):
-        return self.layer_type if self.layer_type is not None else self.operator
+        return self.layer_type if self.layer_type is not None else self.operator_code
 
 
     @property
@@ -54,6 +54,19 @@ class Operator(Base):
         return '\n%s\n%s    %s -> %s' % (self.shorty, self.attrs2str, inames, onames)
 
 
+    def __byPassLegacy__(self):
+        for legacy in self.model.legacys:
+            if legacy.operator_code == 'F.pad':
+                for i, input_name in enumerate(self.inputs):
+                    if legacy.outputs[0] == self.inputs[i]:
+                        self.inputs[i] = legacy.inputs[0]
+                        self.inputs_shape[i] = legacy.inputs_shape[0]
+                        if legacy.attrs['pad'] == [0,0,0,0]:
+                            return True
+                        else:
+                            raise NotImplementedError
+
+
     def __parseInput__(self):
         self.inputs = self.pnnx.get_ops_inputs(self.index)
         for i, input_name in enumerate(self.inputs):
@@ -70,7 +83,6 @@ class Operator(Base):
 
     def __parseAttributes__(self):
         params = self.pnnx.get_ops_param(self.index).split('|')
-
         for param in params:
             if param == '':
                 continue
@@ -109,3 +121,4 @@ class Operator(Base):
         self.__parseInput__()
         self.__parseOutput__()
         self.__parseAttributes__()
+        self.__byPassLegacy__()

@@ -6,7 +6,7 @@ class AdaptiveAvgPooling(Operator):
 
     def __init__(self, model, pnnx, type_code, index):
         super().__init__(model, pnnx, type_code, index)
-        self.pooling_param = dict()
+        assert(self.operator_code in ('nn.AdaptiveAvgPool2d', 'F.adaptive_avg_pool2d'))
         self.setInited()
 
 
@@ -20,6 +20,7 @@ class AdaptiveAvgPooling(Operator):
         output_h = self.attrs['output_size'][0]
         output_w = self.attrs['output_size'][1]
 
+        self.pooling_param = dict()
         self.pooling_param['pool'] = 1
 
         self.pooling_param['stride_h'] = stride_h = input_h // output_h

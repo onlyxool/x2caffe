@@ -6,7 +6,7 @@ class Swish(Operator):
 
     def __init__(self, model, pnnx, type_code, index):
         super().__init__(model, pnnx, type_code, index)
-        self.swish_param = dict()
+        assert(self.operator_code == 'nn.Hardswish')
         self.setInited()
 
 
@@ -15,7 +15,8 @@ class Swish(Operator):
         super().__parse__()
 
         # Attributes
-        if self.operator == 'nn.Hardswish':
+        self.swish_param = dict()
+        if self.operator_code == 'nn.Hardswish':
             self.swish_param['beta'] = 1.0
 
         self.setParsed()

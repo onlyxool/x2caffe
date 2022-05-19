@@ -6,7 +6,7 @@ class Softmax(Operator):
 
     def __init__(self, model, pnnx, type_code, index):
         super().__init__(model, pnnx, type_code, index)
-        assert(self.operator == 'nn.Softmax')
+        assert(self.operator_code in ('nn.Softmax', 'F.softmax'))
         self.setInited()
 
 

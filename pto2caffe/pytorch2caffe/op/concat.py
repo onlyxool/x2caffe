@@ -6,7 +6,7 @@ class Concat(Operator):
 
     def __init__(self, model, pnnx, type_code, index):
         super().__init__(model, pnnx, type_code, index)
-        self.concat_param = dict()
+        assert(self.operator_code == 'torch.cat')
         self.setInited()
 
 
@@ -15,6 +15,7 @@ class Concat(Operator):
         self.layer_type = 'Concat'
 
         # Attributes
+        self.concat_param = dict()
         self.concat_param['axis'] = self.attrs['dim']
 
         self.attrs = self.concat_param

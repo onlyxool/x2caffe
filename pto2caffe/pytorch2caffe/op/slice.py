@@ -6,7 +6,7 @@ class Slice(Operator):
 
     def __init__(self, model, pnnx, type_code, index):
         super().__init__(model, pnnx, type_code, index)
-        self.slice_param = dict()
+        assert(self.operator_code == 'Tensor.slice')
         self.setInited()
 
 
@@ -18,6 +18,8 @@ class Slice(Operator):
     def parse(self):
         self.layer_type = 'Slice'
         super().__parse__()
+
+        self.slice_param = dict()
 
         self.setParsed()
 

@@ -6,7 +6,7 @@ class ReLU(Operator):
 
     def __init__(self, model, pnnx, type_code, index):
         super().__init__(model, pnnx, type_code, index)
-        self.relu_param = dict()
+        assert(self.operator_code in ('nn.ReLU', 'aten::relu_', 'F.relu'))
         self.setInited()
 
 
@@ -14,6 +14,7 @@ class ReLU(Operator):
         self.layer_type = 'ReLU'
         super().__parse__()
 
+        self.relu_param = dict()
         self.relu_param['negative_slope'] = 0
 
         self.attrs = self.relu_param

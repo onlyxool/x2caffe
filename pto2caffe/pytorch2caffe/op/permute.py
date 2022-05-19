@@ -6,7 +6,7 @@ class Permute(Operator):
 
     def __init__(self, model, pnnx, type_code, index):
         super().__init__(model, pnnx, type_code, index)
-        assert(self.operator == 'torch.permute')
+        assert(self.operator_code == 'torch.permute')
         self.setInited()
 
 

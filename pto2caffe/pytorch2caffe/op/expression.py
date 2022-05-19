@@ -164,6 +164,7 @@ class Expression(Operator):
 
     def __init__(self, model, pnnx, type_code, index):
         super().__init__(model, pnnx, type_code, index)
+        assert(self.operator_code == 'pnnx.Expression')
         self.setInited()
 
 

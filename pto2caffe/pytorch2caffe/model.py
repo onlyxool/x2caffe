@@ -8,12 +8,17 @@ from pytorch2caffe.pnnx import Pnnx
 from caffe_transform import save_caffe_model
 from caffe_transform import make_caffe_input_layer
 
+from pytorch2caffe.op.pad import Pad
+from pytorch2caffe.op.silu import Silu
 from pytorch2caffe.op.relu import ReLU 
+from pytorch2caffe.op.mean import Mean
 from pytorch2caffe.op.input import Input 
 from pytorch2caffe.op.slice import Slice
 from pytorch2caffe.op.swish import Swish
 from pytorch2caffe.op.concat import Concat
 from pytorch2caffe.op.linear import Linear
+from pytorch2caffe.op.select import Select
+from pytorch2caffe.op.matmul import MatMul
 from pytorch2caffe.op.output import Output
 from pytorch2caffe.op.pooling import Pooling
 from pytorch2caffe.op.flatten import Flatten
@@ -23,8 +28,12 @@ from pytorch2caffe.op.softmax import Softmax
 from pytorch2caffe.op.dropout import Dropout
 from pytorch2caffe.op.sigmoid import Sigmoid
 from pytorch2caffe.op.conv import Convolution
+from pytorch2caffe.op.upsample import Upsample
 from pytorch2caffe.op.batchnorm import BatchNorm
+from pytorch2caffe.op.transpose import Transpose
+from pytorch2caffe.op.unsqueeze import Unsqueeze
 from pytorch2caffe.op.expression import Expression
+from pytorch2caffe.op.convtranspose import Deconvolution
 from pytorch2caffe.op.adaptavgpooling import AdaptiveAvgPooling
 
 from pytorch2caffe.op.debug import Debug
@@ -34,30 +43,44 @@ logger = logging.getLogger('Pytorch2Caffe')
 
 
 OpMap = {
+    'F.pad': Pad,
+    'F.silu': Silu,
+    'F.relu': ReLU,
     'nn.ReLU': ReLU,
-    'aten::relu_': ReLU,
+    'torch.mean': Mean,
     'torch.cat': Concat,
     'nn.Linear': Linear,
     'pnnx.Input': Input,
-    'pnnx.Output': Output,
+    'aten::relu_': ReLU,
+    'F.softmax': Softmax,
+    'F.sigmoid': Sigmoid,
     'nn.Dropout': Dropout,
     'nn.Softmax': Softmax,
+    'nn.Sigmoid': Sigmoid,
+    'pnnx.Output': Output,
     'nn.Hardswish': Swish,
     'Tensor.slice': Slice,
+    'F.upsample': Upsample,
     'Tensor.view': Reshape,
+    'aten::matmul': MatMul,
+    'nn.Upsample': Upsample,
     'nn.AvgPool2d': Pooling,
     'nn.MaxPool2d': Pooling,
+    'Tensor.select': Select,
     'nn.Conv2d': Convolution,
     'F.hardsigmoid': Sigmoid,
     'torch.flatten': Flatten,
     'torch.permute': Permute,
     'Tensor.reshape': Reshape,
     'nn.BatchNorm2d': BatchNorm,
+    'torch.transpose': Transpose,
+    'torch.unsqueeze': Unsqueeze,
     'pnnx.Expression': Expression,
+    'nn.ConvTranspose2d': Deconvolution,
     'nn.AdaptiveAvgPool2d': AdaptiveAvgPooling,
     'F.adaptive_avg_pool2d': AdaptiveAvgPooling,
 
-#'nn.ChannelShuffle': Debug,
+    'pnnx.Attribute': Debug,
 }
 
 ignore_op = ['prim::TupleConstruct']

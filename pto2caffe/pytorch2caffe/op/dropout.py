@@ -6,7 +6,7 @@ class Dropout(Operator):
 
     def __init__(self, model, pnnx, type_code, index):
         super().__init__(model, pnnx, type_code, index)
-        self.dropout_param = dict()
+        assert(self.operator_code == 'nn.Dropout')
         self.setInited()
 
 
@@ -15,6 +15,7 @@ class Dropout(Operator):
         super().__parse__()
 
         # Attributes
+        self.dropout_param = dict()
         self.dropout_param['dropout_ratio'] = 0.5
 
         self.attrs = self.dropout_param
