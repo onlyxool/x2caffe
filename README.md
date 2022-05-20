@@ -72,17 +72,25 @@ python convert.py -platform=pytorch -model=/path/to/torchscript/model.pt -root_f
 | --------------------- | ------- |
 | Pad                   |         |
 | Add                   |         |
+| Sub                   |         |
 | Mul                   |         |
 | AddV2                 |         |
+| Relu6                 |         |
+| MatMul                |         |
 | MaxPool               |         |
+| AvgPool               |         |
 | BiasAdd               |         |
+| Squeeze               |         |
+| Reshape               |         |
+| Softmax               |         |
 | ConcatV2              |         |
 | Placeholder           |         |
 | Conv2D                |         |
 | LeakyRelu             |         |
 | FusedBatchNormV3      |         |
-| ResizeNearestNeighbor |         |
 | SpaceToDepth          |         |
+| ResizeNearestNeighbor |         |
+| DepthwiseConv2dNative |         |
 
 
 
@@ -94,27 +102,30 @@ python convert.py -platform=pytorch -model=/path/to/torchscript/model.pt -root_f
 | ADD                     |      |
 | MUL                     |      |
 | SUB                     |      |
-| SPLIT                   |      |
 | MEAN                    |      |
+| RELU                    |      |
+| PRELU                   |      |
+| RELU6                   |      |
+| SPLIT                   |      |
+| CONV_2D                 |      |
 | RESHAPE                 |      |
 | SQUEEZE                 |      |
 | SOFTMAX                 |      |
-| RELU                    |      |
-| PRELU                   |      |
-| HARD_SWISH              |      |
+| LOGISTIC                |      |
 | QUANTIZE                |      |
 | TRANSPOSE               |      |
-| CONV_2D                 |      |
-| LOGISTIC                |      |
 | DEQUANTIZE              |      |
+| REDUCE_MAX              |      |
+| HARD_SWISH              |      |
+| LEAKY_RELU              |      |
 | MAX_POOL_2D             |      |
 | CONCATENATION           |      |
-| REDUCE_MAX              |      |
-| LEAKY_RELU              |      |
+| TRANSPOSE_CONV          |      |
+| DEPTH_TO_SPACE          |      |
 | RESIZE_BILINEAR         |      |
 | AVERAGE_POOL_2D         |      |
-| TRANSPOSE_CONV          |      |
 | FULLY_CONNECTED         |      |
+| RESIZE_BILINEAR         |      |
 | DEPTHWISE_CONV_2D       |      |
 | RESIZE_NEAREST_NEIGHBOR |      |
 
@@ -124,21 +135,28 @@ python convert.py -platform=pytorch -model=/path/to/torchscript/model.pt -root_f
 
 | Operators             |      |
 | --------------------- | ---- |
+| Elu                   |      |
 | Exp                   |      |
 | Log                   |      |
 | Pad                   |      |
 | LRN                   |      |
 | Add                   |      |
+| Sum                   |      |
 | Sub                   |      |
 | Mul                   |      |
+| Div                   |      |
 | Pow                   |      |
 | Tanh                  |      |
 | Sqrt                  |      |
-| Sum                   |      |
-| Div                   |      |
+| Relu                  |      |
+| Clip                  |      |
+| Conv                  |      |
+| Gemm                  |      |
+| Mish                  |      |
+| PRelu                 |      |
 | Slice                 |      |
 | Split                 |      |
-| MatMul                |      |
+| MatMul                | Only support input dimentions == 2 |
 | Concat                |      |
 | Resize                |      |
 | Dropout               |      |
@@ -146,40 +164,52 @@ python convert.py -platform=pytorch -model=/path/to/torchscript/model.pt -root_f
 | Squeeze               |      |
 | Flatten               |      |
 | MaxPool               |      |
-| Relu                  |      |
-| Clip                  |      |
-| Conv                  |      |
-| PRelu                 |      |
+| Sigmoid               |      |
+| Softmax               |      |
 | Identity              |      |
-| Gemm                  |      |
 | Constant              |      |
 | Softplus              |      |
+| Upsample              |      |
+| LeakyRelu             |      |
 | Unsqueeze             |      |
 | Transpose             |      |
 | ReduceMean            |      |
-| Sigmoid               |      |
-| Softmax               |      |
 | AveragePool           |      |
-| LeakyRelu             |      |
-| GlobalAveragePool     |      |
 | ConvTranspose         |      |
+| GlobalAveragePool     |      |
 | BatchNormalization    |      |
 | InstanceNormalization |      |
-| Upsample              |      |
-| Mish                  |      |
 
 
 
 **Pytorch:**
 
-| Operators    |      |
-| ------------ | ---- |
-| nn.ReLU      |      |
-| torch.cat    |      |
-| nn.Linear    |      |
-| nn.Dropout   |      |
-| Tensor.slice |      |
-| nn.AvgPool2d |      |
-| nn.MaxPool2d |      |
-| nn.Conv2d    |      |
-
+| Operators         |
+| ----------------- |
+| Pad               |
+| Mul               |
+| Add               |
+| View              |
+| Silu              |
+| ReLU              |
+| Mean              |
+| Slice             |
+| Conv2d            |
+| Concat            |
+| Linear            |
+| Select            |
+| MatMul            |
+| Softmax           |
+| Sigmoid           |
+| Dropout           |
+| Pooling           |
+| Flatten           |
+| Permute           |
+| Reshape           |
+| Upsample          |
+| Transpose         |
+| Unsqueeze         |
+| Hardswish         |
+| BatchNorm2d       |
+| ConvTranspose2d   |
+| AdaptiveAvgPool2d |
