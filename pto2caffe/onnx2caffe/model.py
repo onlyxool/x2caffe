@@ -6,8 +6,8 @@ from onnx import numpy_helper
 
 
 from onnx2caffe.op.elu import Elu
-from onnx2caffe.op.log import Log
 from onnx2caffe.op.exp import Exp
+from onnx2caffe.op.log import Log
 from onnx2caffe.op.pad import Pad
 from onnx2caffe.op.lrn import LRN
 from onnx2caffe.op.mul import Mul
@@ -19,33 +19,32 @@ from onnx2caffe.op.tanh import TanH
 from onnx2caffe.op.power import Pow
 from onnx2caffe.op.sqrt import Sqrt
 from onnx2caffe.op.relu import ReLU
-from onnx2caffe.op.relux import ReLUX
+from onnx2caffe.op.clip import ReLUX
 from onnx2caffe.op.prelu import PReLU
 from onnx2caffe.op.slice import Slice
 from onnx2caffe.op.split import Split
-from onnx2caffe.op.reduce import Reduce
 from onnx2caffe.op.concat import Concat
 from onnx2caffe.op.resize import Resize
 from onnx2caffe.op.matmul import MatMul
-#from onnx2caffe.op.expand import Expand
 from onnx2caffe.op.sigmoid import Sigmoid
 from onnx2caffe.op.softmax import Softmax
-from onnx2caffe.op.reshape import Reshape #Not Finish yet
+from onnx2caffe.op.reshape import Reshape
 from onnx2caffe.op.pooling import Pooling
 from onnx2caffe.op.dropout import Dropout
 from onnx2caffe.op.flatten import Flatten
 from onnx2caffe.op.conv import Convolution
 from onnx2caffe.op.gemm import InnerProduct
+from onnx2caffe.op.upsample import Upsample
 from onnx2caffe.op.constant import Constant
 from onnx2caffe.op.softplus import Softplus
 from onnx2caffe.op.transpose import Permute
+from onnx2caffe.op.reducemean import Reduce
 from onnx2caffe.op.batchnorm import BatchNorm
-from onnx2caffe.op.deconv import Deconvolution
+from onnx2caffe.op.convtranspose import Deconvolution
+from onnx2caffe.op.instancenormalization import InstanceNormalization
+
 
 from onnx2caffe.op.mish import Mish
-from onnx2caffe.op.upsample import Upsample #Deprecated
-from onnx2caffe.op.instancenormalization import InstanceNormalization # Not test yet
-
 
 from caffe_transform import save_caffe_model
 from caffe_transform import make_caffe_input_layer
