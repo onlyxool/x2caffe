@@ -24,8 +24,19 @@ class Convolution(Operator):
         self.convolution_param['bias_term'] = self.attrs.get('bias', False)
         self.convolution_param['pad_h'] = self.attrs.get('padding', [0,0])[0]
         self.convolution_param['pad_w'] = self.attrs.get('padding', [0,0])[1]
-        self.convolution_param['ceil_mode'] = False
+
+        #self.convolution_param['ceil_mode'] = False
         #self.attrs['in_channels']
+
+        output_padding = self.attrs.get('output_padding', [0, 0])
+        if output_padding == [0, 0]:
+            self.convolution_param['pad_h'] = self.attrs.get('padding', [0,0])[0]
+            self.convolution_param['pad_w'] = self.attrs.get('padding', [0,0])[1]
+        else:
+            self.convolution_param['pad_t'] = self.attrs.get('padding', [0,0])[0]
+            self.convolution_param['pad_b'] = self.attrs.get('padding', [0,0])[0] - output_padding[0]
+            self.convolution_param['pad_l'] = self.attrs.get('padding', [0,0])[1]
+            self.convolution_param['pad_r'] = self.attrs.get('padding', [0,0])[1] - output_padding[1]
 
         # Weight
         self.weight = self.inputs_buf[self.inputs.index('weight')]
