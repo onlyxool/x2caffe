@@ -11,35 +11,50 @@ class MatMul(Operator):
 
 
     def parse(self):
-        self.layer_type = 'InnerProduct'
         super().__parse__()
 
-        if len(self.inputs_shape[0]) != 2 or len(self.inputs_shape[1]) != 2:
-            raise NotImplementedError('MatMul only support input dimentions == 2')
+        if self.inputs_buf == [None, None]:
+            self.layer_type = 'MatMul'
 
-        # Weight
-        self.weight = self.inputs_buf[1].transpose(1,0)
+            self.matmul_param = dict()
+            self.matmul_param['transpose_a'] = False
+            self.matmul_param['transpose_b'] = False
+            self.matmul_param['blob_shape'] = self.outputs_shape[0]
 
-        # Bias
-        self.bias = None
+            self.attrs = self.matmul_param
 
-        self.inner_product_param = dict()
-        self.inner_product_param['num_output'] = self.weight.shape[0]
-        self.inner_product_param['transpose'] = False
+            self.setParsed()
+        else:
+            if len(self.inputs_shape[0]) != 2 or len(self.inputs_shape[1]) != 2:
+                raise NotImplementedError('MatMul only support input dimentions == 2')
 
-        self.inner_product_param['weight_filler'] = dict()
-        self.inner_product_param['weight_filler']['type'] = 'constant'
+            self.layer_type = 'InnerProduct'
+            # Weight
+            self.weight = self.inputs_buf[1].transpose(1,0)
 
-        self.inner_product_param['bias_term'] = False
+            # Bias
+            self.bias = None
 
-        self.attrs = self.inner_product_param
+            self.inner_product_param = dict()
+            self.inner_product_param['num_output'] = self.weight.shape[0]
+            self.inner_product_param['transpose'] = False
 
-        self.setParsed()
+            self.inner_product_param['weight_filler'] = dict()
+            self.inner_product_param['weight_filler']['type'] = 'constant'
+
+            self.inner_product_param['bias_term'] = False
+
+            self.attrs = self.inner_product_param
+
+            self.setParsed()
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, inner_product_param=self.inner_product_param)
+        if self.type == 'InnerProduct':
+            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, inner_product_param=self.inner_product_param)
+        elif self.type == 'MatMul':
+            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, matmul_param=self.matmul_param)
 
         self.setConverted()
 
-        return [pre_layer, layer, post_layer]
+        return [layer]
