@@ -156,7 +156,7 @@ python convert.py -platform=pytorch -model=/path/to/torchscript/model.pt -root_f
 | PRelu                 |      |
 | Slice                 |      |
 | Split                 |      |
-| MatMul                | Only support input dimentions == 2 |
+| MatMul                |      |
 | Concat                |      |
 | Resize                |      |
 | Dropout               |      |
