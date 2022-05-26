@@ -106,14 +106,14 @@ class caffe_layer(object):
 _param_names = param_name_dict()
 
 
-def save_caffe_model(caffe_path, layers):
+def save_caffe_model(caffe_model_path, layers):
     proto = caffe_pb2.NetParameter()
     proto_layers = []
     for id, layer in enumerate(layers):
         proto_layers.append(layer._to_proto())
     proto.layer.extend(proto_layers)
 
-    prototxt_save_path = caffe_path + '.prototxt'
+    prototxt_save_path = caffe_model_path + '.prototxt'
     with open(prototxt_save_path, 'w') as f:
         print(proto, file=f)
 
@@ -132,7 +132,7 @@ def save_caffe_model(caffe_path, layers):
         except:
             raise Exception(layer.name)
 
-    model_save_path = caffe_path + '.caffemodel'
+    model_save_path = caffe_model_path + '.caffemodel'
     model.save(model_save_path)
 
 

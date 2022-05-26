@@ -12,9 +12,9 @@ def load_input_from_input_tensor(caffe_net, param_net, input_tensor):
         caffe_net.blobs[input_name].data[0, ...] = input_tensor
 
 
-def dump_caffe_model(caffe_name, caffe_path, input_tensor, input_file_name):
-    proto_file = caffe_path + '/' + caffe_name + '.prototxt'
-    model_file = caffe_path + '/' + caffe_name + '.caffemodel'
+def dump_caffe_model(caffe_name, caffe_model_path, input_tensor, input_file_name):
+    proto_file = caffe_model_path + '/' + caffe_name + '.prototxt'
+    model_file = caffe_model_path + '/' + caffe_name + '.caffemodel'
     caffe_net = caffe.Net(proto_file, caffe.TEST, weights=model_file)
 
     param_net = caffe_pb2.NetParameter()

@@ -64,6 +64,7 @@ def shape_map_nhwc2nchw(shape):
     else:
         return [shape]
 
+
 # Padding
 def computePaddingSize(input, output, stride, kernel, dilation, proto_param, layer_type):
     pad = 0
