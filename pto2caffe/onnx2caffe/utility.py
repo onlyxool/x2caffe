@@ -1,5 +1,6 @@
 from math import ceil
 
+
 def computePad(layer_type, operator_attrs, input_shape, output_shape, kernel_size, strides, legacy_pad):
 
     auto_pad_mode = operator_attrs.get('auto_pad', b'NOTSET').decode('utf-8')
@@ -39,11 +40,19 @@ def computePad(layer_type, operator_attrs, input_shape, output_shape, kernel_siz
         # Attribute Pad
         pad_t,pad_l,pad_b,pad_r = operator_attrs.get('pads', [0,0,0,0])
 
+
     # Legacy Pad
     pad_l += legacy_pad['left']
     pad_r += legacy_pad['right']
     pad_t += legacy_pad['top']
     pad_b += legacy_pad['bottom']
+
+
+    # Output Padding
+    output_padding = operator_attrs.get('output_padding', [0, 0])
+    if output_padding != [0, 0]:
+        pad_b -= output_padding[0]
+        pad_r -= output_padding[1]
 
 
     if pad_l == pad_r and pad_t == pad_b:
