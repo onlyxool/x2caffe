@@ -1,6 +1,9 @@
 from caffe_transform import caffe_layer
 from onnx2caffe.op.operator import Operator
 
+from util import getLegacyAttrs
+from onnx2caffe.utility import computePad
+
 
 class Convolution(Operator):
 
@@ -24,58 +27,19 @@ class Convolution(Operator):
         # Attributes
         self.convolution_param['num_output'] = self.weight.shape[0]
 
-        self.convolution_param['stride_h'] = stride_h = self.attrs.get('strides', [1, 1])[0]
-        self.convolution_param['stride_w'] = stride_w = self.attrs.get('strides', [1, 1])[1]
+        strides = self.attrs.get('strides', [1, 1])
+        self.convolution_param['stride_h'] = strides[0]
+        self.convolution_param['stride_w'] = strides[1]
 
         self.convolution_param['dilation'] = self.attrs.get('dilations', [1, 1])
         self.convolution_param['group'] = self.attrs.get('group', 1)
-        self.convolution_param['kernel_size'] = self.attrs['kernel_shape']
+        self.convolution_param['kernel_size'] = kernel_size = self.attrs['kernel_shape']
         self.convolution_param['bias_term'] = True if self.bias is not None else False
 
         # Padding
-        pad_t,pad_l,pad_b,pad_r = self.attrs.get('pads', [0,0,0,0])
-
-        auto_pad_mode = self.attrs.get('auto_pad', b'NOTSET').decode('utf-8')
-        if auto_pad_mode != 'NOTSET' and auto_pad_mode != 'VALID':
-            output_h = (self.inputs_shape[0][2]-self.inputs_shape[1][2]) / stride_h + 1
-            output_w = (self.inputs_shape[0][3]-self.inputs_shape[1][3]) / stride_w + 1
-
-            pad_h = self.outputs_shape[0][2] - output_h
-            pad_w = self.outputs_shape[0][3] - output_w
-
-            from math import ceil
-            pad_t = pad_b = ceil(pad_h / 2)
-            if (pad_h % 2) != 0:
-                if auto_pad_mode == 'SAME_UPPER':
-                    pad_b += 1
-                elif auto_pad_mode == 'SAME_LOWER':
-                    pad_t += 1
-
-            pad_l = pad_r = ceil(pad_w / 2)
-            if (pad_w % 2) != 0:
-                if auto_pad_mode == 'SAME_UPPER':
-                    pad_r += 1
-                elif auto_pad_mode == 'SAME_LOWER':
-                    pad_l += 1
-
-        for legacy in self.model.legacys:
-            if legacy.outputs[0] == self.inputs[0] and legacy.operator == 'Pad':
-                legacy_pad = legacy.pad
-                pad_l += legacy.pad['left']
-                pad_r += legacy.pad['right']
-                pad_t += legacy.pad['top']
-                pad_b += legacy.pad['bottom']
-                self.inputs[0] = legacy.inputs[0]
-                self.inputs_shape[0] = legacy.inputs_shape[0]
-
-        if pad_l == pad_r and pad_t == pad_b:
-            self.convolution_param['pad_w'] = pad_l
-            self.convolution_param['pad_h'] = pad_t
-        else:
-            self.convolution_param['pad_l'] = pad_l
-            self.convolution_param['pad_r'] = pad_r
-            self.convolution_param['pad_t'] = pad_t
-            self.convolution_param['pad_b'] = pad_b
+        legacy_pad = getLegacyAttrs(self, 'Pad')
+        padding = computePad(self.type, self.attrs, self.inputs_shape[0], self.outputs_shape[0], kernel_size, strides, legacy_pad)
+        self.convolution_param.update(padding)
 
         self.attrs = self.convolution_param
 
