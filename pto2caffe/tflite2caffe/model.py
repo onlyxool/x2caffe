@@ -1,7 +1,5 @@
-import sys
 import tflite
 import logging
-from dump import Dump
 from base import Base
 from util import *
 
@@ -157,6 +155,7 @@ class Model(Base):
             if tf_op_name in ignore_op:
                 continue
             if tf_op_name not in OpMap:
+                import sys
                 errorMsg = 'Error: Operator [' + tf_op_name + '] does not Support.\n'
                 sys.exit(errorMsg)
 
@@ -193,13 +192,3 @@ class Model(Base):
 
     def save(self, caffe_model_path):
         save_caffe_model(caffe_model_path, self.layers)
-
-
-    def dump(self, model_byte, model_name, input_tensor, dump_level=-1):
-        dump = Dump('TFLite', model_byte, model_name, input_tensor, self.param, dump_level)
-        from progress_bar import ProgressBar
-        progressBar = ProgressBar(len(self.operators), 0, "TFLite dump processing")
-        for i, op in enumerate(self.operators):
-            dump.operator(op)
-            progressBar.setValue(i)
-        progressBar.onCancel()

@@ -1,7 +1,6 @@
 import sys
 import logging
 from base import Base
-from dump import Dump
 from onnx import numpy_helper
 
 
@@ -228,13 +227,3 @@ class Model(Base):
 
     def save(self, caffe_model_path):
         save_caffe_model(caffe_model_path, self.layers)
-
-
-    def dump(self, onnx_model, model_name, input_tensor, dump_level=-1):
-        dump = Dump('onnx', onnx_model, model_name, input_tensor, self.param, dump_level)
-        from progress_bar import ProgressBar
-        progressBar = ProgressBar(len(self.operators), 0, "ONNX dump processing")
-        for i, op in enumerate(self.operators):
-            dump.operator(op)
-            progressBar.setValue(i)
-        progressBar.onCancel()

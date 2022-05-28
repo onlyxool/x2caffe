@@ -1,6 +1,5 @@
 import sys
 import logging
-from dump import Dump
 from base import Base
 import tensorflow as tf
 
@@ -141,13 +140,3 @@ class Model(Base):
 
     def save(self, caffe_model_path):
         save_caffe_model(caffe_model_path, self.layers)
-
-
-    def dump(self, model_byte, model_name, input_tensor, dump_level=-1):
-        dump = Dump('TensorFlow', model_byte, model_name, input_tensor, self.param, dump_level)
-        from progress_bar import ProgressBar
-        progressBar = ProgressBar(len(self.operators), 0, "TensorFlow dump processing")
-        for i, op in enumerate(self.operators):
-            dump.operator(op)
-            progressBar.setValue(i)
-        progressBar.onCancel()

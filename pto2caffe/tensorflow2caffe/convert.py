@@ -8,7 +8,6 @@ from tensorflow.core.framework import graph_pb2
 
 from compare import compare
 from preprocess import preprocess
-from caffe_dump import dump_caffe_model
 from tensorflow2caffe.model import Model
 
 
@@ -31,11 +30,5 @@ def convert(pb_file, input_tensor, caffe_model_path, dump_level=-1, param=None):
     model.save(caffe_model_path)
 
     input_tensor = preprocess(input_tensor, param)
-
-    if dump_level >= 0:
-        model.dump(graph, param['model_name'], input_tensor, dump_level)
-
-    if dump_level == 3:
-        dump_caffe_model(caffe_model_path, input_tensor, param['input_file'])
 
     compare(platform, model, caffe_model_path, input_tensor, param.get('compare', -1))

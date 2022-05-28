@@ -1,7 +1,5 @@
-import sys
 import torch
 import logging
-from dump import Dump
 from base import Base
 
 from pytorch2caffe.pnnx import Pnnx
@@ -117,6 +115,7 @@ class Model(Base):
                 continue
 
             if op_type not in OpMap:
+                import sys
                 errorMsg = 'Error: Operator [' + op_type + '] does not Support.\n'
                 sys.exit(errorMsg)
 
@@ -154,13 +153,3 @@ class Model(Base):
 
     def save(self, caffe_model_path):
         save_caffe_model(caffe_model_path, self.layers)
-
-
-    def dump(self, model_byte, model_name, input_tensor, dump_level=-1):
-        dump = Dump('Pytorch', model_byte, model_name, input_tensor, self.param, dump_level)
-        from progress_bar import ProgressBar
-        progressBar = ProgressBar(len(self.operators), 0, "Ptyroch dump processing")
-        for i, op in enumerate(self.operators):
-            dump.operator(op)
-            progressBar.setValue(i)
-        progressBar.onCancel()

@@ -2,7 +2,6 @@ import sys
 import torch
 from compare import compare
 from preprocess import preprocess
-from caffe_dump import dump_caffe_model
 from pytorch2caffe.model import Model
 
 
@@ -22,11 +21,5 @@ def convert(pytorch_file, input_tensor, caffe_model_path, dump_level=-1, param=N
     model.parse()
     model.convert()
     model.save(caffe_model_path)
-
-    if dump_level >= 0:
-        model.dump(pytorch_file, param['model_name'], input_tensor, dump_level)
-
-    if dump_level == 3:
-        dump_caffe_model(caffe_model_path, input_tensor, param['input_file'])
 
     compare('pytorch', model, caffe_model_path, input_tensor, param.get('compare', -1))

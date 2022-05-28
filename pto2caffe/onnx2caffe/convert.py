@@ -3,7 +3,6 @@ from compare import compare
 from onnx import shape_inference
 from preprocess import preprocess
 from onnx2caffe.model import Model
-from caffe_dump import dump_caffe_model
 
 
 def set_batch_size(onnx_model):
@@ -41,12 +40,6 @@ def convert(onnx_file, input_tensor, caffe_model_path, dump_level=-1, param=None
     model.save(caffe_model_path)
 
     input_tensor = preprocess(input_tensor, param)
-
-    if dump_level >= 0 and opset >= 7:
-        model.dump(onnx_model, param['model_name'], input_tensor, dump_level)
-
-    if dump_level == 3:
-        dump_caffe_model(caffe_model_path, input_tensor, param['input_file'])
 
     if opset >= 7:
         compare('onnx', onnx_model, caffe_model_path, input_tensor, param.get('compare', -1))
