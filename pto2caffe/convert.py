@@ -183,6 +183,8 @@ def args_():
 #            help = 'Model input shape')
     args.add_argument('-layout',        type = str,     required = False,   choices=['NCHW', 'NHWC'],
             help = 'Model input layout [NCHW NHWC]')
+    args.add_argument('-savetensor',    type = int,     required = False,   choices=[0, 1], default = 0,
+            help = 'Save The Input Tensor')
 
     args.add_argument('-scale',         type = float,   required = False,   nargs='+',      default = [1, 1, 1],
             help = 'scale value')

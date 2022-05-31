@@ -114,4 +114,9 @@ def preprocess(tensor, param):
     if param['crop_h'] is not None and param['crop_w'] is not None:
         tensor = crop(tensor, param['crop_h'], param['crop_w'])
 
+    if param.get('savetensor', 0) == 1:
+        model_ext = param['model'].split('.')[-1]
+        bin_file = param['model'][:-len(model_ext)] + 'bin'
+        tensor.tofile(bin_file)
+
     return np.expand_dims(tensor, axis=0).astype(np.float32) # Unsqueeze CHW->NCHW
