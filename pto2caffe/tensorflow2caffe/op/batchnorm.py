@@ -24,6 +24,12 @@ class BatchNorm(Operator):
                 self.mean = self.inputs_buf[index]
             elif 'variance' in input_name:
                 self.var = self.inputs_buf[index]
+        else:
+            self.weight = self.inputs_buf[1]
+            self.bias = self.inputs_buf[2]
+            self.mean = self.inputs_buf[3]
+            self.var = self.inputs_buf[4]
+
 
         # FusedBatchNorm
         if len(self.outputs) > 1:
