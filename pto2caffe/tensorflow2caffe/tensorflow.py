@@ -25,10 +25,9 @@ def get_output_frozenmodel(model, input_tensor, blob_name):
                                     outputs=[blob_name],
                                     print_graph=True)
 
-    output = frozen_func(image_input=tf.constant(list(input_tensor)))
+    output = frozen_func(tf.constant(list(input_tensor)))
 
     return output[0].numpy().transpose(0, 3, 1, 2) if len(output[0].numpy().shape) == 4 else output[0].numpy()
-
 
 
 def get_output_savedmodel(model, input_tensor, blob_name):
