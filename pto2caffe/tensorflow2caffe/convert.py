@@ -87,8 +87,10 @@ def search_io(graph_def): #TODO: search all outputs
 
     return inputs, outputs
 
+
 def convert(pb_file, input_tensor, caffe_model_path, dump_level=-1, param=None):
     if os.path.basename(pb_file) == 'saved_model.pb':
+        # SavedModel
         modelpath = pb_file.split(os.path.basename(pb_file))[0]
         imported = tf.saved_model.load(modelpath, tags=None)
 
@@ -100,30 +102,33 @@ def convert(pb_file, input_tensor, caffe_model_path, dump_level=-1, param=None):
         inputs = [tensor.name for tensor in concrete_func.inputs if tensor.dtype != tf.dtypes.resource]
         outputs = [tensor.name for tensor in concrete_func.outputs if tensor.dtype != tf.dtypes.resource]
 
-        frozen_func = convert_variables_to_constants_v2(concrete_func, lower_control_flow=False, aggressive_inlining=True)
+        frozen_func = convert_variables_to_constants_v2(concrete_func, lower_control_flow=True, aggressive_inlining=True)
         graph_def = frozen_func.graph.as_graph_def(add_shapes=True)
-        platform = 'FrozenModel'
+
+#        print('Is Function:', frozen_func.graph.building_function, ' has been finalized:', frozen_func.graph.finalized)
+#        print(' Greph Version:', frozen_func.graph.graph_def_versions, ' Version:', frozen_func.graph.version)
+#        print(str(type(graph_def))) #'tensorflow.python.framework.func_graph.FuncGraph'
     else:
+        # FrozenModel
         with tf.io.gfile.GFile(pb_file, 'rb') as f:
             data = compat.as_bytes(f.read())
             graph_def = graph_pb2.GraphDef()
             graph_def.ParseFromString(data)
             inputs, outputs = search_io(graph_def)
-            platform = 'FrozenModel'
 
-    if True:
-        with tf.Graph().as_default() as tf_graph:
-            with tf.compat.v1.Session(graph=tf_graph) as sess:
-                tf.import_graph_def(graph_def, name='')
-                inputs = inputs_without_resource(sess, inputs)
-                graph_def = tf_optimize(inputs, outputs, graph_def)
+    # Tensorflow Graph Optimize
+    with tf.Graph().as_default() as tf_graph:
+        with tf.compat.v1.Session(graph=tf_graph) as sess:
+            tf.import_graph_def(graph_def, name='')
+            inputs = inputs_without_resource(sess, inputs)
+            graph_def = tf_optimize(inputs, outputs, graph_def)
 
 
-    model = Model(pb_file, graph_def, param)
+    model = Model(frozen_func, graph_def, param)
     model.parse()
     model.convert()
     model.save(caffe_model_path)
 
     input_tensor = preprocess(input_tensor, param)
 
-    compare(platform, model, caffe_model_path, input_tensor, param.get('compare', -1))
+    compare('tensorflow', model, caffe_model_path, input_tensor, param.get('compare', -1))

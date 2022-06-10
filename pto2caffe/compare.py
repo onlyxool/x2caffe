@@ -85,12 +85,9 @@ def compare(platform, target_model, caffe_model_path, input_tensor, level=-1):
         from tflite2caffe.tflite import get_output
     elif platform == 'onnx':
         from onnx2caffe.onnx import get_output
-    elif platform == 'FrozenModel':
+    elif platform == 'tensorflow':
         input_tensor = input_tensor.transpose(0, 2, 3, 1)
         from tensorflow2caffe.tensorflow import get_output_frozenmodel as get_output
-    elif platform == 'SavedModel':
-        input_tensor = input_tensor.transpose(0, 2, 3, 1)
-        from tensorflow2caffe.tensorflow import get_output_savedmodel as get_output
     elif platform == 'pytorch':
         from pytorch2caffe.pytorch import get_output
 
