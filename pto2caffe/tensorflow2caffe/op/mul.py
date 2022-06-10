@@ -27,10 +27,11 @@ class Mul(Operator):
             org_shape = copy.deepcopy(self.inputs_shape[1])
             trim = trim_one(org_shape)
             if trim != self.inputs_shape[1]:
-                self.pre.append('Reshape')
                 self.inputs_shape[1] = trim
                 if self.inputs_buf[1] is not None:
                     self.inputs_buf[1] = self.inputs_buf[1].reshape(tuple(trim))
+                else:
+                    self.pre = 'Reshape'
 
             axis = compute_scale_axis(self.inputs_shape[0], trim)
             if axis is not None:
@@ -44,6 +45,7 @@ class Mul(Operator):
             self.setParsed()
         else:
             self.layer_type = 'Eltwise'
+
             self.eltwise_param = dict()
             self.eltwise_param['operation'] = 0
 
@@ -52,11 +54,17 @@ class Mul(Operator):
 
 
     def convert(self):
+        layers = list()
         if self.type == 'Scale':
-            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, scale_param=self.scale_param)
+            if self.pre == 'Reshape':
+                pre_layer = caffe_layer('Reshape', 'Reshape'+str(self.index), [self.inputs[1]], [None],
+                        ['reshape'+str(self.index)], reshape_param=dict(shape=dict(dim=self.inputs_shape[1])))
+                layers.append(pre_layer)
+                self.inputs[1] = 'reshape' + str(self.index)
+            layers.append(caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, scale_param=self.scale_param))
         elif self.type == 'Eltwise':
-            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param)
+            layers.append(caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param))
 
         self.setConverted()
 
-        return [layer]
+        return layers
