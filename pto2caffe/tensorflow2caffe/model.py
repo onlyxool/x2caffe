@@ -8,6 +8,8 @@ from tensorflow2caffe.op.add import Add
 from tensorflow2caffe.op.sub import Sub
 from tensorflow2caffe.op.mul import Mul
 from tensorflow2caffe.op.pool import Pool
+from tensorflow2caffe.op.mean import Mean
+from tensorflow2caffe.op.relu import ReLU
 from tensorflow2caffe.op.relux import ReLUX
 from tensorflow2caffe.op.resize import Resize
 from tensorflow2caffe.op.concat import Concat
@@ -22,18 +24,48 @@ from tensorflow2caffe.op.leakyrelu import LeakyRelu
 from tensorflow2caffe.op.spacetodepth import SpaceToDepth
 from tensorflow2caffe.op.depthwise import ConvolutionDepthwise
 
+#from tensorflow2caffe.op.debug import Debug
+
 from caffe_transform import save_caffe_model
 from caffe_transform import make_caffe_input_layer
 from util import shape_map_nhwc2nchw
 
 
+def getDynamicInputShape(graph):
+    import numpy as np
+    dynamic_input = dict()
+    for op in graph.get_operations():
+        if op.type == 'Placeholder':
+            inputs_shape = np.array([dim.size for dim in op.get_attr('shape').dim])
+            dynamic_input[op.outputs[0].name] = (inputs_shape == np.array([-1, -1, -1, -1]))
+
+    return dynamic_input
+
+
+def shape_inference(frozen_func, graph, dynamic_input, param):
+    if param['input_shape'] is not None:
+        for input_name, dynamic_dim in dynamic_input.items():
+            frozen_func.graph.get_tensor_by_name(input_name).set_shape(param['input_shape'])
+
+        with tf.Graph().as_default() as inferred_graph:
+            tf.import_graph_def(frozen_func.graph.as_graph_def(add_shapes=True), name="")
+
+        return inferred_graph
+    else:
+        return graph
+
+
 logger = logging.getLogger('TensorFlow2Caffe')
 
 OpMap = {
+#    'RealDiv': Debug,
+#    'Fill': Debug,
     'Pad': Pad,
     'Add': Add,
     'Sub': Sub,
     'Mul': Mul,
+    'Mean': Mean,
+    'Relu': ReLU,
     'AddV2': Add,
     'Relu6': ReLUX,
     'MaxPool': Pool,
@@ -54,13 +86,11 @@ OpMap = {
     'DepthwiseConv2dNative': ConvolutionDepthwise,
 }
 
-#ignore_op = ['Enter', 'Merge', 'Cast', 'VarHandleOp', 'ReadVariableOp', 'NoOp', 'StatefulPartitionedCall']
 
 class Model(Base):
 
-    def __init__(self, pb_file, graph, param):
-        super().__init__(None, graph)
-        self.model_file = pb_file
+    def __init__(self, model, graph, param):
+        super().__init__(model, graph)
         self.param = param
         self.inputs = []
         self.inputs_shape = []
@@ -80,21 +110,23 @@ class Model(Base):
         with graph.as_default():
             tf.import_graph_def(self.graph, name='')
 
+        # Shape Inference
+        graph = shape_inference(self.model, graph, getDynamicInputShape(graph), self.param)
+
         for op in graph.get_operations():
             if op.type == 'Const':
                 self.constant[op.outputs[0].name] = tf.get_static_value(op.outputs[0])
-            elif op.type == 'Identity':# or op.type == 'Cast':
+            elif op.type == 'Identity':
                 self.indentity[op.outputs[0].name] = self.indentity.get(op.inputs[0].name, op.inputs[0].name)
             elif op.type == 'Placeholder':
-                input_shape = []
-                for dim in op.get_attr('shape').dim:
-                    input_shape.append(dim.size if dim.size != -1 else 1)
-                self.inputs_shape.append(input_shape)
+                self.inputs_shape.append(op.outputs[0].shape)
                 self.inputs.append(op.outputs[0].name)
-                self.layers.append(make_caffe_input_layer(op.outputs[0].name, shape_map_nhwc2nchw(input_shape), len(self.inputs), self.param))
+                self.layers.append(make_caffe_input_layer(op.outputs[0].name, shape_map_nhwc2nchw(op.outputs[0].name), len(self.inputs), self.param))
+                self.param['inputs_shape'] = self.inputs_shape
+            elif op.type in ['NoOp']: #ignore_op
+                pass
             else:
                 self.tf_ops.append(op)
-        self.param['inputs_shape'] = self.inputs_shape
 
         if len(self.tf_ops) == 0:
             sys.exit('Error: Model file is not Tensorflow Model.\n')
@@ -105,10 +137,6 @@ class Model(Base):
 
         # Parse all operations
         for index, tf_op in enumerate(self.tf_ops):
-#            print(tf_op.type)
-#            if tf_op.type in ignore_op:
-#                continue
-
             if tf_op.type not in OpMap:
                 errorMsg = 'Error: Operator [' + tf_op.type + '] does not Support.\n'
                 sys.exit(errorMsg)
