@@ -114,7 +114,7 @@ def CheckParam(param):
 
     if 'auto_crop' in param and param['auto_crop'] == 1:
         if param['platform'] == 'pytorch':
-            errorMsg = errorMsg + 'Pytorch model support dynamic shape, auto_crop can\'t apply.'
+            errorMsg = errorMsg + 'Pytorch model support dynamic shape, auto_crop can\'t apply. Use crop_h & crop_w instead.'
             sys.exit(errorMsg)
 
     # Layout
@@ -123,6 +123,10 @@ def CheckParam(param):
             param['layout'] = 'NHWC'
         else:
             param['layout'] = 'NCHW'
+
+    # Input Shape
+    if 'input_shape' in param and param['input_shape'] is not None:
+        param['input_shape'] = eval(param['input_shape'])
 
 
 def Convert(param=None):
@@ -179,8 +183,8 @@ def args_():
     args.add_argument('-color_format',  type = str,     required = False,   choices=['BGR', 'RGB', 'GRAY'],
             help = 'Specify the images color format, 0:BGR 1:RGB 2:GRAY')
 
-#    args.add_argument('-input_shape',   type = int,     required = False,   nargs='+',
-#            help = 'Model input shape')
+    args.add_argument('-input_shape',   type = str,     required = False,
+            help = 'Model input shape')
     args.add_argument('-layout',        type = str,     required = False,   choices=['NCHW', 'NHWC'],
             help = 'Model input layout [NCHW NHWC]')
     args.add_argument('-savetensor',    type = int,     required = False,   choices=[0, 1], default = 0,
