@@ -110,6 +110,7 @@ def convert(pb_file, input_tensor, caffe_model_path, dump_level=-1, param=None):
 #        print(str(type(graph_def))) #'tensorflow.python.framework.func_graph.FuncGraph'
     else:
         # FrozenModel
+        frozen_func = None
         with tf.io.gfile.GFile(pb_file, 'rb') as f:
             data = compat.as_bytes(f.read())
             graph_def = graph_pb2.GraphDef()
