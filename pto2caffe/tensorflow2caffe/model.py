@@ -121,7 +121,7 @@ class Model(Base):
             elif op.type == 'Placeholder':
                 self.inputs_shape.append(op.outputs[0].shape)
                 self.inputs.append(op.outputs[0].name)
-                self.layers.append(make_caffe_input_layer(op.outputs[0].name, shape_map_nhwc2nchw(op.outputs[0].name), len(self.inputs), self.param))
+                self.layers.append(make_caffe_input_layer(op.outputs[0].name, shape_map_nhwc2nchw(op.outputs[0].shape), len(self.inputs), self.param))
                 self.param['inputs_shape'] = self.inputs_shape
             elif op.type in ['NoOp']: #ignore_op
                 pass

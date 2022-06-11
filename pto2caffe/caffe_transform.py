@@ -186,8 +186,6 @@ def make_caffe_input_layer(input, input_shape, index, param):
         if len(input_shape) == 4:
             param['crop_h'] = input_shape[2]
             param['crop_w'] = input_shape[3]
-        else:
-            return
 
     if param['crop_h'] is not None:
         transform_param['crop_h'] = param['crop_h']
