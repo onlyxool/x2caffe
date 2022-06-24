@@ -1,7 +1,7 @@
 import sys
 import torch
 from compare import compare
-from preprocess import preprocess
+from preprocess import get_input_tensor
 from pytorch2caffe.model import Model
 
 
@@ -12,10 +12,10 @@ def check_model_file(pytorch_file):
         sys.exit('Error: Model file is not Torchscript.\n')
 
 
-def convert(pytorch_file, input_tensor, caffe_model_path, dump_level=-1, param=None):
+def convert(pytorch_file, caffe_model_path, param=None):
     check_model_file(pytorch_file)
 
-    input_tensor = preprocess(input_tensor, param)
+    input_tensor = get_input_tensor(param,param['input_shape'])
 
     model = Model(pytorch_file, param, input_tensor)
     model.parse()

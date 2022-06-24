@@ -119,7 +119,7 @@ class Model(Base):
         print('TFlite Model Input size:')
         for i in range(self.graph.InputsLength()):
             print(self.graph.Inputs(i), ':', list(self.graph.Tensors(self.graph.Inputs(i)).ShapeAsNumpy()))
-            self.inputs_shape.append(list(self.graph.Tensors(self.graph.Inputs(i)).ShapeAsNumpy()))
+            self.inputs_shape.append(shape_map_nhwc2nchw(list(self.graph.Tensors(self.graph.Inputs(i)).ShapeAsNumpy())))
         self.param['inputs_shape'] = self.inputs_shape
 
         # Tensors

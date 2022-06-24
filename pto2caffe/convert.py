@@ -2,10 +2,6 @@ import os
 import sys
 import argparse
 
-from preprocess import get_input_tensor
-from preprocess import preprocess
-
-
 
 def set_bin_shape(source_tensor, param):
     param['source_shape'] = [1] + list(source_tensor.shape)
@@ -74,37 +70,39 @@ def CheckParam(param):
     param['model'] = os.path.abspath(os.path.normpath(param['model']))
 
     # root_folder
-    if not os.path.isdir(param['root_folder']):
-        errorMsg = errorMsg + 'Illegal root_folder  ' + param['root_folder']
-        sys.exit(errorMsg)
-    param['root_folder'] = os.path.abspath(os.path.normpath(param['root_folder']))
+    if param['root_folder']:
+        print('WARNING: The Agrument -root_folder is DEPRECATED and will be removed in a future version.')
+        if not os.path.isdir(param['root_folder']):
+            errorMsg = errorMsg + 'Illegal root_folder  ' + param['root_folder']
+            sys.exit(errorMsg)
+        param['root_folder'] = os.path.abspath(os.path.normpath(param['root_folder']))
 
-    # source
-    if param.get('source', None) is not None:
-        if os.path.isfile(param['source']):
-            param['source'] = os.path.abspath(os.path.normpath(param['source']))
+        # source
+        if param.get('source', None) is not None:
+            if os.path.isfile(param['source']):
+                param['source'] = os.path.abspath(os.path.normpath(param['source']))
+            else:
+                param['source'] = make_source_list(param['root_folder'], errorMsg)
         else:
             param['source'] = make_source_list(param['root_folder'], errorMsg)
-    else:
-        param['source'] = make_source_list(param['root_folder'], errorMsg)
 
-    # bin_shape & dtype
-    if isContainFile(param['root_folder'], ['bin']):
-        param['file_type'] = 'raw'
-        if param['dtype'] is None:
-            errorMsg = errorMsg + 'argument dtype can\'t be None'
+        # bin_shape & dtype
+        if isContainFile(param['root_folder'], ['bin']):
+            param['file_type'] = 'raw'
+            if param['dtype'] is None:
+                errorMsg = errorMsg + 'argument dtype can\'t be None'
+                sys.exit(errorMsg)
+            if param['bin_shape'] is None:
+                errorMsg = errorMsg + 'argument bin_shape can\'t be None'
+                sys.exit(errorMsg)
+            elif len(param['bin_shape']) != 3:
+                errorMsg = errorMsg + 'Bin file shape should be 3 dimension'
+                sys.exit(errorMsg)
+        elif isContainFile(param['root_folder'], ['jpg', 'bmp', 'png', 'jpeg']):
+            param['file_type'] = 'img'
+        else:
+            errorMsg = errorMsg + 'Can\'t find any data file or image file in ' + param['root_folder']
             sys.exit(errorMsg)
-        if param['bin_shape'] is None:
-            errorMsg = errorMsg + 'argument bin_shape can\'t be None'
-            sys.exit(errorMsg)
-        elif len(param['bin_shape']) != 3:
-            errorMsg = errorMsg + 'Bin file shape should be 3 dimension'
-            sys.exit(errorMsg)
-    elif isContainFile(param['root_folder'], ['jpg', 'bmp', 'png', 'jpeg']):
-        param['file_type'] = 'img'
-    else:
-        errorMsg = errorMsg + 'Can\'t find any data file or image file in ' + param['root_folder']
-        sys.exit(errorMsg)
 
     # BGR -> RGB
     if param['color_format'] == 'BGR':
@@ -132,7 +130,7 @@ def CheckParam(param):
 def Convert(param=None):
     # Set Log level
     os.environ['GLOG_minloglevel'] = str(param.get('log', 2)) # 0:DEBUG 1:INFO 2:WARNING 3:ERROR
-    os.environ["TF_CPP_MIN_LOG_LEVEL"] = str(param.get('log', 2)) # 0:INFO 1:WARNING 2:ERROR 3:FATAL
+    os.environ["TF_CPP_MIN_LOG_LEVEL"] = str(param.get('log', 3)) # 0:INFO 1:WARNING 2:ERROR 3:FATAL
 
     # Check Param
     CheckParam(param)
@@ -143,25 +141,22 @@ def Convert(param=None):
 
     param['model_name'] = os.path.basename(model_path)
     caffe_model_path = os.path.splitext(model_path)[0]
-    dump_level = param.get('dump', -1)
 
-    input_tensor = get_input_tensor(param['root_folder'], param)
-
-    if param['file_type'] == 'raw':
-        set_bin_shape(input_tensor, param)
+#    if param['file_type'] == 'raw':
+#        set_bin_shape(input_tensor, param)
 
     if framework == 'pytorch':
         from pytorch2caffe.convert import convert as PytorchConvert
-        PytorchConvert(model_path, input_tensor, caffe_model_path, dump_level, param)
+        PytorchConvert(model_path, caffe_model_path, param)
     elif framework == 'tensorflow':
         from tensorflow2caffe.convert import convert as TensorflowConvert
-        TensorflowConvert(model_path, input_tensor, caffe_model_path, dump_level, param)
+        TensorflowConvert(model_path, caffe_model_path, param)
     elif framework == 'tflite':
         from tflite2caffe.convert import convert as TensorLiteConvert
-        TensorLiteConvert(model_path, input_tensor, caffe_model_path, dump_level, param)
+        TensorLiteConvert(model_path, caffe_model_path, param)
     elif framework == 'onnx':
         from onnx2caffe.convert import convert as OnnxConvert
-        OnnxConvert(model_path, input_tensor, caffe_model_path, dump_level, param)
+        OnnxConvert(model_path, caffe_model_path, param)
     else:
         raise NotImplementedError
 
@@ -172,7 +167,7 @@ def args_():
             help = 'Pytorch/Tensorflow/ONNX/TFLite')
     args.add_argument('-model',         type = str,     required = True,
             help = 'Orginal Model File')
-    args.add_argument('-root_folder',   type = str,     required = True,
+    args.add_argument('-root_folder',   type = str,     required = False,
             help = 'Specify the Data root folder')
     args.add_argument('-source',        type = str,     required = False,
             help = 'Specify the data source')
@@ -190,7 +185,7 @@ def args_():
     args.add_argument('-savetensor',    type = int,     required = False,   choices=[0, 1], default = 0,
             help = 'Save The Input Tensor')
 
-    args.add_argument('-scale',         type = float,   required = False,   nargs='+',      default = [1, 1, 1],
+    args.add_argument('-scale',         type = float,   required = False,   nargs='+',
             help = 'scale value')
     args.add_argument('-mean',          type = float,   required = False,   nargs='+',
             help = 'mean value')

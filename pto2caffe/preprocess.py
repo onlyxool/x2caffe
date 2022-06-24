@@ -39,17 +39,17 @@ def get_one_file(folder_path):
                 return path+'/'+file_name
 
 
-def get_input_tensor(path, param):
-    if os.path.isfile(path):
-        return load_file2tensor(path, param)
-    elif os.path.isdir(path):
-        param['input_file'] = get_one_file(path)
-        return load_file2tensor(param['input_file'], param)
+def get_input_tensor(param, input_shape):
+    root_path = param['root_folder']
+    if root_path is not None and os.path.isfile(root_path):
+        tensor = load_file2tensor(root_path, param)
+    elif root_path is not None and os.path.isdir(root_path):
+        param['input_file'] = get_one_file(root_path)
+        tensor = load_file2tensor(param['input_file'], param)
     else:
-        return None
+        return np.random.random(input_shape).astype(np.float32)
 
-    return tensor
-
+    preprocess(tensor, param)
 
 def mean(tensor, means):
     if len(means) == tensor.shape[0]:

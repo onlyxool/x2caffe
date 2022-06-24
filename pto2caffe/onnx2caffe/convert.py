@@ -1,7 +1,7 @@
 import onnx
 from compare import compare
 from onnx import shape_inference
-from preprocess import preprocess
+from preprocess import get_input_tensor
 from onnx2caffe.model import Model
 
 
@@ -14,7 +14,7 @@ def set_batch_size(onnx_model):
                 dim.dim_value = 1
 
 
-def convert(onnx_file, input_tensor, caffe_model_path, dump_level=-1, param=None):
+def convert(onnx_file, caffe_model_path, param=None):
     onnx_model = onnx.load(onnx_file)
     opset = onnx_model.opset_import[0].version
     set_batch_size(onnx_model)
@@ -39,7 +39,7 @@ def convert(onnx_file, input_tensor, caffe_model_path, dump_level=-1, param=None
     model.convert()
     model.save(caffe_model_path)
 
-    input_tensor = preprocess(input_tensor, param)
+    input_tensor = get_input_tensor(param, model.inputs_shape[0])
 
     if opset >= 7:
         compare('onnx', onnx_model, caffe_model_path, input_tensor, param.get('compare', -1))

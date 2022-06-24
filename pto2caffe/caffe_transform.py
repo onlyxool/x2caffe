@@ -138,33 +138,31 @@ def save_caffe_model(caffe_model_path, layers):
 
 def make_caffe_input_layer(input, input_shape, index, param):
     layer_name = 'input' + str(index)
-    output = input
-    output = [output]
-
-    include = dict()
-    include['phase'] = 1
 
     image_data_param = dict()
     bin_data_param = dict()
     transform_param = dict()
-    shape = dict()
 
-    input_files = np.loadtxt(param['source'], dtype=str).tolist()
-    if isinstance(input_files, list):
-        ext = input_files[0].split('.')[-1].lower()
-    elif isinstance(input_files, str):
-        ext = input_files.split('.')[-1].lower()
+    if param['source']:
+        input_files = np.loadtxt(param['source'], dtype=str).tolist()
+        if isinstance(input_files, list):
+            ext = input_files[0].split('.')[-1].lower()
+        elif isinstance(input_files, str):
+            ext = input_files.split('.')[-1].lower()
 
-    if ext in ['jpg', 'bmp', 'png', 'jpeg']:
-        image_data_param['source'] = param['source']
-        image_data_param['root_folder'] = param['root_folder'] + '/'
-    elif ext == 'bin':
-        bin_data_param['source'] = param['source']
-        bin_data_param['root_folder'] = param['root_folder'] + '/'
-        bin_data_param['data_format'] = dtype_map[param['dtype']]
-        bin_data_param['shape'] = dict(dim=param['source_shape'])
+        if ext in ['jpg', 'bmp', 'png', 'jpeg']:
+            layer_type = 'ImageData'
+            image_data_param['source'] = param['source']
+            image_data_param['root_folder'] = param['root_folder'] + '/'
+        elif ext == 'bin':
+            layer_type = 'Input'
+            bin_data_param['source'] = param['source']
+            bin_data_param['root_folder'] = param['root_folder'] + '/'
+            bin_data_param['data_format'] = dtype_map[param['dtype']]
+            bin_data_param['shape'] = dict(dim=param['source_shape'])
     else:
-        raise NotImplementedError('Do not support file format: '+ ext)
+        ext = None
+        layer_type = 'Input'
 
     if param['color_format'] == 'BGR':
         image_data_param['color_format'] = 0
@@ -193,6 +191,10 @@ def make_caffe_input_layer(input, input_shape, index, param):
         transform_param['crop_w'] = param['crop_w']
 
     if ext in ['jpg', 'bmp', 'png', 'jpeg']:
-        return caffe_layer("ImageData", layer_name, [], [], output, transform_param=transform_param, image_data_param=image_data_param, include=include)
+        return caffe_layer(layer_type, layer_name, [], [], [input], transform_param=transform_param, image_data_param=image_data_param, include=dict(phase=1))
     elif ext == 'bin':
-        return caffe_layer("Input", layer_name, [], [], output, transform_param=transform_param, bin_data_param=bin_data_param, input_param=dict(shape=dict(dim=input_shape)), include=include)
+        return caffe_layer(layer_type, layer_name, [], [], [input], transform_param=transform_param, \
+                bin_data_param=bin_data_param, input_param=dict(shape=dict(dim=input_shape)), include=dict(phase=1))
+    else:
+        return caffe_layer(layer_type, layer_name, [], [], [input], transform_param=transform_param, \
+                input_param=dict(shape=dict(dim=input_shape)), include=dict(phase=1))

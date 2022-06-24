@@ -21,10 +21,10 @@ class Mean(Operator):
 
         # Attributes
         self.pooling_param = dict()
-        self.pooling_param['pool'] = 1 
+        self.pooling_param['pool'] = 1
         self.pooling_param['kernel_h'] = self.inputs_shape[0][2]
         self.pooling_param['kernel_w'] = self.inputs_shape[0][3]
-        self.pooling_param['stride'] = 1 
+        self.pooling_param['stride'] = 1
         self.pooling_param['ceil_mode'] = False
 
         self.attrs = self.pooling_param
