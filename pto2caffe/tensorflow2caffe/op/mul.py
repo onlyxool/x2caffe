@@ -16,13 +16,15 @@ class Mul(Operator):
 
     def parse(self):
         super().__parse__()
-        self.scale_param = dict()
 
         if self.inputs_buf[0] is not None and self.inputs_buf[1] is not None:
             self.model.constant[self.outputs[0]] = self.inputs_buf[0] * self.inputs_buf[1]
         elif self.inputs_shape[0] != self.inputs_shape[1] or self.inputs_buf[1] is not None:
             self.layer_type = 'Scale'
-            self.scale_param = dict()
+
+            if self.inputs_buf[0] is not None or self.inputs_shape[0].count(1) > self.inputs_shape[1].count(1):
+                self.inputs.reverse()
+                self.inputs_shape.reverse()
 
             org_shape = copy.deepcopy(self.inputs_shape[1])
             trim = trim_one(org_shape)
@@ -34,11 +36,13 @@ class Mul(Operator):
                     self.pre = 'Reshape'
 
             axis = compute_scale_axis(self.inputs_shape[0], trim)
+
+            self.scale_param = dict()
+            self.scale_param['bias_term'] = False
             if axis is not None:
                 self.scale_param['axis'] = axis
 
             self.weight = self.inputs_buf[1]
-            self.scale_param['bias_term'] = False
             self.bias = None
 
             self.attrs = self.scale_param
