@@ -4,7 +4,7 @@ from caffe_transform import caffe_layer
 from tensorflow2caffe.op.operator import Operator
 
 
-class Resize(Operator):
+class ResizeNearestNeighbor(Operator):
 
     def __init__(self, model, tf_op, index):
         super().__init__(model, tf_op, index)
@@ -16,8 +16,12 @@ class Resize(Operator):
         super().__parse__()
 
         # Output shape
-        output_h = self.inputs_buf[1][0]
-        output_w = self.inputs_buf[1][1]
+        if any(self.outputs_shape[0]):
+            output_h = self.inputs_buf[1][0]
+            output_w = self.inputs_buf[1][1]
+        else:
+            output_h = self.outputs_shape[0][-2]
+            output_w = self.outputs_shape[0][-1]
 
         # Input Shape
         input_h = self.inputs_shape[0][2]
