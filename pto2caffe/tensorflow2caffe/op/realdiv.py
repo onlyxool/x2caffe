@@ -24,8 +24,12 @@ class RealDiv(Operator):
                 self.inputs_buf.reverse()
 
             self.scale_param = dict()
+
+            if len(self.inputs_shape[1]) > 0:
+                self.scale_param['axis'] = self.inputs_shape[0].index(self.inputs_shape[1][0])
+
+            self.scale_param['num_axes'] = len(self.inputs_shape[1])
             self.scale_param['bias_term'] = False
-            self.scale_param['axis'] = 0
 
             self.weight = 1 / self.inputs_buf[1]
             self.bias = None
