@@ -1,10 +1,8 @@
-import copy
+import numpy as np
 
 from caffe_transform import caffe_layer
 from tensorflow2caffe.op.operator import Operator
 
-from util import trim_one
-from util import compute_scale_axis
 
 class Mul(Operator):
 
@@ -19,31 +17,35 @@ class Mul(Operator):
 
         if self.inputs_buf[0] is not None and self.inputs_buf[1] is not None:
             self.model.constant[self.outputs[0]] = self.inputs_buf[0] * self.inputs_buf[1]
-        elif self.inputs_shape[0] != self.inputs_shape[1] or self.inputs_buf[1] is not None:
+
+        elif (self.inputs_buf[0] is not None or self.inputs_buf[1] is not None) or (self.inputs_shape[0] != self.inputs_shape[1]):
             self.layer_type = 'Scale'
 
-            if self.inputs_buf[0] is not None or self.inputs_shape[0].count(1) > self.inputs_shape[1].count(1):
+            if self.inputs_buf[0] is not None or \
+                (self.inputs_buf == [None, None] and self.inputs_shape[0].count(1) > self.inputs_shape[1].count(1)):
                 self.inputs.reverse()
                 self.inputs_shape.reverse()
+                self.inputs_buf.reverse()
 
-            org_shape = copy.deepcopy(self.inputs_shape[1])
-            trim = trim_one(org_shape)
-            if trim != self.inputs_shape[1]:
-                self.inputs_shape[1] = trim
-                if self.inputs_buf[1] is not None:
-                    self.inputs_buf[1] = self.inputs_buf[1].reshape(tuple(trim))
-                else:
-                    self.pre = 'Reshape'
-
-            axis = compute_scale_axis(self.inputs_shape[0], trim)
-
-            self.scale_param = dict()
-            self.scale_param['bias_term'] = False
-            if axis is not None:
-                self.scale_param['axis'] = axis
-
+            # Weight & Bias
             self.weight = self.inputs_buf[1]
             self.bias = None
+
+            # Weight Shape
+            self.inputs_shape[1] = list(np.squeeze(np.random.random(self.inputs_shape[1])).shape)
+            if self.weight is None:
+                self.pre = 'Reshape'
+            else:
+                self.weight = self.weight.reshape(self.inputs_shape[1])
+
+            # Attribute
+            self.scale_param = dict()
+
+            if len(self.inputs_shape[1]) > 0:
+                self.scale_param['axis'] = self.inputs_shape[0].index(self.inputs_shape[1][0])
+
+            self.scale_param['num_axes'] = len(self.inputs_shape[1])
+            self.scale_param['bias_term'] = False
 
             self.attrs = self.scale_param
             self.setParsed()
