@@ -15,6 +15,10 @@ class Max(Operator):
         self.layer_type = 'Pooling'
         super().__parse__()
 
+        reduction_indices = self.inputs_buf[1]
+        if reduction_indices is not None:
+            raise NotImplementedError
+
         # Attribute
         self.pooling_param = dict()
         self.pooling_param['pool'] = 0
