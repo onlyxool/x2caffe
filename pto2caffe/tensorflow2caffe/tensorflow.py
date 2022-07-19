@@ -1,6 +1,7 @@
 import os
 import tensorflow as tf
 from tensorflow import keras
+from util import get_layout
 
 
 def wrap_frozen_graph(graph_def, inputs, outputs, print_graph=False):
@@ -27,7 +28,19 @@ def get_output_frozenmodel(model, input_tensor, blob_name):
 
     output = frozen_func(tf.constant(list(input_tensor)))
 
-    return output[0].numpy().transpose(0, 3, 1, 2) if len(output[0].numpy().shape) == 4 else output[0].numpy()
+    output_tensor = output[0].numpy()
+    if model.layout == 'NHWC':
+        if len(output_tensor.shape) == 4:
+            return output_tensor.transpose(0, 3, 1, 2)
+        elif len(output_tensor.shape) == 3:
+            if get_layout(output_tensor.shape) == 'HWC':
+                return output_tensor.transpose(2, 0, 1)
+            elif get_layout(output_tensor.shape) == 'NHW':
+                return output_tensor
+        else:
+            return output_tensor
+    elif model.layout == 'NCHW':
+        return output_tensor
 
 
 def get_output_savedmodel(model, input_tensor, blob_name):
