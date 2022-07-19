@@ -22,7 +22,7 @@ class Mul(Operator):
             self.layer_type = 'Scale'
 
             if self.inputs_buf[0] is not None or \
-                (self.inputs_buf == [None, None] and self.inputs_shape[0].count(1) > self.inputs_shape[1].count(1)):
+                (self.inputs_buf[0] is None and self.inputs_buf[1] is None and self.inputs_shape[0].count(1) > self.inputs_shape[1].count(1)):
                 self.inputs.reverse()
                 self.inputs_shape.reverse()
                 self.inputs_buf.reverse()
@@ -43,6 +43,8 @@ class Mul(Operator):
 
             if len(self.inputs_shape[1]) > 0:
                 self.scale_param['axis'] = self.inputs_shape[0].index(self.inputs_shape[1][0])
+            else:
+                self.scale_param['axis'] = 0
 
             self.scale_param['num_axes'] = len(self.inputs_shape[1])
             self.scale_param['bias_term'] = False
