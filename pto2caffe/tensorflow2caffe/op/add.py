@@ -7,7 +7,7 @@ class Add(Operator):
 
     def __init__(self, model, tf_op, index):
         super().__init__(model, tf_op, index)
-        assert(self.operator_code in ('Add', 'AddV2'))
+        assert(self.operator_code in ('Add', 'AddV2', 'AddN'))
         self.setInited()
 
 
@@ -20,6 +20,9 @@ class Add(Operator):
             self.eltwise_param['operation'] = 1
 
             self.attrs = self.eltwise_param
+            self.setParsed()
+        elif self.inputs_buf[0] is not None and self.inputs_buf[1] is not None:
+            self.model.constant[self.outputs[0]] = self.inputs_buf[0] + self.inputs_buf[1]
         else:
             self.layer_type = 'Scale'
 
@@ -38,18 +41,18 @@ class Add(Operator):
 
             # Attributes
             self.scale_param = dict()
-            self.scale_param['bias_term'] = True
+            self.scale_param['axis'] = 0
 
-            # Axis
             if self.bias.shape != () and self.bias.shape != []:
-                self.scale_param['axis'] = self.inputs_shape[input_index].index(self.bias.shape[0])
                 self.scale_param['num_axes'] = len(self.bias.shape)
             else:
                 self.scale_param['num_axes'] = 0
 
+            self.scale_param['bias_term'] = True
+
             self.attrs = self.scale_param
 
-        self.setParsed()
+            self.setParsed()
 
 
     def convert(self):
