@@ -19,7 +19,10 @@ class Concat(Operator):
 
         for index, input in enumerate(self.inputs):
             if input.lower().find('axis') != -1:
-                self.concat_param['axis'] = dim_map_nhwc2nchw[self.inputs_buf[index]]
+                if self.layout == 'NHWC' and self.outputs_shape[0] != self.op.outputs[0].shape.as_list():
+                    self.concat_param['axis'] = dim_map_nhwc2nchw[self.inputs_buf[index]]
+                else:
+                    self.concat_param['axis'] = int(self.inputs_buf[index])
 
         self.attrs = self.concat_param
 
