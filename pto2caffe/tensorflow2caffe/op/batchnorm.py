@@ -30,11 +30,6 @@ class BatchNorm(Operator):
             self.mean = self.inputs_buf[3]
             self.var = self.inputs_buf[4]
 
-
-        # FusedBatchNorm
-        if len(self.outputs) > 1:
-            self.outputs = self.outputs[0:1]
-
         # Attribute
         self.batch_norm_param = dict()
         self.batch_norm_param['eps'] = self.attrs.get('epsilon', 1e-5)
@@ -49,8 +44,8 @@ class BatchNorm(Operator):
 
 
     def convert(self):
-        layer0 = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.mean, self.var, batch_norm_param=self.batch_norm_param)
-        layer1 = caffe_layer('Scale', 'Scale'+str(self.index), self.outputs, self.inputs_buf, self.outputs, self.weight, self.bias, scale_param=self.scale_param)
+        layer0 = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs[0:1], self.mean, self.var, batch_norm_param=self.batch_norm_param)
+        layer1 = caffe_layer('Scale', 'Scale'+str(self.index), self.outputs[0:1], [None, self.weight, self.bias], self.outputs[0:1], self.weight, self.bias, scale_param=self.scale_param)
 
         self.setConverted()
 
