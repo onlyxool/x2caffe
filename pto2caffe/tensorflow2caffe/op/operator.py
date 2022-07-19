@@ -52,21 +52,42 @@ class Operator(Base):
         return '\n%s\n%s    %s -> %s' % (self.shorty, self.attrs2str, inames, onames)
 
 
+    def debug(self):
+        print('\nOp:', self.name, self.op.name, self.operator_code)
+
+        print('Input:')
+        for op_input in self.op.inputs:
+            print('    ', op_input)
+            print('     Buf', self.model.constant.get(self.model.indentity.get(op_input.name, op_input.name), None))
+
+        print('Output:')
+        for op_output in self.op.outputs:
+            print('    ', op_output)
+
+        print('Attrs:', self.attrs, end='\n\n')
+
+
     def ndim(self, dim):
         return self.layout.find(dim)
 
 
     def __parseInput__(self):
-        for i in range(len(self.op.inputs)):
-            self.inputs.append(self.model.indentity.get(self.op.inputs[i].name, self.op.inputs[i].name))
-            self.inputs_shape.append(shape_map_nhwc2nchw(self.op.inputs[i].shape))
-            self.inputs_buf.append(self.model.constant.get(self.inputs[i], None))
+        for index, op_input in enumerate(self.op.inputs):
+            self.inputs.append(self.model.indentity.get(op_input.name, op_input.name))
+            self.inputs_buf.append(self.model.constant.get(self.inputs[index], None))
+            if op_input.shape.is_fully_defined():
+                self.inputs_shape.append(shape_map_nhwc2nchw(op_input.shape.as_list()) if self.layout == 'NHWC' else op_input.shape.as_list())
+            else:
+                self.inputs_shape.append(None)
 
 
     def __parseOutput__(self):
-        for i in range(len(self.op.outputs)):
-            self.outputs.append(self.op.outputs[i].name)
-            self.outputs_shape.append(shape_map_nhwc2nchw(self.op.outputs[i].shape))
+        for index, op_output in enumerate(self.op.outputs):
+            self.outputs.append(op_output.name)
+            if op_output.shape.is_fully_defined():
+                self.outputs_shape.append(shape_map_nhwc2nchw(op_output.shape.as_list()) if self.layout == 'NHWC' else op_output.shape.as_list())
+            else:
+                self.outputs_shape.append(None)
 
 
     def __convertAttributeProto__(self, attr, name):
@@ -95,10 +116,10 @@ class Operator(Base):
     def __parseAttributes__(self):
         for op_attr in self.op.op_def.attr:
             self.attrs[op_attr.name] = self.__convertAttributeProto__(self.op.node_def.attr, op_attr.name)
-        self.layout = self.attrs.get('data_format', 'NHWC')
+        self.layout = self.attrs.get('data_format', self.model.layout)
 
 
     def __parse__(self):
+        self.__parseAttributes__()
         self.__parseInput__()
         self.__parseOutput__()
-        self.__parseAttributes__()
