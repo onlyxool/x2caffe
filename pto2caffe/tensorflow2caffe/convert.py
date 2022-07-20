@@ -4,13 +4,10 @@ from tensorflow.python.util import compat
 from tensorflow.python.platform import gfile
 from tensorflow.core.protobuf import saved_model_pb2
 from tensorflow.core.framework import graph_pb2
-
-from tensorflow.python.framework import graph_util
 from tensorflow.python.framework.convert_to_constants import convert_variables_to_constants_v2
-from tensorflow.compat.v1.graph_util import extract_sub_graph
 
 from compare import compare
-from preprocess import preprocess
+from preprocess import get_input_tensor
 from tensorflow2caffe.model import Model
 
 
@@ -45,13 +42,9 @@ def tf_optimize_grappler(input_names, output_names, graph_def):
     # TODO: if we turn on pruning, grappler removes some identities that the tf-1.x lstm rewriter
     # depends on so for now don't turn this on, constfold is always enabled now.
     rewrite_options.optimizers[:] = [
-        # 'pruning', 'constfold', 'arithmetic', 'dependency', 'function',
-        'constfold', 'function'
+         'pruning', 'constfold', 'arithmetic', 'dependency', 'function'
+#        'constfold', 'function'
     ]
-
-#if LooseVersion(tf.__version__) >= "2.5":
-    # This flag disables folding QDQ nodes around constants in the network (eg: around conv/FC weights)
-    rewrite_options.experimental_disable_folding_quantization_emulation = True
 
     meta_graph = tf.compat.v1.train.export_meta_graph(graph_def=graph_def)
     fetch_collection = meta_graph_pb2.CollectionDef()
@@ -66,11 +59,6 @@ def tf_optimize(input_names, output_names, graph_def):
     """Extract inference subgraph and optimize graph."""
     assert isinstance(input_names, list)
     assert isinstance(output_names, list)
-
-    # TODO: is this needed ?
-    needed_names = [node_name(i) for i in input_names] + \
-                   [node_name(i) for i in output_names]
-    graph_def = extract_sub_graph(graph_def, needed_names)
 
     graph_def = tf_optimize_grappler(input_names, output_names, graph_def)
 
@@ -88,15 +76,41 @@ def search_io(graph_def): #TODO: search all outputs
     return inputs, outputs
 
 
-def convert(pb_file, input_tensor, caffe_model_path, dump_level=-1, param=None):
+def shape_inference(graph, inputs_name, param):
+    if param['input_shape'] is not None:
+        for input_name in inputs_name:
+            graph.get_tensor_by_name(input_name).set_shape(param['input_shape'])
+
+        with tf.Graph().as_default() as inferred_graph:
+            tf.import_graph_def(graph.as_graph_def(add_shapes=True), name="")
+
+        return inferred_graph.as_graph_def(add_shapes=True)
+    else:
+        return graph.as_graph_def(add_shapes=False)
+
+
+def is_function(g):
+    return 'tensorflow.python.framework.func_graph.FuncGraph' in str(type(g))
+
+def convert(pb_file, caffe_model_path, param=None):
     if os.path.basename(pb_file) == 'saved_model.pb':
         # SavedModel
         modelpath = pb_file.split(os.path.basename(pb_file))[0]
-        imported = tf.saved_model.load(modelpath, tags=None)
+
+        with tf.io.gfile.GFile(pb_file, 'rb') as f:
+            saved_model = saved_model_pb2.SavedModel()
+            saved_model.ParseFromString(compat.as_bytes(f.read()))
+            meta_graphs = saved_model.meta_graphs
+
+        if len(meta_graphs) > 1:
+            tags = meta_graphs[0].meta_info_def.tags[0]
+        else:
+            tags = None
+
+        imported = tf.saved_model.load(modelpath, tags=tags)
 
         all_sigs = imported.signatures.keys()
         valid_sigs = [s for s in all_sigs if not s.startswith("_")]
-
         concrete_func = imported.signatures[valid_sigs[0]]
 
         inputs = [tensor.name for tensor in concrete_func.inputs if tensor.dtype != tf.dtypes.resource]
@@ -118,11 +132,18 @@ def convert(pb_file, input_tensor, caffe_model_path, dump_level=-1, param=None):
             inputs, outputs = search_io(graph_def)
 
     # Tensorflow Graph Optimize
-    with tf.Graph().as_default() as tf_graph:
-        with tf.compat.v1.Session(graph=tf_graph) as sess:
+    with tf.Graph().as_default() as graph:
+        with tf.compat.v1.Session(graph=graph) as sess:
             tf.import_graph_def(graph_def, name='')
-            inputs = inputs_without_resource(sess, inputs)
+            for index, input_name in enumerate(inputs):
+                if input_name.find(':') == -1:
+                    inputs[index] = input_name+':0'
+
             graph_def = tf_optimize(inputs, outputs, graph_def)
+
+            # Shape Inference
+#if str(type(graph)) in 'tensorflow.python.framework.func_graph.FuncGraph':
+            graph_def = shape_inference(graph, inputs, param)
 
 
     model = Model(frozen_func, graph_def, param)
@@ -130,6 +151,6 @@ def convert(pb_file, input_tensor, caffe_model_path, dump_level=-1, param=None):
     model.convert()
     model.save(caffe_model_path)
 
-    input_tensor = preprocess(input_tensor, param)
+    input_tensor = get_input_tensor(param, model.inputs_shape[0])
 
     compare('tensorflow', model, caffe_model_path, input_tensor, param.get('compare', -1))
