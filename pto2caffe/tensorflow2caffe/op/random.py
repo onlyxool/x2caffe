@@ -18,7 +18,9 @@ class Random(Operator):
             if self.attrs['seed'] == 0 and self.attrs['seed2'] == 0 and self.attrs['dtype'] == 1:
                 self.model.constant[self.outputs[0]] = np.random.normal(loc=0, scale=1, size=list(self.inputs_buf[0]))
             else:
-                raise NotImplementedError
+                import sys
+                errorMsg = 'Error: Operator [ RandomStandardNormal ] does not Support (seed =' + self.attrs['seed'] + ' or seed2 = ' + self.attrs['seed2'] + ').\n'
+                sys.exit(errorMsg)
         else:
             raise NotImplementedError
 
