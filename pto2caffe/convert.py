@@ -1,10 +1,7 @@
 import os
 import sys
 import argparse
-
-
-def set_bin_shape(source_tensor, param):
-    param['source_shape'] = [1] + list(source_tensor.shape)
+from util import numpy_dtype
 
 
 def isContainFile(path, ext_list):
@@ -54,6 +51,7 @@ def make_source_list(data_path, errorMsg):
 def CheckParam(param):
     # platform
     errorMsg = '\nArgument Check Failed: '
+
     param['platform'] = param['platform'].lower()
     if param['platform'] not in ['tensorflow', 'pytorch', 'tflite', 'onnx']:
         errorMsg = errorMsg + 'argument -platform: invalid choice: ' + param['platform'] + ' (choose from TensorFlow, Pytorch, TFLite, ONNX)'
@@ -86,12 +84,9 @@ def CheckParam(param):
         else:
             param['source'] = make_source_list(param['root_folder'], errorMsg)
 
-        # bin_shape & dtype
+        # bin_shape
         if isContainFile(param['root_folder'], ['bin']):
             param['file_type'] = 'raw'
-            if param['dtype'] is None:
-                errorMsg = errorMsg + 'argument dtype can\'t be None'
-                sys.exit(errorMsg)
             if param['bin_shape'] is None:
                 errorMsg = errorMsg + 'argument bin_shape can\'t be None'
                 sys.exit(errorMsg)
@@ -103,6 +98,13 @@ def CheckParam(param):
         else:
             errorMsg = errorMsg + 'Can\'t find any data file or image file in ' + param['root_folder']
             sys.exit(errorMsg)
+
+    # dtype
+    if param['dtype'] is None:
+        errorMsg = errorMsg + 'argument dtype can\'t be None'
+        sys.exit(errorMsg)
+    else:
+        param['dtype'] = numpy_dtype[param['dtype']]
 
     # BGR -> RGB
     if param['color_format'] == 'BGR':
@@ -130,7 +132,7 @@ def CheckParam(param):
 def Convert(param=None):
     # Set Log level
     os.environ['GLOG_minloglevel'] = str(param.get('log', 2)) # 0:DEBUG 1:INFO 2:WARNING 3:ERROR
-    os.environ["TF_CPP_MIN_LOG_LEVEL"] = str(param.get('log', 3)) # 0:INFO 1:WARNING 2:ERROR 3:FATAL
+    os.environ["TF_CPP_MIN_LOG_LEVEL"] = str(param.get('log', 2)) # 0:INFO 1:WARNING 2:ERROR 3:FATAL
 
     # Check Param
     CheckParam(param)
@@ -141,9 +143,6 @@ def Convert(param=None):
 
     param['model_name'] = os.path.basename(model_path)
     caffe_model_path = os.path.splitext(model_path)[0]
-
-#    if param['file_type'] == 'raw':
-#        set_bin_shape(input_tensor, param)
 
     if framework == 'pytorch':
         from pytorch2caffe.convert import convert as PytorchConvert
@@ -171,7 +170,7 @@ def args_():
             help = 'Specify the Data root folder')
     args.add_argument('-source',        type = str,     required = False,
             help = 'Specify the data source')
-    args.add_argument('-dtype',         type = str,     required = False,   choices=['u8', 's16', 'f32'],   default='u8',
+    args.add_argument('-dtype',         type = str,     required = False,   choices=['u8', 's16', 's32', 'f32'],   default='u8',
             help = 'Specify the Data type, 0:u8 1:s16 2:f32')
     args.add_argument('-bin_shape',     type = int,     required = False,   nargs='+',
             help = 'Specify the Data shape when input data is bin file, default layout is [C,H,W]')
@@ -203,8 +202,8 @@ def args_():
             help = 'Compare network output, 0:Compare latest layer 1:Compare every layer')
     args.add_argument('-log',           type = int,     required = False,   default=2,      choices=[0, 1, 2],
             help = 'log print level, 0:Debug 1:Info 2:Warning, 3:ERROR')
-    args.add_argument('-simplifier',    type = int,     required = False,   default=0,      choices=[0, 1],
-            help = 'simplify onnx model by onnx-simplifier')
+    args.add_argument('-optimizify',    type = int,     required = False,   default=0,      choices=[0, 1, 2, 3, 4, 5],
+            help = 'optimizify model')
     args.add_argument('-streamlit',     type = int,     required = False,   default=0,      choices=[0, 1],
             help = 'Web Interface Flag')
     args = args.parse_args()
@@ -223,5 +222,5 @@ def main():
     print('Conversion Done.\n')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     sys.exit(main())
