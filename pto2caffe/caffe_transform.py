@@ -159,7 +159,7 @@ def make_caffe_input_layer(input, input_shape, index, param):
             bin_data_param['source'] = param['source']
             bin_data_param['root_folder'] = param['root_folder'] + '/'
             bin_data_param['data_format'] = dtype_map[param['dtype']]
-            bin_data_param['shape'] = dict(dim=param['source_shape'])
+            bin_data_param['shape'] = dict(dim=param['bin_shape'])
     else:
         ext = None
         layer_type = 'Input'
