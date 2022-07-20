@@ -86,7 +86,7 @@ def compare(platform, target_model, caffe_model_path, input_tensor, level=-1):
     elif platform == 'onnx':
         from onnx2caffe.onnx import get_output
     elif platform == 'tensorflow':
-        input_tensor = input_tensor.transpose(0, 2, 3, 1)
+        input_tensor = input_tensor.transpose(0, 2, 3, 1) if len(target_model.inputs_shape[0]) == 4 else input_tensor
         from tensorflow2caffe.tensorflow import get_output_frozenmodel as get_output
     elif platform == 'pytorch':
         from pytorch2caffe.pytorch import get_output
