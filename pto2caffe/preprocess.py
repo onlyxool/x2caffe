@@ -4,23 +4,16 @@ import cv2
 import numpy as np
 
 
-numpy_dtype = { 
-    'u8': np.uint8,
-    's8': np.int8,
-    's16': np.int16,
-    'f32': np.float32
-}
-
-
 def load_file2tensor(path, param):
     '''
     Load image or raw data as tensor[C, H, W]
     '''
     ext = os.path.basename(path).split('.')[-1].lower()
     if ext in ['bin']:
-        tensor = np.fromfile(path, numpy_dtype[param['dtype']])
+        tensor = np.fromfile(path, param['dtype'])
         tensor = np.array(tensor, dtype=np.float32)
         tensor = np.reshape(tensor , param['bin_shape'])
+        param['source_shape'] = [1] + list(tensor.shape)
     elif ext in ['jpg', 'bmp', 'png', 'jpeg']:
         tensor = cv2.imread(path).transpose(2, 0, 1).astype(np.float32) # HWC->CHW
         assert(tensor is not None), 'Error: Input file is None  ' + path
@@ -40,16 +33,16 @@ def get_one_file(folder_path):
 
 
 def get_input_tensor(param, input_shape):
-    root_path = param['root_folder']
+    root_path = param.get('root_folder', None)
     if root_path is not None and os.path.isfile(root_path):
         tensor = load_file2tensor(root_path, param)
     elif root_path is not None and os.path.isdir(root_path):
         param['input_file'] = get_one_file(root_path)
         tensor = load_file2tensor(param['input_file'], param)
     else:
-        return np.random.random(input_shape).astype(np.float32)
+        return np.random.random(input_shape).astype(param['dtype'])
 
-    preprocess(tensor, param)
+    return preprocess(tensor, param)
 
 def mean(tensor, means):
     if len(means) == tensor.shape[0]:
