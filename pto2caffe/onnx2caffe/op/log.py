@@ -15,7 +15,7 @@ class Log(Operator):
         super().__parse__()
 
         # Attributes
-        # Leave all arguments in ExpParameter as default
+        # Leave all arguments in LogParameter as default
         # base = -1.0 (base = e)
         # scale = 1.0
         # shift = 0.0

@@ -64,4 +64,3 @@ class Slice(Operator):
         self.setConverted()
 
         return [layer]
-

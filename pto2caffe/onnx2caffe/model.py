@@ -42,6 +42,7 @@ from onnx2caffe.op.batchnorm import BatchNorm
 from onnx2caffe.op.convtranspose import Deconvolution
 from onnx2caffe.op.instancenormalization import InstanceNormalization
 
+from onnx2caffe.op.debug import Debug
 
 from onnx2caffe.op.mish import Mish
 
@@ -71,7 +72,6 @@ OpMap = {
     'Slice': Slice,
     'Split': Split,
     'MatMul': MatMul,
-#    'Expand': Expand,
     'Concat': Concat,
     'Resize': Resize,
     'LeakyRelu': ReLU,
@@ -97,6 +97,9 @@ OpMap = {
     'InstanceNormalization': InstanceNormalization,
     'Upsample': Upsample, #Deprecated
     'Mish': Mish, # Yolov4
+
+#    'Expand': Debug,
+#    'ConstantOfShape': Debug,
 }
 
 
