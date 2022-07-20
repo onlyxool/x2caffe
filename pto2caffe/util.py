@@ -6,63 +6,63 @@ import tensorflow as tf
 dim_map_nhwc2nchw = [0, 2, 3, 1]
 
 
-trans_dtype = {
+numpy_dtype = {
     'u8': np.uint8,
     's8': np.int8,
     's16': np.int16,
+    's32': np.int32,
     'f32': np.float32
 }
 
-
 dtype_map = {
-    'u8': 0,
-    's16': 1,
-    'f32': 2
+    np.uint8: 0,
+    np.int16: 1,
+    np.float32: 2
 }
 
 
-def transpose(tensor):
-    if len(tensor.shape) == 4:
-        return tensor.transpose(3, 0, 1, 2)
+def get_layout(shape):
+    if not isinstance(shape, list) and not isinstance(shape, tuple):
+        raise NotImplementedError
+
+    diff = np.abs(np.ediff1d(np.array(shape)))
+    idx = diff.argmin()
+
+    if len(shape) == 4:
+        if idx == 1:
+            return 'NHWC'
+        elif idx == 2:
+            return 'NCHW'
+        else:
+            return None
+    elif len(shape) == 3:
+        return 'HWX' if idx == 0 and diff.min() < np.array(shape).min() else 'XHW'
     else:
-        return tensor
-
-
-def np_nhwc2nchw(array):
-    if len(array.shape) == 4:
-        return array.transpose(3, 0, 1, 2)
-    else:
-        return array
-
-
-def checkBatchNum(shape:list):
-    if len(shape) > 0 and (shape[0] == 0 or shape[0] == None or shape[0] == -1):
-        shape[0] = 1
-    return shape
+        return None
 
 
 def shape_map_nhwc2nchw(shape):
-    if isinstance(shape, np.ndarray) or isinstance(shape, list): #TFLite
-        if len(shape) == 4:
-            return [shape[0], shape[3], shape[1], shape[2]]
-        elif len(shape) <= 3 and len(shape) >= 0:
-            return list(shape)
-        else:
-            print(shape, shape.size, len(shape))
-            raise NotImplementedError(shape)
-    elif isinstance(shape, tf.TensorShape): # Tensorflow GraphDef
-        if shape.rank == None:
-            return None
-        elif shape.rank == 4:
-            shape_list = shape.as_list()
-            return checkBatchNum([shape_list[0], shape_list[3], shape_list[1], shape_list[2]])
-        elif shape.rank >= 0 and shape.rank <= 3:
-            return checkBatchNum(shape.as_list())
-        else:
-            print('Shape Error:', shape)
-            raise NotImplementedError
+    if not isinstance(shape, list) and not isinstance(shape, tuple):
+        raise NotImplementedError
+
+    if len(shape) == 4:
+        return [shape[0], shape[3], shape[1], shape[2]]
+    elif len(shape) == 3:
+        return [shape[2], shape[0], shape[1]] if get_layout(shape) == 'HWX' else shape
     else:
-        return [shape]
+        return shape
+
+
+def shape_map_nchw2nhwc(shape):
+    if not isinstance(shape, list) and not isinstance(shape, tuple):
+        raise NotImplementedError
+
+    if len(shape) == 4:
+        return [shape[0], shape[2], shape[3], shape[1]]
+    elif len(shape) == 3:
+        return [shape[1], shape[2], shape[0]] if get_layout(shape) == 'XHW' else shape
+    else:
+        return shape
 
 
 # Padding
@@ -150,19 +150,19 @@ def getLegacyAttrs(operator, legacy_type):
 
 # Scale Axis
 def trim_one(scale_shape):
-    if scale_shape == [] or scale_shape is None:
+    if len(scale_shape) <= 1 or scale_shape is None:
         return scale_shape
 
     # Remove 1 from head
     while True:
-        if scale_shape[0] == 1:
+        if len(scale_shape) > 1 and scale_shape[0] == 1:
             scale_shape.remove(1)
         else:
             break
 
     # Remove 1 from tail
     while True:
-        if scale_shape[-1] == 1:
+        if len(scale_shape) > 1 and scale_shape[-1] == 1:
             scale_shape.pop()
         else:
             break
