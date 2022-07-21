@@ -22,7 +22,7 @@ class Softplus(Operator):
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, softplus_param=self.softplus_param)
+        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs)
 
         self.setConverted()
 
