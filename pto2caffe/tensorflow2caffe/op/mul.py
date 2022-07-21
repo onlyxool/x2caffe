@@ -22,7 +22,8 @@ class Mul(Operator):
             self.layer_type = 'Scale'
 
             if self.inputs_buf[0] is not None or \
-                (self.inputs_buf[0] is None and self.inputs_buf[1] is None and self.inputs_shape[0].count(1) > self.inputs_shape[1].count(1)):
+                (self.inputs_buf[0] is None and self.inputs_buf[1] is None and self.inputs_shape[0].count(1) > self.inputs_shape[1].count(1) and \
+                len(self.inputs_shape[0]) <= len(self.inputs_shape[1])):
                 self.inputs.reverse()
                 self.inputs_shape.reverse()
                 self.inputs_buf.reverse()
