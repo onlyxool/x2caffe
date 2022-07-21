@@ -41,12 +41,8 @@ class Add(Operator):
 
             # Attributes
             self.scale_param = dict()
-            self.scale_param['axis'] = 0
-
-            if self.bias.shape != () and self.bias.shape != []:
-                self.scale_param['num_axes'] = len(self.bias.shape)
-            else:
-                self.scale_param['num_axes'] = 0
+            self.scale_param['axis'] = self.inputs_shape[0].index(self.inputs_shape[1][0])
+            self.scale_param['num_axes'] = len(self.weight.shape)
 
             self.scale_param['bias_term'] = True
 
