@@ -37,6 +37,8 @@ def get_output_frozenmodel(model, input_tensor, blob_name):
                 return output_tensor.transpose(2, 0, 1)
             elif get_layout(output_tensor.shape) == 'NHW':
                 return output_tensor
+            else:
+                return output_tensor
         else:
             return output_tensor
     elif model.layout == 'NCHW':
