@@ -16,9 +16,7 @@ class Split(Operator):
         super().__parse__()
 
         if self.attrs['num_split'] == 1:
-            self.layer_type = 'Reshape'
-            self.reshape_param = dict(shape=dict(dim=self.outputs_shape[0]))
-            self.attrs = self.reshape_param
+            self.model.indentity[self.op.outputs[0].name] = self.model.indentity.get(self.op.inputs[1].name, self.op.inputs[1].name)
         else:
             self.layer_type = 'Slice'
 
@@ -32,7 +30,7 @@ class Split(Operator):
 
             self.attrs = self.slice_param
 
-        self.setParsed()
+            self.setParsed()
 
 
     def convert(self):
