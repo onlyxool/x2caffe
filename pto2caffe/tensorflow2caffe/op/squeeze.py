@@ -14,19 +14,20 @@ class Squeeze(Operator):
         self.layer_type = 'Reshape'
         super().__parse__()
 
-#        self.outputs_shape[0] = list(np.delete(np.array(self.op.inputs[0].shape), self.attrs['squeeze_dims']))
-
-        if None not in self.outputs_shape[0]:
-            self.reshape_param = dict(shape=dict(dim=self.outputs_shape[0]))
-        elif self.inputs_buf[0] is not None:
-            self.reshape_param = dict(shape=dict(dim=list(self.inputs_buf[0])))
+        if self.op.inputs[0].shape == self.op.outputs[0].shape:
+            self.model.indentity[self.op.outputs[0].name] = self.model.indentity.get(self.op.inputs[0].name, self.op.inputs[0].name)
         else:
-            import sys
-            sys.exit('Error: Dynamic Model input detected, Please Use -inputs_shape overwirte input shape.')
+            if None not in self.outputs_shape[0]:
+                self.reshape_param = dict(shape=dict(dim=self.outputs_shape[0]))
+            elif self.inputs_buf[0] is not None:
+                self.reshape_param = dict(shape=dict(dim=list(self.inputs_buf[0])))
+            else:
+                import sys
+                sys.exit('Error: Dynamic Model input detected, Please Use -inputs_shape overwirte input shape.')
 
-        self.attrs = self.reshape_param
+            self.attrs = self.reshape_param
 
-        self.setParsed()
+            self.setParsed()
 
 
     def convert(self):
