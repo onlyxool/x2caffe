@@ -21,35 +21,46 @@ class Unpack(Operator):
             for index, output in enumerate(self.outputs):
                 self.model.constant[self.outputs[index]] = np.squeeze(outputs_buf[index], axis=self.attrs['axis'])
         else:
-            self.layer_type = 'Slice'
-
-            # Attribute axis
-            self.slice_param = dict()
-            if len(self.inputs_shape) == 4:
-                self.slice_param['axis'] = dim_map_nhwc2nchw[self.op.inputs[0].shape.as_list().index(self.attrs['num'])]
+            if self.attrs['num'] == 1:
+                self.layer_type = 'Reshape'
+                self.reshape_param = dict(shape=dict(dim=self.outputs_shape[0]))
+                self.attrs = self.reshape_param
+                self.setParsed()
             else:
-                self.slice_param['axis'] = self.op.inputs[0].shape.as_list().index(self.attrs['num'])
+                self.layer_type = 'Slice'
 
-            # Attribute slice_point
-            slice_points = np.arange(start=1, stop=self.attrs['num'], step=1, dtype = np.int32).tolist()
-            self.slice_param['slice_point'] = slice_points
+                # Attribute axis
+                self.slice_param = dict()
+                if len(self.inputs_shape) == 4:
+                    self.slice_param['axis'] = dim_map_nhwc2nchw[self.op.inputs[0].shape.as_list().index(self.attrs['num'])]
+                else:
+                    self.slice_param['axis'] = self.op.inputs[0].shape.as_list().index(self.attrs['num'])
 
-            self.attrs = self.slice_param
+                # Attribute slice_point
+                slice_points = np.arange(start=1, stop=self.attrs['num'], step=1, dtype = np.int32).tolist()
+                self.slice_param['slice_point'] = slice_points
 
-            self.reshapes = list()
-            for index, output in enumerate(self.outputs):
-                self.reshapes.append('Unpack_' + self.op.name + '_split' + str(index))
 
-            self.reshape_param = dict(shape=dict(dim=self.outputs_shape[0]))
+                # Append Extra Reshape Layer
+                self.reshapes = list()
+                for index, output in enumerate(self.outputs):
+                    self.reshapes.append('Unpack_' + self.op.name + '_split' + str(index))
 
-            self.setParsed()
+                self.reshape_param = dict(shape=dict(dim=self.outputs_shape[0]))
+
+                self.attrs = self.slice_param
+
+                self.setParsed()
 
 
     def convert(self):
         layers = list()
-        layers.append(caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.reshapes, slice_param=self.slice_param))
-        for index, reshape_name in enumerate(self.reshapes):
-            layers.append(caffe_layer('Reshape', reshape_name, [reshape_name], [None], [self.outputs[index]], reshape_param=self.reshape_param))
+        if self.type == 'Slice':
+            layers.append(caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.reshapes, slice_param=self.slice_param))
+            for index, reshape_name in enumerate(self.reshapes):
+                layers.append(caffe_layer('Reshape', reshape_name, [reshape_name], [None], [self.outputs[index]], reshape_param=self.reshape_param))
+        elif self.type == 'Reshape':
+            layers.append(caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, reshape_param=self.reshape_param))
 
         self.setConverted()
 
