@@ -1,5 +1,8 @@
+import numpy as np
+
 from caffe_transform import caffe_layer
 from tensorflow2caffe.op.operator import Operator
+
 from util import dim_map_nhwc2nchw
 
 
@@ -12,20 +15,31 @@ class Pack(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Concat'
         super().__parse__()
 
-        self.reshapes = list()
-        for index, input in enumerate(self.inputs):
-            self.reshapes.append('Pack_' + self.op.name + '_split' + str(index))
-        self.reshape_param = dict(shape=dict(dim=[1]+self.inputs_shape[index]))
+        for index, buf in enumerate(self.inputs_buf):
+            if self.inputs_buf[index] is not None:
+                constant = True
+            else:
+                constant = False
+                break
 
-        self.concat_param = dict()
-        self.concat_param['axis'] = dim_map_nhwc2nchw[self.attrs['axis']]
+        if constant:
+            self.model.constant[self.outputs[0]] = np.stack(self.inputs_buf)
+        else:
+            self.layer_type = 'Concat'
 
-        self.attrs = self.concat_param
+            self.reshapes = list()
+            for index, input in enumerate(self.inputs):
+                self.reshapes.append('Pack_' + self.op.name + '_split' + str(index))
+            self.reshape_param = dict(shape=dict(dim=[1]+self.inputs_shape[index]))
 
-        self.setParsed()
+            self.concat_param = dict()
+            self.concat_param['axis'] = dim_map_nhwc2nchw[self.attrs['axis']]
+
+            self.attrs = self.concat_param
+
+            self.setParsed()
 
 
     def convert(self):
