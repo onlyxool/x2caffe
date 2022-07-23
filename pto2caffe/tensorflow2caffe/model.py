@@ -13,17 +13,21 @@ from tensorflow2caffe.op.neg import Neg
 from tensorflow2caffe.op.pad import Pad
 from tensorflow2caffe.op.sub import Sub
 from tensorflow2caffe.op.exp import Exp
+from tensorflow2caffe.op.fill import Fill
 from tensorflow2caffe.op.mean import Mean
 from tensorflow2caffe.op.pack import Pack
 from tensorflow2caffe.op.pool import Pool
 from tensorflow2caffe.op.relu import ReLU
 from tensorflow2caffe.op.sqrt import Sqrt
 from tensorflow2caffe.op.tanh import Tanh
+from tensorflow2caffe.op.tile import Tile
 from tensorflow2caffe.op.enter import Enter
+from tensorflow2caffe.op.range import Range
 from tensorflow2caffe.op.relux import ReLUX
 from tensorflow2caffe.op.shape import Shape
 from tensorflow2caffe.op.split import Split
 from tensorflow2caffe.op.concat import Concat
+from tensorflow2caffe.op.splitv import SplitV
 from tensorflow2caffe.op.square import Square
 from tensorflow2caffe.op.matmul import MatMul
 from tensorflow2caffe.op.unpack import Unpack
@@ -64,9 +68,6 @@ logger = logging.getLogger('TensorFlow2Caffe')
 
 OpMap = {
 #    'ExpandDims': Debug,
-#    'Range': Debug,
-#    'Tile': Debug,
-#    'Fill': Debug,
 #    'PlaceholderWithDefault': Debug,
 #    'Switch': Debug,
 #    'ExtractImagePatches': Debug,
@@ -97,18 +98,22 @@ OpMap = {
     'Sub': Sub,
     'Exp': Exp,
     'AddN': Add,
+    'Fill': Fill,
     'Mean': Mean,
     'Pack': Pack,
     'Relu': ReLU,
     'Sqrt': Sqrt,
     'Tanh': Tanh,
+    'Tile': Tile,
     'AddV2': Add,
     'Enter': Enter,
+    'Range': Range,
     'Relu6': ReLUX,
     'Shape': Shape,
     'Split': Split,
     'AvgPool': Pool,
     'MaxPool': Pool,
+    'SplitV': SplitV,
     'Square': Square,
     'MatMul': MatMul,
     'Unpack': Unpack,
@@ -224,10 +229,7 @@ class Model(Base):
         for index, op in enumerate(operations):
             if op.type == 'Const':
                 self.constant[op.outputs[0].name] = tf.get_static_value(op.outputs[0])
-            elif op.type in ('Identity', 'IdentityN', 'Cast'):
-#self.constant[op.outputs[0].name] = self.constant.get(op.inputs[0].name, None)
-                self.indentity[op.outputs[0].name] = self.indentity.get(op.inputs[0].name, op.inputs[0].name)
-            elif op.type == 'FakeQuantWithMinMaxVars':
+            elif op.type in ('Identity', 'IdentityN', 'Cast', 'Complex', 'FakeQuantWithMinMaxVars'):
                 if tf.get_static_value(op.outputs[0]) is None:
                     self.indentity[op.outputs[0].name] = self.indentity.get(op.inputs[0].name, op.inputs[0].name)
                 else:
