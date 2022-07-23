@@ -17,28 +17,36 @@ class StridedSlice(Operator):
     def parse(self):
         super().__parse__()
 
-        if self.inputs_buf[3].size == list(self.inputs_buf[3]).count(1):
-            axis_index = np.nonzero(self.inputs_buf[2] - self.inputs_buf[1])[0]
-            if axis_index.size > 1:
-                errorMsg = 'Error[' + self.op.name + ']: Can\'t slice more than one axis'
-                sys.exit()
-
-            axis_nhwc = int(axis_index[0])
-            axis_nchw = dim_map_nhwc2nchw[axis_nhwc]
-
-            if self.inputs_buf[2][axis_nhwc] == self.op.inputs[0].shape[axis_nhwc]:
-                self.model.indentity[self.op.outputs[0].name] = self.model.indentity.get(self.op.inputs[0].name, self.op.inputs[0].name)
+        if self.inputs_buf[0] is not None:
+            if self.inputs_buf[0].ndim == 1:
+                begin = int(self.inputs_buf[1])
+                end = int(self.inputs_buf[2])
+                strides = int(self.inputs_buf[3])
+                self.model.constant[self.outputs[0]] = self.inputs_buf[0][begin:end:strides]
             else:
-                self.layer_type = 'Slice'
-                self.slice_param = dict()
-                self.slice_param['axis'] = dim_map_nhwc2nchw[axis_nhwc]
-                self.slice_param['slice_point'] = list(np.absolute(self.inputs_buf[2] - self.inputs_buf[1]))[axis_nhwc]
-                self.outputs.append(self.name+'_useless')
-                self.attrs = self.slice_param
-                self.setParsed()
+                raise NotImplementedError
         else:
-            errorMsg = 'Error[' + self.op.name + ']: Do not support stride > 1. OP ' + self.op.name + '\'s strides is ' + str(self.inputs_buf[3]) + '\n'
-            sys.exit(errorMsg)
+            if self.inputs_buf[3].size == list(self.inputs_buf[3]).count(1):
+                axis_index = np.nonzero(self.inputs_buf[2] - self.inputs_buf[1])[0]
+                if axis_index.size > 1:
+                    errorMsg = 'Error[' + self.op.name + ']: Can\'t slice more than one axis'
+                    sys.exit()
+
+                axis = int(axis_index[0]) if self.layout == 'NHWC' else dim_map_nhwc2nchw[int(axis_index[0])]
+
+                if self.inputs_buf[2][axis] == self.op.inputs[0].shape[axis]:
+                    self.model.indentity[self.op.outputs[0].name] = self.model.indentity.get(self.op.inputs[0].name, self.op.inputs[0].name)
+                else:
+                    self.layer_type = 'Slice'
+                    self.slice_param = dict()
+                    self.slice_param['axis'] = axis
+                    self.slice_param['slice_point'] = list(np.absolute(self.inputs_buf[2] - self.inputs_buf[1]))[axis]
+                    self.outputs.append(self.name+'_useless')
+                    self.attrs = self.slice_param
+                    self.setParsed()
+            else:
+                errorMsg = 'Error[' + self.op.name + ']: Do not support stride > 1. OP ' + self.op.name + '\'s strides is ' + str(self.inputs_buf[3]) + '\n'
+                sys.exit(errorMsg)
 
 
 
