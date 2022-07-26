@@ -17,8 +17,8 @@ class Pack(Operator):
     def parse(self):
         super().__parse__()
 
-        for index, buf in enumerate(self.inputs_buf):
-            if self.inputs_buf[index] is not None:
+        for input_buf in self.inputs_buf:
+            if input_buf is not None:
                 constant = True
             else:
                 constant = False
@@ -29,13 +29,24 @@ class Pack(Operator):
         else:
             self.layer_type = 'Concat'
 
+            # Append Extra Reshape
             self.reshapes = list()
             for index, input in enumerate(self.inputs):
                 self.reshapes.append('Pack_' + self.op.name + '_split' + str(index))
-            self.reshape_param = dict(shape=dict(dim=[1]+self.inputs_shape[index]))
 
+            # Reshape Attribute
+            if self.attrs['axis'] == 0:
+                self.reshape_param = dict(shape=dict(dim=[1]+self.inputs_shape[index]))
+            elif self.attrs['axis'] == len(self.outputs_shape[0]) - 1:
+                self.reshape_param = dict(shape=dict(dim=self.inputs_shape[index]+[1]))
+            else:
+                import sys
+                errorMsg = 'Error: Op Pack (' + self.op.name + '): axis is ' + str(self.attrs['axis'])
+                sys.exit(errorMsg)
+
+            # Concat Attribute
             self.concat_param = dict()
-            self.concat_param['axis'] = dim_map_nhwc2nchw[self.attrs['axis']]
+            self.concat_param['axis'] = dim_map_nhwc2nchw[self.attrs['axis']] if self.layout == 'NHWC' and self.outputs_shape[0] != self.op.outputs[0].shape.as_list() else self.attrs['axis']
 
             self.attrs = self.concat_param
 
