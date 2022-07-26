@@ -17,7 +17,7 @@ def wrap_frozen_graph(graph_def, inputs, outputs, print_graph=False):
 
 
 def get_output_frozenmodel(model, input_tensor, blob_name):
-    if blob_name.find('split') >= 0:
+    if blob_name.find('split') >= 0 or blob_name.find('useless') >= 0:
         return None
 
     # Wrap frozen graph to ConcreteFunctions
