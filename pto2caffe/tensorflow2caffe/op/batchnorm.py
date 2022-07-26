@@ -44,9 +44,9 @@ class BatchNorm(Operator):
 
 
     def convert(self):
-        layer0 = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs[0:1], self.mean, self.var, batch_norm_param=self.batch_norm_param)
-        layer1 = caffe_layer('Scale', 'Scale'+str(self.index), self.outputs[0:1], [None, self.weight, self.bias], self.outputs[0:1], self.weight, self.bias, scale_param=self.scale_param)
+        layer_batchnorm = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs[0:1], self.mean, self.var, batch_norm_param=self.batch_norm_param)
+        layer_scale = caffe_layer('Scale', 'Scale'+str(self.index), self.outputs[0:1], [None, self.weight, self.bias], self.outputs[0:1], self.weight, self.bias, scale_param=self.scale_param)
 
         self.setConverted()
 
-        return [layer0, layer1]
+        return [layer_batchnorm, layer_scale]
