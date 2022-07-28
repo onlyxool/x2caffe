@@ -23,8 +23,6 @@ class Sum(Operator):
         else:
             raise NotImplementedError(self.op.name)
 
-        self.setParsed()
-
 
     def convert(self):
         pass
