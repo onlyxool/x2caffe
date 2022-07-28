@@ -17,8 +17,7 @@ class Enter(Operator):
         if self.attrs['is_constant']:
             self.model.constant[self.outputs[0]] = self.inputs_buf[0]
         else:
-            import sys
-            sys.exit('Error: Operator [ Enter ] does not Support (is_constant = False).\n')
+            self.model.indentity[self.op.outputs[0].name] = self.model.indentity.get(self.op.inputs[0].name, self.op.inputs[0].name)
 
 
     def convert(self):
