@@ -18,16 +18,24 @@ class StridedSlice(Operator):
         super().__parse__()
 
         if self.inputs_buf[0] is not None:
-            if self.inputs_buf[0].ndim == 1:
+            if self.inputs_buf[1].size == 1:
                 begin = int(self.inputs_buf[1])
                 end = int(self.inputs_buf[2])
                 strides = int(self.inputs_buf[3])
-                self.model.constant[self.outputs[0]] = self.inputs_buf[0][begin:end:strides]
-            elif self.inputs_buf[0].ndim == 2:
+                if self.inputs_buf[0][begin:end:strides].size == 1:
+                    self.model.constant[self.outputs[0]] = np.array(self.inputs_buf[0][begin:end:strides].item())
+                else:
+                    self.model.constant[self.outputs[0]] = self.inputs_buf[0][begin:end:strides]
+            elif self.inputs_buf[1].size == 2:
                 begin = self.inputs_buf[1]
                 end = self.inputs_buf[2]
                 strides = self.inputs_buf[3]
                 self.model.constant[self.outputs[0]] = self.inputs_buf[0][begin[0]:end[0]:strides[0], begin[1]:end[1]:strides[1]]
+            elif self.inputs_buf[1].size == 3:
+                begin = self.inputs_buf[1]
+                end = self.inputs_buf[2]
+                strides = self.inputs_buf[3]
+                self.model.constant[self.outputs[0]] = self.inputs_buf[0][begin[0]:end[0]:strides[0], begin[1]:end[1]:strides[1], begin[2]:end[2]:strides[2]]
             else:
                 raise NotImplementedError(self.op.name)
         else:
