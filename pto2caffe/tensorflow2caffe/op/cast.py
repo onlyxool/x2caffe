@@ -1,4 +1,3 @@
-import numpy as np
 from tensorflow2caffe.op.operator import Operator
 
 
