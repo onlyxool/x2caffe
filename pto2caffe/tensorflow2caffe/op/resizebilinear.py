@@ -21,8 +21,17 @@ class ResizeBilinear(Operator):
         self.interp_param['align_corners'] = self.attrs['align_corners']
         # self.attrs['half_pixel_centers']
 
-        self.interp_param['height'] = self.outputs_shape[0][-2]
-        self.interp_param['width'] = self.outputs_shape[0][-1]
+        if self.inputs_buf[1] is not None:
+            output_h = self.inputs_buf[1][0]
+            output_w = self.inputs_buf[1][1]
+        elif self.outputs_shape[0] is not None:
+            output_h = self.outputs_shape[0][-2]
+            output_w = self.outputs_shape[0][-1]
+        else:
+            raise ValueError(self.op.name)
+
+        self.interp_param['height'] = output_h
+        self.interp_param['width'] = output_w
 
         self.attrs = self.interp_param
 
