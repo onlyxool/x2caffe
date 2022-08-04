@@ -17,7 +17,7 @@ class Fill(Operator):
         super().__parse__()
 
         if self.inputs_buf[0] is not None and self.inputs_buf[1] is not None:
-            self.model.constant[self.outputs[0]] = np.empty(self.inputs_buf[0], self.op.outputs[0].dtype.as_numpy_dtype())
+            self.model.constant[self.outputs[0]] = np.empty(shape=self.op.outputs[0].shape.as_list(), dtype=self.op.outputs[0].dtype.as_numpy_dtype())
             self.model.constant[self.outputs[0]].fill(self.inputs_buf[1].item(0))
         else:
             import sys
