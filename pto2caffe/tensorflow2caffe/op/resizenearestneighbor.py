@@ -16,12 +16,14 @@ class ResizeNearestNeighbor(Operator):
         super().__parse__()
 
         # Output shape
-        if any(self.outputs_shape[0]):
+        if self.inputs_buf[1] is not None:
             output_h = self.inputs_buf[1][0]
             output_w = self.inputs_buf[1][1]
-        else:
+        elif self.outputs_shape[0] is not None:
             output_h = self.outputs_shape[0][-2]
             output_w = self.outputs_shape[0][-1]
+        else:
+            raise ValueError(self.op.name)
 
         # Input Shape
         input_h = self.inputs_shape[0][2]
