@@ -1,4 +1,3 @@
-from caffe_transform import caffe_layer
 from tensorflow2caffe.op.operator import Operator
 
 
