@@ -19,13 +19,13 @@ class Tile(Operator):
         if self.inputs_buf[0] is not None and self.inputs_buf[1] is not None:
             self.model.constant[self.outputs[0]] = np.tile(self.inputs_buf[0], self.inputs_buf[1])
         else:
-            raise NotImplementedError
+            raise NotImplementedError(self.op.name)
 
-        self.tile_param = dict()
+            self.tile_param = dict()
 
-        self.attrs = self.tile_param
+            self.attrs = self.tile_param
 
-        self.setParsed()
+            self.setParsed()
 
 
     def convert(self):
