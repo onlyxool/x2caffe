@@ -14,9 +14,13 @@ class Shape(Operator):
         self.layer_type = 'Shape'
         super().__parse__()
 
-        self.model.constant[self.outputs[0]] = np.array(self.inputs_shape[0])
-
-        self.setParsed()
+        if self.inputs_buf[0] is not None:
+            self.model.constant[self.outputs[0]] = np.array(self.inputs_buf[0].shape)
+        else:
+            if self.op.inputs[0].shape.is_fully_defined():
+                self.model.constant[self.outputs[0]] = np.array(self.op.inputs[0].shape.as_list())
+            else:
+                raise NotImplementedError(self.op.name)
 
 
     def convert(self):
