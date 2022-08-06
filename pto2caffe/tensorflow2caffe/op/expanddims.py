@@ -1,3 +1,5 @@
+import numpy as np
+
 from caffe_transform import caffe_layer
 from tensorflow2caffe.op.operator import Operator
 
@@ -15,12 +17,11 @@ class ExpandDims(Operator):
         super().__parse__()
 
         if self.inputs_buf[0] is not None:
-            import numpy as np
             self.model.constant[self.outputs[0]] = np.expand_dims(self.inputs_buf[0], int(self.inputs_buf[1]))
         else:
             dim = int(self.inputs_buf[1])
-            if all(self.outputs_shape[0]) and dim == 0:
-                target_shape = [1] + self.outputs_shape[0]
+            if all(self.outputs_shape[0]):
+                target_shape = list(np.expand_dims(np.random.random(self.inputs_shape[0]), dim).shape)
             else:
                 raise NotImplementedError(self.op.name)
 
