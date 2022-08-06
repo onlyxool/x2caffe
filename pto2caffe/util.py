@@ -1,6 +1,5 @@
 import math
 import numpy as np
-import tensorflow as tf
 
 
 dim_map_nhwc2nchw = [0, 2, 3, 1]
@@ -14,6 +13,7 @@ numpy_dtype = {
     'f32': np.float32
 }
 
+
 dtype_map = {
     np.uint8: 0,
     np.int16: 1,
@@ -24,6 +24,9 @@ dtype_map = {
 def get_layout(shape):
     if not isinstance(shape, list) and not isinstance(shape, tuple):
         raise NotImplementedError
+
+    if not all(shape):
+        return None
 
     diff = np.abs(np.ediff1d(np.array(shape)))
     idx = diff.argmin()
@@ -37,6 +40,8 @@ def get_layout(shape):
             return None
     elif len(shape) == 3:
         return 'HWX' if idx == 0 and diff.min() < np.array(shape).min() else 'XHW'
+    elif len(shape) == 5:
+        return None
     else:
         return None
 
