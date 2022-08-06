@@ -18,26 +18,20 @@ class StridedSlice(Operator):
         super().__parse__()
 
         if self.inputs_buf[0] is not None:
-            if self.inputs_buf[1].size == 1:
-                begin = int(self.inputs_buf[1])
-                end = int(self.inputs_buf[2])
-                strides = int(self.inputs_buf[3])
-                if self.inputs_buf[0][begin:end:strides].size == 1:
-                    self.model.constant[self.outputs[0]] = np.array(self.inputs_buf[0][begin:end:strides].item())
-                else:
-                    self.model.constant[self.outputs[0]] = self.inputs_buf[0][begin:end:strides]
-            elif self.inputs_buf[1].size == 2:
-                begin = self.inputs_buf[1]
-                end = self.inputs_buf[2]
-                strides = self.inputs_buf[3]
-                self.model.constant[self.outputs[0]] = self.inputs_buf[0][begin[0]:end[0]:strides[0], begin[1]:end[1]:strides[1]]
-            elif self.inputs_buf[1].size == 3:
-                begin = self.inputs_buf[1]
-                end = self.inputs_buf[2]
-                strides = self.inputs_buf[3]
-                self.model.constant[self.outputs[0]] = self.inputs_buf[0][begin[0]:end[0]:strides[0], begin[1]:end[1]:strides[1], begin[2]:end[2]:strides[2]]
-            else:
-                raise NotImplementedError(self.op.name)
+            import tensorflow as tf
+            x = tf.constant(self.inputs_buf[0], self.op.inputs[0].dtype)
+            begin = tf.constant(self.inputs_buf[1], self.op.inputs[1].dtype)
+            end = tf.constant(self.inputs_buf[2], self.op.inputs[2].dtype)
+            strides = tf.constant(self.inputs_buf[3], self.op.inputs[3].dtype)
+
+            begin_mask = self.attrs['begin_mask']
+            end_mask = self.attrs['end_mask']
+            ellipsis_mask = self.attrs['ellipsis_mask']
+            new_axis_mask = self.attrs['new_axis_mask']
+            shrink_axis_mask = self.attrs['shrink_axis_mask']
+
+            self.model.constant[self.outputs[0]] = tf.strided_slice(x, begin=begin, end=end, strides=strides,
+                    begin_mask=begin_mask, end_mask=end_mask, ellipsis_mask=ellipsis_mask, new_axis_mask=new_axis_mask, shrink_axis_mask=shrink_axis_mask).numpy()
         else:
             # Skip op if input shape == output shape
             if self.op.inputs[0].shape == self.op.outputs[0].shape: # Skip
@@ -47,13 +41,17 @@ class StridedSlice(Operator):
 
                 # Check Stride != 1
                 if self.inputs_buf[3].size != list(self.inputs_buf[3]).count(1):
-                    errorMsg = 'Error Op' + self.op.name + '(StridedSlice): Do not support stride > 1. OP ' + self.op.name + '\'s strides is ' + str(self.inputs_buf[3]) + '\n'
+                    errorMsg = 'Error: Op ' + self.op.name + '(StridedSlice): Do not support stride > 1. OP ' + self.op.name + '\'s strides is ' + str(self.inputs_buf[3]) + '\n'
+                    sys.exit(errorMsg)
+
+                if len(self.inputs_shape[0]) > 4:
+                    errorMsg = 'Error: Op ' + self.op.name + '(StridedSlice): Do not support dimitions > 4.'
                     sys.exit(errorMsg)
 
                 axis_index = np.nonzero(self.inputs_buf[2] - self.inputs_buf[1])[0]
 
                 if axis_index.size > 1:
-                    errorMsg = 'Error Op ' + self.op.name + '(StridedSlice): Can\'t slice more than one axis'
+                    errorMsg = 'Error: Op ' + self.op.name + '(StridedSlice): Can\'t slice more than one axis'
                     sys.exit(errorMsg)
 
                 start = int(self.inputs_buf[1][axis_index[0]])
