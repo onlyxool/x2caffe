@@ -15,42 +15,49 @@ class Max(Operator):
     def parse(self):
         super().__parse__()
 
-        axis = self.inputs_buf[1]
-        if axis is None:
+        if self.inputs_buf[1] is None:
             import sys
             errorMsg = 'Error: Op Max (' + self.op.name + '): can\'t support axis == None'
             sys.exit(errorMsg)
-        elif axis.size == 1:
-            self.layer_type = 'ArgMax'
-
-            self.argmax_param = dict()
-            self.argmax_param['out_max_val'] = True
-            self.argmax_param['top_k'] = 1
-            self.argmax_param['axis'] = dim_map_nhwc2nchw[int(axis)]
-
-            self.attrs = self.argmax_param
-        elif (axis.tolist() == [2, 3] and self.layout == 'NCHW') or axis.tolist() == [1, 2] and self.layout == 'NHWC':
-            self.layer_type = 'Pooling'
-
-            self.pooling_param = dict()
-            self.pooling_param['pool'] = 0
-            self.pooling_param['kernel_h'] = self.op.inputs[0].shape[self.ndim('H')]
-            self.pooling_param['kernel_w'] = self.op.inputs[0].shape[self.ndim('W')]
-            self.pooling_param['stride'] = 1
-            self.pooling_param['ceil_mode'] = False
-
-            if not self.attrs['keep_dims']:
-                self.keep_dims = False
-                self.reshape = 'Max_' + self.op.name + '_split'
-                self.reshape_param = dict(shape=dict(dim=self.outputs_shape[0]))
-            else:
-                self.keep_dims = True
-
-            self.attrs = self.pooling_param
         else:
-            raise NotImplementedError(self.op.name)
+            axis = self.inputs_buf[1]
 
-        self.setParsed()
+        if self.inputs_buf[0] is not None:
+            import tensorflow as tf
+            x = tf.constant(self.inputs_buf[0], dtype=self.op.inputs[0].dtype)
+            self.model.constant[self.outputs[0]] = tf.raw_ops.Max(input=x, axis=axis, keep_dims=self.attrs['keep_dims'], name=None).numpy()
+        else:
+            if axis.size == 1:
+                self.layer_type = 'ArgMax'
+
+                self.argmax_param = dict()
+                self.argmax_param['out_max_val'] = True
+                self.argmax_param['top_k'] = 1
+                self.argmax_param['axis'] = dim_map_nhwc2nchw[int(axis)]
+
+                self.attrs = self.argmax_param
+            elif (axis.tolist() == [2, 3] and self.layout == 'NCHW') or axis.tolist() == [1, 2] and self.layout == 'NHWC':
+                self.layer_type = 'Pooling'
+
+                self.pooling_param = dict()
+                self.pooling_param['pool'] = 0
+                self.pooling_param['kernel_h'] = self.op.inputs[0].shape[self.ndim('H')]
+                self.pooling_param['kernel_w'] = self.op.inputs[0].shape[self.ndim('W')]
+                self.pooling_param['stride'] = 1
+                self.pooling_param['ceil_mode'] = False
+
+                if not self.attrs['keep_dims']:
+                    self.keep_dims = False
+                    self.reshape = 'Max_' + self.op.name + '_split'
+                    self.reshape_param = dict(shape=dict(dim=self.outputs_shape[0]))
+                else:
+                    self.keep_dims = True
+
+                self.attrs = self.pooling_param
+            else:
+                raise NotImplementedError(self.op.name)
+
+            self.setParsed()
 
 
     def convert(self):
