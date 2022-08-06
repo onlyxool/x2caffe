@@ -1,3 +1,4 @@
+from caffe_transform import caffe_layer
 from tensorflow2caffe.op.operator import Operator
 
 
@@ -10,18 +11,37 @@ class Sum(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Sum'
         super().__parse__()
 
-        axes = self.inputs_buf[1]
-
-        # Handle Constant OP
         if self.inputs_buf[0] is not None and self.inputs_buf[1] is not None:
-            import numpy as np
-            self.model.constant[self.outputs[0]] = np.sum(self.inputs_buf[0], axis=tuple(axes), keepdims=self.attrs['keep_dims'])
+            # Handle Constant OP
+            import tensorflow as tf
+            x = tf.constant(self.inputs_buf[0], dtype=self.op.inputs[0].dtype)
+            axis = tf.constant(self.inputs_buf[1], dtype=self.op.inputs[1].dtype)
+            self.model.constant[self.outputs[0]] = tf.raw_ops.Sum(x, axis=axis, keep_dims=self.attrs['keep_dims'], name=None)
         else:
-            raise NotImplementedError(self.op.name)
+            if self.inputs_buf[1] is None:
+                import sys
+                errorMsg = 'Error: Op Max (' + self.op.name + '): can\'t support axis == None'
+                sys.exit(errorMsg)
+            else:
+                axis = self.inputs_buf[1]
+
+            if axis.size == 1 and int(axis) == len(self.inputs_shape) - 1:
+                self.layer_type = 'Reduction'
+                self.reduction_param = dict()
+                self.reduction_param['operation'] = 1
+                self.reduction_param['axis'] = int(axis)
+                self.attrs = self.reduction_param
+            else:
+                raise NotImplementedError(self.op.name)
+
+            self.setParsed()
 
 
     def convert(self):
-        pass
+        layers.append(caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, reduction_param=self.reduction_param))
+
+        self.setConverted()
+
+        return [layer]
