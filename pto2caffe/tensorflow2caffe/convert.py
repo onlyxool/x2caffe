@@ -32,6 +32,41 @@ def inputs_without_resource(sess, input_names):
     return input_names
 
 
+def _remove_non_variable_resources_from_captures(concrete_func):
+    """
+    Removes all non-variable resources (such as tables) from a function's captured inputs to prevent tf from
+    raising a 'cannot convert dtype resource to numpy' error while freezing the graph.
+    """
+    # pylint: disable=protected-access
+    resource_id_to_placeholder = {}
+    placeholder_to_resource = {}
+    graph_captures_copy = None
+    func_captures_copy = None
+    if hasattr(concrete_func.graph, '_captures') and hasattr(concrete_func, '_captured_inputs'):
+        graph_captures_copy = concrete_func.graph._captures.copy()
+        func_captures_copy = concrete_func._captured_inputs.copy()
+        variable_handles = {id(v.handle) for v in concrete_func.graph.variables}
+        for k, v in list(concrete_func.graph._captures.items()):
+            val_tensor, name_tensor = v
+            if val_tensor.dtype == tf.resource and id(val_tensor) not in variable_handles:
+                resource_id_to_placeholder[id(val_tensor)] = name_tensor.name.split(':')[0]
+                placeholder_to_resource[name_tensor.name.split(':')[0]] = val_tensor
+                del concrete_func.graph._captures[k]
+                for i in reversed(range(len(concrete_func._captured_inputs))):
+                    if concrete_func._captured_inputs[i] is val_tensor:
+                        concrete_func._captured_inputs.pop(i)
+            elif val_tensor.dtype != tf.resource:
+                npval = val_tensor.numpy()
+                if not hasattr(npval, 'dtype'):
+                    # Hack around a TF bug until PR is merged: https://github.com/tensorflow/tensorflow/pull/45610
+                    arr = np.array(npval)
+                    val_tensor.numpy = lambda arr=arr: arr
+    else:
+        logger.warning(
+            "Could not search for non-variable resources. Concrete function internal representation may have changed.")
+    return resource_id_to_placeholder, placeholder_to_resource, graph_captures_copy, func_captures_copy
+
+
 def tf_optimize_grappler(input_names, output_names, graph_def):
     from tensorflow.core.protobuf import meta_graph_pb2 as meta_graph_pb2, config_pb2, rewriter_config_pb2
     from tensorflow.python.grappler import tf_optimizer as tf_opt
@@ -92,6 +127,7 @@ def shape_inference(graph, inputs_name, param):
 def is_function(g):
     return 'tensorflow.python.framework.func_graph.FuncGraph' in str(type(g))
 
+
 def convert(pb_file, caffe_model_path, param=None):
     if os.path.basename(pb_file) == 'saved_model.pb':
         # SavedModel
@@ -112,6 +148,9 @@ def convert(pb_file, caffe_model_path, param=None):
         all_sigs = imported.signatures.keys()
         valid_sigs = [s for s in all_sigs if not s.startswith("_")]
         concrete_func = imported.signatures[valid_sigs[0]]
+
+        removed_resource_to_placeholder, placeholder_to_resource, graph_captures_copy, func_captures_copy = \
+            _remove_non_variable_resources_from_captures(concrete_func)
 
         inputs = [tensor.name for tensor in concrete_func.inputs if tensor.dtype != tf.dtypes.resource]
         outputs = [tensor.name for tensor in concrete_func.outputs if tensor.dtype != tf.dtypes.resource]
