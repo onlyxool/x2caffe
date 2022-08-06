@@ -1,4 +1,4 @@
-import numpy as np
+import tensorflow as tf
 from tensorflow2caffe.op.operator import Operator
 
 
@@ -6,7 +6,7 @@ class Random(Operator):
 
     def __init__(self, model, tf_op, index):
         super().__init__(model, tf_op, index)
-        assert(self.operator_code in ('RandomStandardNormal'))
+        assert(self.operator_code in ('RandomStandardNormal', 'RandomUniform'))
         self.setInited()
 
 
@@ -15,14 +15,9 @@ class Random(Operator):
         super().__parse__()
 
         if self.operator_code == 'RandomStandardNormal':
-            if self.attrs['seed'] == 0 and self.attrs['seed2'] == 0 and self.attrs['dtype'] == 1:
-                self.model.constant[self.outputs[0]] = np.random.normal(loc=0, scale=1, size=list(self.inputs_buf[0]))
-            else:
-                import sys
-                errorMsg = 'Error: Operator [ RandomStandardNormal ] does not Support (seed =' + self.attrs['seed'] + ' or seed2 = ' + self.attrs['seed2'] + ').\n'
-                sys.exit(errorMsg)
-        else:
-            raise NotImplementedError
+            self.model.constant[self.outputs[0]] = tf.random.normal(shape=self.op.outputs[0].shape, dtype=self.attrs['dtype'], seed=None, name=None).numpy()
+        elif self.operator_code == 'RandomUniform':
+            self.model.constant[self.outputs[0]] = tf.random.uniform(shape=self.op.outputs[0].shape, dtype=self.attrs['dtype'], seed=None, name=None).numpy()
 
 
     def convert(self):

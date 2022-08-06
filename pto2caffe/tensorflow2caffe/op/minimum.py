@@ -16,7 +16,6 @@ class Minimum(Operator):
         self.layer_type = 'Minimum'
         super().__parse__()
 
-        self.debug()
         if self.inputs_buf[0] is not None and self.inputs_buf[1] is not None:
             self.model.constant[self.outputs[0]] = np.minimum(self.inputs_buf[0], self.inputs_buf[1])
         elif self.inputs_buf[0] is None and self.inputs_buf[1] is None:
