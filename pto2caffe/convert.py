@@ -132,7 +132,7 @@ def CheckParam(param):
 def Convert(param=None):
     # Set Log level
     os.environ['GLOG_minloglevel'] = str(param.get('log', 2)) # 0:DEBUG 1:INFO 2:WARNING 3:ERROR
-    os.environ["TF_CPP_MIN_LOG_LEVEL"] = str(param.get('log', 2)) # 0:INFO 1:WARNING 2:ERROR 3:FATAL
+    os.environ["TF_CPP_MIN_LOG_LEVEL"] = str(param.get('log', 3)) # 0:INFO 1:WARNING 2:ERROR 3:FATAL
 
     # Check Param
     CheckParam(param)
@@ -202,7 +202,7 @@ def args_():
             help = 'Compare network output, 0:Compare latest layer 1:Compare every layer')
     args.add_argument('-log',           type = int,     required = False,   default=2,      choices=[0, 1, 2],
             help = 'log print level, 0:Debug 1:Info 2:Warning, 3:ERROR')
-    args.add_argument('-optimizify',    type = int,     required = False,   default=0,      choices=[0, 1, 2, 3, 4, 5],
+    args.add_argument('-optimizify',    type = int,     required = False,   default=0,      choices=[0, 1, 2, 3, 4, 5, 6],
             help = 'optimizify model')
     args.add_argument('-streamlit',     type = int,     required = False,   default=0,      choices=[0, 1],
             help = 'Web Interface Flag')
