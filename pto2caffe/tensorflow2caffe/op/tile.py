@@ -1,5 +1,3 @@
-import numpy as np
-
 from caffe_transform import caffe_layer
 from tensorflow2caffe.op.operator import Operator
 
@@ -17,7 +15,10 @@ class Tile(Operator):
         super().__parse__()
 
         if self.inputs_buf[0] is not None and self.inputs_buf[1] is not None:
-            self.model.constant[self.outputs[0]] = np.tile(self.inputs_buf[0], self.inputs_buf[1])
+            import tensorflow as tf
+            x = tf.constant(self.inputs_buf[0], self.op.inputs[0].dtype)
+            multiples = tf.constant(self.inputs_buf[1], self.op.inputs[1].dtype)
+            self.model.constant[self.outputs[0]] = tf.tile(x, multiples).numpy()
         else:
             raise NotImplementedError(self.op.name)
 
