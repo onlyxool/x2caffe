@@ -17,11 +17,9 @@ class Fill(Operator):
             import tensorflow as tf
             dims = tf.constant(self.inputs_buf[0], dtype=self.op.inputs[0].dtype)
             value = tf.constant(self.inputs_buf[1], dtype=self.op.inputs[1].dtype)
-            self.model.constant[self.outputs[0]] = tf.raw_ops.Fill(dims=dims, value=value, name=None)
+            self.model.constant[self.outputs[0]] = tf.raw_ops.Fill(dims=dims, value=value, name=None).numpy()
         else:
             self.model.unsupport.append(self.operator_code)
-            errorMsg = 'Error: Operator [ Fill ] does not Support (dims = {} and value = {}).\n'.format(self.inputs_buf[0], self.inputs_buf[1])
-            print(errorMsg)
 
 
     def convert(self):

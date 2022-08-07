@@ -1,4 +1,5 @@
 import numpy as np
+import tensorflow as tf
 
 from caffe_transform import caffe_layer
 from tensorflow2caffe.op.operator import Operator
@@ -17,10 +18,9 @@ class Minimum(Operator):
         super().__parse__()
 
         if self.inputs_buf[0] is not None and self.inputs_buf[1] is not None:
-            import tensorflow as tf
             x = tf.constant(self.inputs_buf[0], dtype=self.op.inputs[0].dtype)
             y = tf.constant(self.inputs_buf[1], dtype=self.op.inputs[1].dtype)
-            self.model.constant[self.outputs[0]] = tf.raw_ops.Minimum(x=x, y=y, name=None)
+            self.model.constant[self.outputs[0]] = tf.raw_ops.Minimum(x=x, y=y, name=None).numpy()
         elif self.inputs_buf[0] is None and self.inputs_buf[1] is None:
             self.layer_type = 'Eltwise'
 
