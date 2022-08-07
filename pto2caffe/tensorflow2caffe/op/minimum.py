@@ -17,7 +17,10 @@ class Minimum(Operator):
         super().__parse__()
 
         if self.inputs_buf[0] is not None and self.inputs_buf[1] is not None:
-            self.model.constant[self.outputs[0]] = np.minimum(self.inputs_buf[0], self.inputs_buf[1])
+            import tensorflow as tf
+            x = tf.constant(self.inputs_buf[0], dtype=self.op.inputs[0].dtype)
+            y = tf.constant(self.inputs_buf[1], dtype=self.op.inputs[1].dtype)
+            self.model.constant[self.outputs[0]] = tf.raw_ops.Minimum(x=x, y=y, name=None)
         elif self.inputs_buf[0] is None and self.inputs_buf[1] is None:
             self.layer_type = 'Eltwise'
 
