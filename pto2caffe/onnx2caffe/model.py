@@ -98,6 +98,7 @@ OpMap = {
     'Upsample': Upsample, #Deprecated
     'Mish': Mish, # Yolov4
 
+#    'Multinomial': Debug,
 #    'Expand': Debug,
 #    'ConstantOfShape': Debug,
 }
@@ -119,13 +120,16 @@ class Model(Base):
                 sys.exit('Error: Model opset > 13 or <= 3, it may cause incompatiblility issue. (opset:{})\n'.format(opset_version))
 
         self.param = param
+        self.inputs = list()
         self.inputs_shape = list()
-        self.operators = []
-        self.layers = []
-        self.inputs = []
         self.input_tensor = dict()
+        self.constant = dict()
+        self.operators = list()
+        self.unsupport = list()
+        self.errorMsg = list()
+        self.layers = list()
         self.shape = dict()
-        self.legacys = []
+        self.legacys = list()
         self.setInited()
 
 
@@ -199,17 +203,23 @@ class Model(Base):
 
         for index, node in enumerate(self.graph.node):
             if node.op_type not in OpMap:
-                errorMsg = 'Error: Operator [' + node.op_type + '] does not Support.\n'
-                sys.exit(errorMsg)
+                self.unsupport.append(node.op_type)
+                continue
 
             op = OpMap[node.op_type](self, node, index)
             op.parse()
 
             if op.status.parsed:
                 self.operators.append(op)
-            else:
-                if op.isLegacy:
-                    self.legacys.append(op)
+            elif op.isLegacy:
+                self.legacys.append(op)
+
+        for errorMsg in list(set(self.errorMsg)):
+            print(errorMsg)
+
+        if len(self.unsupport) > 0:
+            errorMsg = 'Error: Operator ' + str(list(set(self.unsupport))) + ' does not Support.\n'
+            sys.exit(errorMsg)
 
         self.setParsed()
 

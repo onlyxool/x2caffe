@@ -29,7 +29,8 @@ class Slice(Operator):
             steps = list(self.inputs_buf[4]) if len(self.inputs_buf) >= 5 else [1]*num_slices
 
         if len(starts) > 1 or len(ends) > 1 or len(axes) > 1 or num_slices > 1:
-            raise NotImplementedError
+            self.model.unsupport.append(self.operator_code)
+            self.model.errorMsg.append('Do not support starts > 1. ' + self.name + '\'s starts is ' + str(starts))
 
         if ends[0] == 9223372036854775807: # int max
             ends[0] = self.inputs_shape[0][axes[0]]
@@ -51,9 +52,8 @@ class Slice(Operator):
                 self.outputs.insert(0, self.name + 'useless0')
                 self.outputs.append(self.name + 'useless1')
         else:
-            import sys
-            errorMsg = 'Do not support step > 1. ' + self.name + '\'s steps is ' + str(steps) + '\n'
-            sys.exit(errorMsg)
+            self.model.unsupport.append(self.operator_code)
+            self.model.errorMsg.append('Do not support step > 1. ' + self.name + '\'s steps is ' + str(steps))
 
         self.setParsed()
 

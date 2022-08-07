@@ -15,9 +15,22 @@ class Div(Operator):
         super().__parse__()
 
         # Attributes
-        if self.inputs_buf[1] is not None:
+        if self.inputs_buf[0] is not None or self.inputs_buf[1] is not None:
+            if self.inputs_buf[0] is not None:
+                self.inputs.reverse()
+                self.inputs_shape.reverse()
+                self.inputs_buf.reverse()
+
+            # Weight
+            self.weight = 1/self.inputs_buf[1]
+
+            # Bias
+            self.bias = None
+
+            # Scale Parameter
             self.scale_param = dict()
             self.scale_param['bias_term'] = False
+
             for i in range(len(self.inputs_shape[0])):
                 if self.inputs_shape[1] == [] or self.inputs_shape[1] == ():
                     self.scale_param['axis'] = 0
@@ -25,17 +38,13 @@ class Div(Operator):
                 if self.inputs_shape[0][i] == self.inputs_shape[1][0]:
                     self.scale_param['axis'] = i
                     break
+
             self.attrs = self.scale_param
 
-            # Weight
-            self.weight = 1/self.inputs_buf[1]
-
-            # Bias
-            self.bias = None
+            self.setParsed()
         else:
-            raise NotImplementedError(self.operator_code)
-
-        self.setParsed()
+            self.model.unsupport.append(self.operator_code)
+            self.model.errorMsg.append('Error: Operator [ Div ] does not Support. Operand[1] is None.')
 
 
     def convert(self):
