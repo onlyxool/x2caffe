@@ -17,6 +17,11 @@ class MatMul(Operator):
         if len(self.inputs_shape[0]) != 2 or len(self.inputs_shape[1]) != 2:
             raise NotImplementedError('MatMul only support input dimentions == 2')
 
+        if self.inputs_buf[0] is not None and self.inputs_buf[1] is None:
+            self.inputs.reverse()
+            self.inputs_shape.reverse()
+            self.inputs_buf.reverse()
+
         if not self.attrs.get('transpose_b', False):
             self.weight = self.inputs_buf[1].transpose(1,0)
         else:
