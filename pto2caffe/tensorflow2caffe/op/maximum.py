@@ -35,10 +35,10 @@ class Maximum(Operator):
             self.layer_type = 'ReLU'
 
             # Check weather y == 0
-#            if np.count_nonzero(self.inputs_buf[1]) > 0:
-#                import sys
-#                print(self.inputs_buf)
-#                sys.exit('Error: Operator [ Maximum ] does not Support y != 0.\n')
+            if np.count_nonzero(self.inputs_buf[1]) > 0:
+                self.model.unsupport.append(self.operator_code)
+                print('Error: Operator [ Maximum ] does not Support y != 0.\n')
+                return
 
             # Attribute
             self.relu_param = dict()
