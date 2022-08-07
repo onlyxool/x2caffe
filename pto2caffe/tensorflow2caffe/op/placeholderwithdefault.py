@@ -16,7 +16,9 @@ class PlaceholderWithDefault(Operator):
 
         if self.inputs_buf[0] is not None:
             if self.operator_code == 'PlaceholderWithDefault':
-                self.model.constant[self.outputs[0]] = tf.raw_ops.PlaceholderWithDefault(tf.constant(self.inputs_buf[0], dtype=self.op.inputs[0].dtype), shape=self.op.outputs[0].shape, name=None)
+                input = tf.constant(self.inputs_buf[0], dtype=self.op.inputs[0].dtype)
+                shape = self.op.outputs[0].shape
+                self.model.constant[self.outputs[0]] = tf.raw_ops.PlaceholderWithDefault(input=input, shape=shape, name=None)
         else:
             raise NotImplementedError(self.op.name)
 
