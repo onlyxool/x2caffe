@@ -61,7 +61,7 @@ class Operator(Base):
         for i in range(self.op.InputsLength()):
             if self.op.Inputs(i) >= 0:
                 self.inputs.append(self.op.Inputs(i))
-                self.inputs_shape.append(shape_map_nhwc2nchw(self.graph.Tensors(self.inputs[i]).ShapeAsNumpy()))
+                self.inputs_shape.append(shape_map_nhwc2nchw(self.graph.Tensors(self.inputs[i]).ShapeAsNumpy().tolist()))
                 self.inputs_buf.append(self.model.tensor[self.op.Inputs(i)])
             else:
                 self.inputs_buf.append(None)
@@ -71,7 +71,7 @@ class Operator(Base):
         for i in range(self.op.OutputsLength()):
             if self.op.Outputs(i) >= 0:
                 self.outputs.append(self.op.Outputs(i))
-                self.outputs_shape.append(shape_map_nhwc2nchw(self.graph.Tensors(self.outputs[0]).ShapeAsNumpy()))
+                self.outputs_shape.append(shape_map_nhwc2nchw(self.graph.Tensors(self.outputs[0]).ShapeAsNumpy().tolist()))
 
 
     def parseInputOutput(self):
