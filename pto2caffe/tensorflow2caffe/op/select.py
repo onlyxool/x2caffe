@@ -19,9 +19,7 @@ class Select(Operator):
             e = tf.constant(self.inputs_buf[2], dtype=self.op.inputs[2].dtype)
             self.model.constant[self.outputs[0]] = tf.raw_ops.SelectV2(condition=condition, t=t, e=e, name=None)
         else:
-            import sys
-            errorMsg = 'Error: Operator [ SelectV2 ] does not Support.\n'
-            sys.exit(errorMsg)
+            self.model.unsupport.append(self.operator_code)
 
 
     def convert(self):

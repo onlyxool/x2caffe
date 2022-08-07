@@ -16,9 +16,10 @@ class Max(Operator):
         super().__parse__()
 
         if self.inputs_buf[1] is None:
-            import sys
+            self.model.unsupport.append(self.operator_code)
             errorMsg = 'Error: Op Max (' + self.op.name + '): can\'t support axis == None'
-            sys.exit(errorMsg)
+            print(errorMsg)
+            return
         else:
             axis = self.inputs_buf[1]
 

@@ -1,4 +1,3 @@
-import sys
 import numpy as np
 
 from caffe_transform import caffe_layer
@@ -31,7 +30,8 @@ class StridedSlice(Operator):
             shrink_axis_mask = self.attrs['shrink_axis_mask']
 
             self.model.constant[self.outputs[0]] = tf.strided_slice(x, begin=begin, end=end, strides=strides,
-                    begin_mask=begin_mask, end_mask=end_mask, ellipsis_mask=ellipsis_mask, new_axis_mask=new_axis_mask, shrink_axis_mask=shrink_axis_mask).numpy()
+                    begin_mask=begin_mask, end_mask=end_mask, ellipsis_mask=ellipsis_mask, new_axis_mask=new_axis_mask,
+                    shrink_axis_mask=shrink_axis_mask).numpy()
         else:
             # Skip op if input shape == output shape
             if self.op.inputs[0].shape == self.op.outputs[0].shape: # Skip
@@ -41,18 +41,25 @@ class StridedSlice(Operator):
 
                 # Check Stride != 1
                 if self.inputs_buf[3].size != list(self.inputs_buf[3]).count(1):
-                    errorMsg = 'Error: Op ' + self.op.name + '(StridedSlice): Do not support stride > 1. OP ' + self.op.name + '\'s strides is ' + str(self.inputs_buf[3]) + '\n'
-                    sys.exit(errorMsg)
+                    self.model.unsupport.append(self.operator_code)
+                    errorMsg = 'Error: Op ' + self.op.name + '(StridedSlice): Do not support stride > 1. OP ' + \
+                        self.op.name + '\'s strides is ' + str(self.inputs_buf[3]) + '\n'
+                    print(errorMsg)
+                    return
 
                 if len(self.inputs_shape[0]) > 4:
+                    self.model.unsupport.append(self.operator_code)
                     errorMsg = 'Error: Op ' + self.op.name + '(StridedSlice): Do not support dimitions > 4.'
-                    sys.exit(errorMsg)
+                    print(errorMsg)
+                    return
 
                 axis_index = np.nonzero(self.inputs_buf[2] - self.inputs_buf[1])[0]
 
                 if axis_index.size > 1:
+                    self.model.unsupport.append(self.operator_code)
                     errorMsg = 'Error: Op ' + self.op.name + '(StridedSlice): Can\'t slice more than one axis'
-                    sys.exit(errorMsg)
+                    print(errorMsg)
+                    return
 
                 start = int(self.inputs_buf[1][axis_index[0]])
                 end = int(self.inputs_buf[2][axis_index[0]])
@@ -64,8 +71,12 @@ class StridedSlice(Operator):
                     slice_point = start
                     self.outputs.insert(0, self.name+'_useless')
                 else:
-                    errorMsg = 'Error Op ' + self.op.name + '(StridedSlice): Can\'t support begin: ' + str(self.inputs_buf[1]) + ' end: ' + str(self.inputs_buf[2])
-                    sys.exit(errorMsg)
+                    self.model.unsupport.append(self.operator_code)
+                    errorMsg = 'Error Op ' + self.op.name + '(StridedSlice): Can\'t support begin: ' + \
+                        str(self.inputs_buf[1]) + ' end: ' + str(self.inputs_buf[2])
+                    print(errorMsg)
+                    return
+
 
                 self.slice_param = dict()
                 self.slice_param['axis'] = int(axis_index[0]) if self.layout == 'NCHW' else dim_map_nhwc2nchw[int(axis_index[0])]

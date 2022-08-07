@@ -17,9 +17,7 @@ class Rsqrt(Operator):
             import tensorflow as tf
             self.model.constant[self.outputs[0]] = tf.math.rsqrt(self.inputs_buf[0], name=None).numpy()
         else:
-            import sys 
-            errorMsg = 'Error: Operator [ Rsqrt ] does not Support.\n'
-            sys.exit(errorMsg)
+            self.model.unsupport.append(self.operator_code)
 
 
     def convert(self):

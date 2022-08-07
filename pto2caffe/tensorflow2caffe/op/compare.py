@@ -27,9 +27,7 @@ class Compare(Operator):
             elif self.operator_code == 'Equal':
                 self.model.constant[self.outputs[0]] = tf.math.equal(x, y).numpy()
         else:
-            import sys
-            errorMsg = 'Error: Operator [' + self.operator_code + '] does not Support.\n'
-            sys.exit(errorMsg)
+            self.model.unsupport.append(self.operator_code)
 
 
     def convert(self):

@@ -18,9 +18,7 @@ class Rank(Operator):
         if self.inputs_buf[0] is not None:
             self.model.constant[self.outputs[0]] = np.array(self.inputs_buf[0].ndim)
         else:
-            import sys
-            errorMsg = 'Error: Operator {} [ Rank ] does not Support (Input = {}).\n'.format(self.op.name, self.inputs_buf[0])
-            sys.exit(errorMsg)
+            self.model.unsupport.append(self.operator_code)
 
 
     def convert(self):

@@ -22,9 +22,7 @@ class Loop(Operator):
                 data = tf.constant(self.inputs_buf[0], dtype=self.op.inputs[0].dtype)
                 self.model.constant[self.outputs[0]] = tf.raw_ops.NextIteration(data=data, name=None).numpy()
         else:
-            import sys
-            errorMsg = 'Error: Operator [' + self.operator_code + '] does not Support.\n'
-            sys.exit(errorMsg)
+            self.model.unsupport.append(self.operator_code)
 
 
     def convert(self):

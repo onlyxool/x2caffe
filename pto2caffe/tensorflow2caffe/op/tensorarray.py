@@ -1,4 +1,3 @@
-import sys
 import tensorflow as tf
 
 from tensorflow2caffe.op.operator import Operator
@@ -35,8 +34,8 @@ class TensorArray(Operator):
             self.model.constant[self.outputs[0]] = tf.raw_ops.TensorArraySizeV3(handle=handle, flow_in=flow_in, name=None)
         elif self.operator_code == 'TensorArrayWriteV3':
             if self.inputs_buf[2] is None:
-                errorMsg = 'Error: Operator [' + self.operator_code + '] does not Support.\n'
-                sys.exit(errorMsg)
+                self.model.unsupport.append(self.operator_code)
+                return
 
             handle = tf.constant(self.inputs_buf[0], dtype=self.op.inputs[0].dtype)
             index = tf.constant(self.inputs_buf[1], dtype=self.op.inputs[1].dtype)
@@ -51,8 +50,8 @@ class TensorArray(Operator):
             self.model.constant[self.outputs[0]] = tf.raw_ops.TensorArrayReadV3(handle=handle, index=index, flow_in=flow_in, dtype=self.attrs['dtype'], name=None)
         elif self.operator_code == 'TensorArrayScatterV3':
             if self.inputs_buf[2] is None:
-                errorMsg = 'Error: Operator [' + self.operator_code + '] does not Support.\n'
-                sys.exit(errorMsg)
+                self.model.unsupport.append(self.operator_code)
+                return
 
             handle = tf.constant(self.inputs_buf[0], dtype=self.op.inputs[0].dtype)
             indices = tf.constant(self.inputs_buf[1], dtype=self.op.inputs[1].dtype)

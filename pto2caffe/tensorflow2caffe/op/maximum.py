@@ -26,6 +26,7 @@ class Maximum(Operator):
             self.eltwise_param['operation'] = 2
 
             self.attrs = self.eltwise_param
+
             self.setParsed()
         elif self.inputs_buf[1] is not None:
             self.layer_type = 'ReLU'
@@ -41,6 +42,7 @@ class Maximum(Operator):
             self.relu_param['negative_slope'] = 0
 
             self.attrs = self.relu_param
+
             self.setParsed()
 
 

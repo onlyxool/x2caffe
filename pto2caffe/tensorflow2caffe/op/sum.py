@@ -19,13 +19,8 @@ class Sum(Operator):
             x = tf.constant(self.inputs_buf[0], dtype=self.op.inputs[0].dtype)
             axis = tf.constant(self.inputs_buf[1], dtype=self.op.inputs[1].dtype)
             self.model.constant[self.outputs[0]] = tf.raw_ops.Sum(x, axis=axis, keep_dims=self.attrs['keep_dims'], name=None)
-        else:
-            if self.inputs_buf[1] is None:
-                import sys
-                errorMsg = 'Error: Op Max (' + self.op.name + '): can\'t support axis == None'
-                sys.exit(errorMsg)
-            else:
-                axis = self.inputs_buf[1]
+        elif self.inputs_buf[1] is not None:
+            axis = self.inputs_buf[1]
 
             if axis.size == 1 and int(axis) == len(self.inputs_shape) - 1:
                 self.layer_type = 'Reduction'
@@ -33,10 +28,13 @@ class Sum(Operator):
                 self.reduction_param['operation'] = 1
                 self.reduction_param['axis'] = int(axis)
                 self.attrs = self.reduction_param
+                self.setParsed()
             else:
                 raise NotImplementedError(self.op.name)
-
-            self.setParsed()
+        else:
+            self.model.unsupport.append(self.operator_code)
+            errorMsg = 'Error: Op Max (' + self.op.name + '): can\'t support axis == None'
+            print(errorMsg)
 
 
     def convert(self):

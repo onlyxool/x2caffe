@@ -32,8 +32,9 @@ class Minimum(Operator):
 
             # Check weather y == 0
             if np.count_nonzero(self.inputs_buf[1]) > 0:
-                import sys
-                sys.exit('Error: Operator [ Minimum ] does not Support y != 0.\n')
+                self.model.unsupport.append(self.operator_code)
+                print('Error: Operator [ Minimum ] does not Support y != 0.\n')
+                return
 
             # Attribute
             self.relu_param = dict()

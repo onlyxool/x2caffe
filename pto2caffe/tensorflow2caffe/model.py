@@ -11,6 +11,7 @@ from tensorflow2caffe.op.max import Max
 from tensorflow2caffe.op.mul import Mul
 from tensorflow2caffe.op.neg import Neg
 from tensorflow2caffe.op.pad import Pad
+from tensorflow2caffe.op.pow import Pow
 from tensorflow2caffe.op.sub import Sub
 from tensorflow2caffe.op.sum import Sum
 from tensorflow2caffe.op.exp import Exp
@@ -19,6 +20,7 @@ from tensorflow2caffe.op.fill import Fill
 from tensorflow2caffe.op.loop import Loop
 from tensorflow2caffe.op.mean import Mean
 from tensorflow2caffe.op.pack import Pack
+from tensorflow2caffe.op.prod import Prod
 from tensorflow2caffe.op.pool import Pool
 from tensorflow2caffe.op.rank import Rank
 from tensorflow2caffe.op.relu import ReLU
@@ -91,10 +93,6 @@ OpMap = {
 #    'Snapshot': Debug,
 #    'MatrixBandPart': Debug,
 #    'Pow': Debug,
-    'LoopCond': Loop,
-    'NextIteration': Loop,
-    'TensorListReserve': TensorList,
-    'SelectV2': Select,
 #'All': Debug,
 
     'Abs': Abs,
@@ -105,6 +103,7 @@ OpMap = {
     'Mul': Mul,
     'Neg': Neg,
     'Pad': Pad,
+    'Pow': Pow,
     'Sub': Sub,
     'Sum': Sum,
     'AddN': Add,
@@ -112,6 +111,7 @@ OpMap = {
     'Fill': Fill,
     'Mean': Mean,
     'Pack': Pack,
+    'Prod': Prod,
     'Rank': Rank,
     'Relu': ReLU,
     'Size': Size,
@@ -137,6 +137,7 @@ OpMap = {
     'Switch': Switch,
     'MatMul': MatMul,
     'Unpack': Unpack,
+    'LoopCond': Loop,
     'BiasAdd': BiasAdd,
     'Greater': Compare,
     'Maximum': Maximum,
@@ -147,10 +148,12 @@ OpMap = {
     'Softmax': Softmax,
     'Squeeze': Squeeze,
     'ConcatV2': Concat,
+    'SelectV2': Select,
     'GatherV2': GatherV2,
     'LogicalOr': Logical,
     'Softplus': Softplus,
     'LogicalAnd': Logical,
+    'NextIteration': Loop,
     'Conv2D': Convolution,
     'LeakyRelu': LeakyRelu,
     'Transpose': Transpose,
@@ -163,6 +166,7 @@ OpMap = {
     'TensorArrayV3': TensorArray,
     'FusedBatchNormV3': BatchNorm,
     'RandomStandardNormal': Random,
+    'TensorListReserve': TensorList,
     'ResizeBilinear': ResizeBilinear,
     'TensorArraySizeV3': TensorArray,
     'TensorArrayReadV3': TensorArray,
@@ -183,14 +187,15 @@ class Model(Base):
         super().__init__(model, graph)
         self.param = param
         self.layout = param['layout']
-        self.inputs = []
-        self.inputs_shape = []
+        self.inputs = list()
+        self.inputs_shape = list()
         self.constant = dict()
         self.indentity = dict()
-        self.tf_ops = []
-        self.operators = []
-        self.layers = []
-        self.legacys = []
+        self.operations = list()
+        self.operators = list()
+        self.unsupport = list()
+        self.layers = list()
+        self.legacys = list()
         self.setInited()
 
 
@@ -281,18 +286,16 @@ class Model(Base):
             elif op.type in ['NoOp', 'Assert']: #ignore_op
                 pass
             else:
-                self.tf_ops.append(op)
+                self.operations.append(op)
 
-        if len(self.tf_ops) == 0:
+        if len(self.operations) == 0:
             sys.exit('Error: Model file is not Tensorflow Model.\n')
 
-
         # Parse all operations
-        op_unsupport = list()
-        for index, tf_op in enumerate(self.tf_ops):
+        for index, tf_op in enumerate(self.operations):
+
             if tf_op.type not in OpMap:
-                if tf_op.type not in op_unsupport:
-                    op_unsupport.append(tf_op.type)
+                self.unsupport.append(tf_op.type)
                 continue
 
             op = OpMap[tf_op.type](self, tf_op, index)
@@ -303,8 +306,8 @@ class Model(Base):
             else:
                 self.legacys.append(op)
 
-        if len(op_unsupport) > 0:
-            errorMsg = 'Error: Operator ' + str(op_unsupport) + ' does not Support.\n'
+        if len(self.unsupport) > 0:
+            errorMsg = 'Error: Operator ' + str(list(set(self.unsupport))) + ' does not Support.\n'
             sys.exit(errorMsg)
 
         self.setParsed()
@@ -315,10 +318,7 @@ class Model(Base):
 
         for op in self.operators:
             logger.debug(op)
-            layers = op.convert()
-            if layers is None:
-                continue
-            for layer in layers:
+            for layer in op.convert():
                 self.layers.append(layer)
 
         self.setConverted()

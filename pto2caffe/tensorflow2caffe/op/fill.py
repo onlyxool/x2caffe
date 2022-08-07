@@ -18,9 +18,9 @@ class Fill(Operator):
             self.model.constant[self.outputs[0]] = np.empty(shape=self.op.outputs[0].shape.as_list(), dtype=self.op.outputs[0].dtype.as_numpy_dtype())
             self.model.constant[self.outputs[0]].fill(self.inputs_buf[1].item(0))
         else:
-            import sys
+            self.model.unsupport.append(self.operator_code)
             errorMsg = 'Error: Operator [ Fill ] does not Support (dims = {} and value = {}).\n'.format(self.inputs_buf[0], self.inputs_buf[1])
-            sys.exit(errorMsg)
+            print(errorMsg)
 
 
     def convert(self):

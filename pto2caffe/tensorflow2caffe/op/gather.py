@@ -20,9 +20,7 @@ class GatherV2(Operator):
             axis = tf.constant(self.inputs_buf[2], dtype=self.op.inputs[2].dtype)
             self.model.constant[self.outputs[0]] = tf.raw_ops.GatherV2(params=params, indices=indices, axis=axis, batch_dims=self.attrs['batch_dims'], name=None)
         else:
-            import sys
-            errorMsg = 'Error: Operator [ GatherV2 ] does not Support.\n'
-            sys.exit(errorMsg)
+            self.model.unsupport.append(self.operator_code)
 
 
     def convert(self):

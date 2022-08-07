@@ -40,9 +40,10 @@ class Pack(Operator):
             elif self.attrs['axis'] == len(self.outputs_shape[0]) - 1:
                 self.reshape_param = dict(shape=dict(dim=self.inputs_shape[index]+[1]))
             else:
-                import sys
-                errorMsg = 'Error: Op Pack (' + self.op.name + '): axis is ' + str(self.attrs['axis'])
-                sys.exit(errorMsg)
+                self.model.unsupport.append(self.operator_code)
+                errorMsg = 'Error: Op Pack (' + self.op.name + ') unsupport: axis is ' + str(self.attrs['axis'])
+                print(errorMsg)
+                return
 
             # Concat Attribute
             self.concat_param = dict()
