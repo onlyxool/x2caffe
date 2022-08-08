@@ -5,22 +5,6 @@ import numpy as np
 dim_map_nhwc2nchw = [0, 2, 3, 1]
 
 
-numpy_dtype = {
-    'u8': np.uint8,
-    's8': np.int8,
-    's16': np.int16,
-    's32': np.int32,
-    'f32': np.float32
-}
-
-
-dtype_map = {
-    np.uint8: 0,
-    np.int16: 1,
-    np.float32: 2
-}
-
-
 def get_layout(shape):
     if not isinstance(shape, list) and not isinstance(shape, tuple):
         raise NotImplementedError

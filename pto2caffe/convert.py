@@ -1,7 +1,9 @@
 import os
 import sys
 import argparse
-from util import numpy_dtype
+import numpy as np
+
+numpy_dtype = {'u8': np.uint8, 's8': np.int8, 's16': np.int16, 's32': np.int32, 'f32': np.float32}
 
 
 def isContainFile(path, ext_list):
@@ -170,7 +172,7 @@ def args_():
             help = 'Specify the Data root folder')
     args.add_argument('-source',        type = str,     required = False,
             help = 'Specify the data source')
-    args.add_argument('-dtype',         type = str,     required = False,   choices=['u8', 's16', 's32', 'f32'],   default='u8',
+    args.add_argument('-dtype',         type = str,     required = False,   choices=['u8', 's16', 's32', 'f32'],    default='f32',
             help = 'Specify the Data type, 0:u8 1:s16 2:f32')
     args.add_argument('-bin_shape',     type = int,     required = False,   nargs='+',
             help = 'Specify the Data shape when input data is bin file, default layout is [C,H,W]')
@@ -204,6 +206,8 @@ def args_():
             help = 'log print level, 0:Debug 1:Info 2:Warning, 3:ERROR')
     args.add_argument('-optimizify',    type = int,     required = False,   default=0,      choices=[0, 1, 2, 3, 4, 5, 6],
             help = 'optimizify model')
+    args.add_argument('-simplifier',    type = int,     required = False,   default=0,      choices=[0, 1],
+            help = 'simplifier onnx model')
     args.add_argument('-streamlit',     type = int,     required = False,   default=0,      choices=[0, 1],
             help = 'Web Interface Flag')
     args = args.parse_args()

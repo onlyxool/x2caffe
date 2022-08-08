@@ -4,8 +4,6 @@ import caffe_path
 import caffe
 from caffe.proto import caffe_pb2
 
-from util import *
-
 
 def param_name_dict():
     """Find out the correspondence between layer names and parameter names."""
@@ -117,8 +115,11 @@ def save_caffe_model(caffe_model_path, layers):
     with open(prototxt_save_path, 'w') as f:
         print(proto, file=f)
 
-#    caffe.set_device(2)
-    caffe.set_mode_cpu()
+    if caffe.__version__.find('gpu') >= 0:
+        caffe.set_mode_gpu()
+        caffe.set_device(0)
+    else:
+        caffe.set_mode_cpu()
 
     model = caffe.Net(prototxt_save_path, caffe.TEST)
     for id, layer in enumerate(layers):
@@ -135,6 +136,8 @@ def save_caffe_model(caffe_model_path, layers):
     model_save_path = caffe_model_path + '.caffemodel'
     model.save(model_save_path)
 
+
+dtype_map = {np.uint8: 0, np.int16: 1, np.float32: 2}
 
 def make_caffe_input_layer(input, input_shape, index, param):
     layer_name = 'input' + str(index)
