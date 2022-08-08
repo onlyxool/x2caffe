@@ -69,11 +69,11 @@ class Operator(Base):
     def __parseInput__(self):
         for input in self.node.input:
             self.inputs.append(input)
-            self.inputs_buf.append(self.model.input_tensor.get(input, None))
+            self.inputs_buf.append(self.model.constant.get(input, None))
             if input in self.model.shape:
                 self.inputs_shape.append(self.model.shape[input])
-            elif input in self.model.input_tensor:
-                self.inputs_shape.append(self.model.input_tensor[input].shape)
+            elif input in self.model.constant:
+                self.inputs_shape.append(self.model.constant[input].shape)
             else:
                 self.inputs_shape.append(None)
 

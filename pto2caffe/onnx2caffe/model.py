@@ -122,7 +122,8 @@ class Model(Base):
         self.param = param
         self.inputs = list()
         self.inputs_shape = list()
-        self.input_tensor = dict()
+        self.inputs_dtype = list()
+        self.constant = dict()
         self.constant = dict()
         self.operators = list()
         self.unsupport = list()
@@ -186,16 +187,16 @@ class Model(Base):
 
         # Get Weight & Bias
         for tensor in self.model.graph.initializer:
-            self.input_tensor[tensor.name] =  numpy_helper.to_array(tensor)
+            self.constant[tensor.name] =  numpy_helper.to_array(tensor)
         for tensor in self.model.graph.sparse_initializer:
-            self.input_tensor[tensor.name] =  numpy_helper.to_array(tensor)
+            self.constant[tensor.name] =  numpy_helper.to_array(tensor)
 
         if len(self.graph.input) == 0 or self.graph.input is None:
             sys.exit('model input can\'t be none')
 
         print('ONNX Model Input size: (opset=%d)' %self.opset[0])
         for input in self.graph.input:
-            if input.name not in self.input_tensor:
+            if input.name not in self.constant:
                 self.inputs.append(input.name)
                 self.inputs_shape.append(self.shape[input.name])
                 print(input.name, self.shape[input.name])

@@ -16,7 +16,7 @@ class Unsqueeze(Operator):
         # Attributes
         if self.inputs_buf[0] is not None:
             self.layer_type = 'Unsqueeze'
-            self.model.input_tensor[self.outputs[0]] = self.inputs_buf[0].reshape(self.outputs_shape[0])
+            self.model.constant[self.outputs[0]] = self.inputs_buf[0].reshape(self.outputs_shape[0])
         else:
             self.layer_type = 'Reshape'
             self.reshape_param = dict(shape=dict(dim=self.outputs_shape[0]))

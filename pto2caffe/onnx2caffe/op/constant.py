@@ -13,7 +13,7 @@ class Constant(Operator):
         super().__parse__()
 
         # Attributes
-        self.model.input_tensor[self.node.output[0]] = self.attrs['value']
+        self.model.constant[self.node.output[0]] = self.attrs['value']
 
 
     def convert(self):
