@@ -1,5 +1,6 @@
 import sys
 import logging
+import numpy as np
 from base import Base
 from onnx import numpy_helper
 
@@ -49,8 +50,9 @@ from onnx2caffe.op.mish import Mish
 from caffe_transform import save_caffe_model
 from caffe_transform import make_caffe_input_layer
 
+numpy_dtype = [None, np.float32, np.uint8, np.int8, np.uint16, np.int16, np.int32, np.int64, 'string', np.bool, np.float16, np.double, np.uint32, np.uint64, np.complex64, np.complex128, 'bfloat16']
 
-logger = logging.getLogger('onnx2caffe')
+logger = logging.getLogger('ONNX2Caffe')
 
 OpMap = {
     'Elu': Elu,
@@ -123,6 +125,8 @@ class Model(Base):
         self.inputs = list()
         self.inputs_shape = list()
         self.inputs_dtype = list()
+        self.inputs_maxval = list()
+        self.inputs_minval = list()
         self.constant = dict()
         self.constant = dict()
         self.operators = list()
@@ -135,7 +139,6 @@ class Model(Base):
 
 
     def ReplaceActivation(self, node, op_list, activation):
-#        skip_op = ['Constant', 'Reshape']
         skip_op = []
         for i in range(len(node)):
             if i >= len(node):
@@ -197,9 +200,14 @@ class Model(Base):
         print('ONNX Model Input size: (opset=%d)' %self.opset[0])
         for input in self.graph.input:
             if input.name not in self.constant:
+                print(input.name, self.shape[input.name])
+
                 self.inputs.append(input.name)
                 self.inputs_shape.append(self.shape[input.name])
-                print(input.name, self.shape[input.name])
+                self.inputs_dtype.append(numpy_dtype[input.type.tensor_type.elem_type])
+                self.inputs_maxval.append(None)
+                self.inputs_minval.append(None)
+
         self.param['inputs_shape'] = self.inputs_shape
 
         for index, node in enumerate(self.graph.node):

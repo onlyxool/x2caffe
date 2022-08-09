@@ -23,7 +23,7 @@ class Quantize(Operator):
             self.reshape_param = dict(shape=dict(dim=self.outputs_shape[0]))
             self.setParsed()
         else:
-            self.model.tensor[self.outputs[0]] = self.model.tensor[self.inputs[0]]
+            self.model.constant[self.outputs[0]] = self.model.constant[self.inputs[0]]
 
 
     def convert(self):

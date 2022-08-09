@@ -33,6 +33,9 @@ from caffe_transform import save_caffe_model
 from caffe_transform import make_caffe_input_layer
 from tflite2caffe.quantize import Dequantize, isQuantilize
 
+
+numpy_dtype = [np.float32, np.float16, np.int32, np.uint8, np.int64, 'string', np.bool, np.int16, np.complex64, np.int8, np.float64, np.complex128]
+
 logger = logging.getLogger('TFLite2Caffe')
 
 OpMap = {
@@ -101,12 +104,20 @@ class Model(Base):
     def __init__(self, model:tflite.Model, param):
         super().__init__(model, model.Subgraphs(0))
         self.version = model.Version()
+
+        self.inputs = list()
         self.inputs_shape = list()
-        self.tensor = dict()
+        self.inputs_dtype = list()
+        self.inputs_maxval = list()
+        self.inputs_minval = list()
+        self.inputs_scale = list()
+        self.inputs_zeropoint = list()
+
+        self.constant = dict()
         self.param = param
-        self.operators = []
-        self.layers = []
-        self.legacys = []
+        self.operators = list()
+        self.layers = list()
+        self.legacys = list()
         self.setInited()
 
 
@@ -119,21 +130,28 @@ class Model(Base):
         print('TFlite Model Input size:')
         for i in range(self.graph.InputsLength()):
             print(self.graph.Inputs(i), ':', list(self.graph.Tensors(self.graph.Inputs(i)).ShapeAsNumpy()))
+
+            self.inputs_dtype.append(numpy_dtype[self.graph.Tensors(self.graph.Inputs(i)).Type()])
+            self.inputs_maxval.append(self.graph.Tensors(self.graph.Inputs(i)).Quantization().MaxAsNumpy())
+            self.inputs_minval.append(self.graph.Tensors(self.graph.Inputs(i)).Quantization().MinAsNumpy())
             self.inputs_shape.append(shape_map_nhwc2nchw(self.graph.Tensors(self.graph.Inputs(i)).ShapeAsNumpy().tolist()))
+            self.inputs_scale.append(self.graph.Tensors(self.graph.Inputs(i)).Quantization().ScaleAsNumpy())
+            self.inputs_zeropoint.append(self.graph.Tensors(self.graph.Inputs(i)).Quantization().ZeroPointAsNumpy())
+
         self.param['inputs_shape'] = self.inputs_shape
 
         # Tensors
         for i in range(self.graph.TensorsLength()):
             type_id = self.graph.Tensors(i).Type()
-            tensor_type = ['float32', 'float16', 'int32', 'uint8', 'int64', 'string', 'bool', 'int16', 'COMPLEX64', 'int8', 'float64', 'COMPLEX128']
             buffer_id = self.graph.Tensors(i).Buffer()
+
             buf = self.model.Buffers(buffer_id).DataAsNumpy()
             shape = self.graph.Tensors(i).ShapeAsNumpy()
 
             if isinstance(buf, int) and buf == 0:
-                self.tensor[i] = None
+                self.constant[i] = None
             elif isinstance(buf, np.ndarray):
-                nparray = np.frombuffer(buf, dtype=tensor_type[type_id]).reshape(shape)
+                nparray = np.frombuffer(buf, dtype=numpy_dtype[type_id]).reshape(shape)
                 if self.graph.Tensors(i).Quantization() is not None:
                     quantizedDimmension = self.graph.Tensors(i).Quantization().QuantizedDimension()
                     scale = self.graph.Tensors(i).Quantization().ScaleAsNumpy()
@@ -142,7 +160,7 @@ class Model(Base):
                     if isQuantilize(self.graph.Tensors(i).Quantization().ScaleLength(), self.graph.Tensors(i).Quantization().ZeroPointLength()):
                         nparray = Dequantize(nparray, scale, zero_point, quantizedDimmension, np.float32)
 
-                self.tensor[i] = nparray
+                self.constant[i] = nparray
             else:
                 raise NotImplementedError
 

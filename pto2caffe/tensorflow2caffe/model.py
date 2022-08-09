@@ -189,6 +189,9 @@ class Model(Base):
         self.layout = param['layout']
         self.inputs = list()
         self.inputs_shape = list()
+        self.inputs_dtype = list()
+        self.inputs_maxval = list()
+        self.inputs_minval = list()
         self.constant = dict()
         self.indentity = dict()
         self.operations = list()
@@ -237,12 +240,19 @@ class Model(Base):
         return operations
 
 
-    def get_input_shape(self, operations):
+    def parse_input(self, operations):
         for op in operations:
-            if op.type == 'Placeholder':
-                if 'unused_control_flow_input' not in op.outputs[0].name and op.outputs[0].shape.is_fully_defined():
-                    self.inputs_shape.append(shape_map_nhwc2nchw(op.outputs[0].shape.as_list()) if self.layout == 'NHWC' else op.outputs[0].shape.as_list())
-                    self.inputs.append(op.outputs[0].name)
+            if op.type == 'Placeholder' and 'unused_control_flow_input' not in op.outputs[0].name and op.outputs[0].shape.is_fully_defined():
+                dtype = type(op.get_attr('dtype').as_numpy_dtype()) if op.get_attr('dtype').is_numpy_compatible else None
+                input_shape = shape_map_nhwc2nchw(op.outputs[0].shape.as_list()) if self.layout == 'NHWC' else op.outputs[0].shape.as_list()
+
+                self.inputs.append(op.outputs[0].name)
+                self.inputs_shape.append(input_shape)
+                self.inputs_dtype.append(dtype)
+                self.inputs_maxval.append(op.get_attr('dtype').max)
+                self.inputs_minval.append(op.get_attr('dtype').min)
+
+                self.layers.append(make_caffe_input_layer(op.outputs[0].name, input_shape, len(self.inputs), self.param))
 
         print('Tensorflow GraphDef Input size: (graph version=%d)' %self.graph.version)
         for i, shape in enumerate(self.inputs_shape):
@@ -257,7 +267,6 @@ class Model(Base):
             sys.exit('Error: Dynamic Model input detected, Please Use -input_shape to overwrite input shape.')
 
 
-
     def parse(self):
         logger.debug('Parsing the TensorFlow Model...')
 
@@ -267,7 +276,7 @@ class Model(Base):
 
         operations = graph.get_operations()
 
-        self.get_input_shape(operations)
+        self.parse_input(operations)
 
         operations = self.preprocess(operations)
 
@@ -279,11 +288,7 @@ class Model(Base):
                     self.indentity[op.outputs[0].name] = self.indentity.get(op.inputs[0].name, op.inputs[0].name)
                 else:
                     self.constant[op.outputs[0].name] = tf.get_static_value(op.outputs[0])
-            elif op.type == 'Placeholder':
-                if 'unused_control_flow_input' not in op.outputs[0].name:
-                    input_shape = shape_map_nhwc2nchw(op.outputs[0].shape.as_list()) if self.layout == 'NHWC' else op.outputs[0].shape.as_list()
-                    self.layers.append(make_caffe_input_layer(op.outputs[0].name, input_shape, len(self.inputs), self.param))
-            elif op.type in ['NoOp', 'Assert']: #ignore_op
+            elif op.type in ['NoOp', 'Assert', 'Placeholder']: #ignore_op
                 pass
             else:
                 self.operations.append(op)

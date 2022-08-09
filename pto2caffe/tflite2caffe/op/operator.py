@@ -62,7 +62,7 @@ class Operator(Base):
             if self.op.Inputs(i) >= 0:
                 self.inputs.append(self.op.Inputs(i))
                 self.inputs_shape.append(shape_map_nhwc2nchw(self.graph.Tensors(self.inputs[i]).ShapeAsNumpy().tolist()))
-                self.inputs_buf.append(self.model.tensor[self.op.Inputs(i)])
+                self.inputs_buf.append(self.model.constant[self.op.Inputs(i)])
             else:
                 self.inputs_buf.append(None)
 

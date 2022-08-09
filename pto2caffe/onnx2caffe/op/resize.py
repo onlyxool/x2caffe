@@ -33,8 +33,6 @@ class Resize(Operator):
             scale_factor_w = output_w / input_w
             scale_factor = scale_factor_h if scale_factor_h == scale_factor_w else 0
 
-        assert(scale_factor != 0)
-
         # Attributes
         self.mode = str(self.attrs['mode'], encoding = "utf8")
         coordinate = str(self.attrs.get('coordinate_transformation_mode', b''), encoding = "utf8")

@@ -32,15 +32,24 @@ def get_one_file(folder_path):
                 return path+'/'+file_name
 
 
-def get_input_tensor(param, input_shape):
+def get_input_tensor(param, input_shape, dtype=None, maxval=None, minval=None):
+    dtype = param['dtype'] if dtype is None else dtype
     root_path = param.get('root_folder', None)
+
     if root_path is not None and os.path.isfile(root_path):
         tensor = load_file2tensor(root_path, param)
     elif root_path is not None and os.path.isdir(root_path):
         param['input_file'] = get_one_file(root_path)
         tensor = load_file2tensor(param['input_file'], param)
     else:
-        return np.random.random(input_shape).astype(param['dtype'])
+        if np.issubdtype(dtype, np.integer):
+            maxval = np.iinfo(dtype).max if maxval is None else maxval
+            minval = np.iinfo(dtype).min if minval is None else minval
+            return np.random.randint(low=minval, high=maxval, size=input_shape, dtype=dtype)
+        elif np.issubdtype(dtype, np.floating):
+            return np.random.uniform(size=input_shape).astype(dtype)
+        else:
+            raise NotImplementedError('Can\'t support %s as input data type')
 
     return preprocess(tensor, param)
 
