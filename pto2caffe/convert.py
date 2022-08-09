@@ -79,6 +79,7 @@ def CheckParam(param):
 
         # source
         if param.get('source', None) is not None:
+            print('WARNING: The Agrument -source is DEPRECATED and will be removed in a future version.')
             if os.path.isfile(param['source']):
                 param['source'] = os.path.abspath(os.path.normpath(param['source']))
             else:
