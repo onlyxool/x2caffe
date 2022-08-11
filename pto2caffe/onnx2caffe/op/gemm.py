@@ -15,12 +15,14 @@ class InnerProduct(Operator):
         super().__parse__()
 
         if self.inputs_shape[0] is None or self.inputs_shape[1] is None:
-            errorMsg = 'Input shape of Gemm is None. [' + self.name +']'
-            raise NotImplementedError(errorMsg)
+            self.model.errorMsg.append('[' + self.node.name + ']: Input shape of Gemm is None.')
+            self.model.unsupport.append(self.operator_code)
+            return
 
         if len(self.inputs_shape[1]) != 2 or len(self.inputs_shape[0]) != 2:
-            errorMsg = 'Gemm is supported only for inner_product layer. [' + self.name +']'
-            raise NotImplementedError(errorMsg)
+            self.model.errorMsg.append('[' + self.node.name + ']: Operator Gemm is supported only for inner_product layer.')
+            self.model.unsupport.append(self.operator_code)
+            return
 
         # Weight
         self.weight = self.inputs_buf[1]

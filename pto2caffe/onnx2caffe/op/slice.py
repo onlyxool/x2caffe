@@ -30,7 +30,7 @@ class Slice(Operator):
 
         if len(starts) > 1 or len(ends) > 1 or len(axes) > 1 or num_slices > 1:
             self.model.unsupport.append(self.operator_code)
-            self.model.errorMsg.append('Do not support starts > 1. ' + self.node.name + '\'s starts is ' + str(starts))
+            self.model.errorMsg.append('[' + self.node.name + ']: Operator Slice Do not support starts > 1. ' + self.node.name + '\'s starts is ' + str(starts))
 
         if ends[0] == 9223372036854775807: # int max
             ends[0] = self.inputs_shape[0][axes[0]]
@@ -53,7 +53,7 @@ class Slice(Operator):
                 self.outputs.append(self.name + 'useless1')
         else:
             self.model.unsupport.append(self.operator_code)
-            self.model.errorMsg.append('Do not support step > 1. ' + self.node.name + '\'s steps is ' + str(steps))
+            self.model.errorMsg.append('[' + self.node.name + ']: Operator Slice Do not support step > 1. ' + self.node.name + '\'s steps is ' + str(steps))
 
         self.setParsed()
 

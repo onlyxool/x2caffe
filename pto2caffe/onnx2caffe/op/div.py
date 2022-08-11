@@ -43,8 +43,8 @@ class Div(Operator):
 
             self.setParsed()
         else:
+            self.model.errorMsg.append('[' + self.node.name + ']: Operator Div does not Support. Operand[1] is None.')
             self.model.unsupport.append(self.operator_code)
-            self.model.errorMsg.append('Error: Operator [ Div ] does not Support. Operand[1] is None.')
 
 
     def convert(self):
