@@ -41,8 +41,14 @@ class ResizeNearest(Operator):
             self.convolution_param['stride_h'] = int(scale_factor)
             self.convolution_param['stride_w'] = int(scale_factor)
             self.convolution_param['group'] = self.inputs_shape[0][1]
+
+            # Padding
+            legacy_pad = self.model.pad.get(self.inputs[0], {'left': 0, 'right': 0, 'top': 0, 'bottom': 0})
+            padding = handleLegacyPad('VALID', self.inputs_shape[2], self.outputs_shape[0], self.convolution_param, legacy_pad, self.type)
+            self.convolution_param.update(padding)
+
             self.attrs = self.convolution_param
-            # TODO: self.convolution_param['pads']
+
             self.weight = np.ones((self.outputs_shape[0][1], 1, int(scale_factor), int(scale_factor)), dtype=int)
             self.inputs_buf[1] = self.weight
             self.inputs_shape[1] = self.inputs_buf[1].shape

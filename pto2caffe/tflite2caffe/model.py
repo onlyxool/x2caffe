@@ -114,10 +114,11 @@ class Model(Base):
         self.inputs_zeropoint = list()
 
         self.constant = dict()
+        self.indentity = dict()
+        self.pad = dict()
         self.param = param
         self.operators = list()
         self.layers = list()
-        self.legacys = list()
         self.setInited()
 
 
@@ -186,8 +187,6 @@ class Model(Base):
                 if hasattr(op, 'activ_type_code'):
                     act_op = handleFusedActivation(op)
                     self.operators.append(act_op)
-            else:
-                self.legacys.append(op)
 
         self.setParsed()
 
