@@ -1,6 +1,6 @@
 from caffe_transform import caffe_layer
 from tensorflow2caffe.op.operator import Operator
-from util import handleLegacyPad, getLegacyAttrs
+from util import handleLegacyPad
 
 
 class Convolution(Operator):
@@ -38,7 +38,7 @@ class Convolution(Operator):
         self.convolution_param['bias_term'] = True if self.bias is not None else False
 
         # Padding
-        legacy_pad = getLegacyAttrs(self, 'Pad')
+        legacy_pad = self.model.pad.get(self.inputs[0], {'left': 0, 'right': 0, 'top': 0, 'bottom': 0})
         padding = handleLegacyPad(self.attrs['padding'], self.inputs_shape[0], self.outputs_shape[0], self.convolution_param, legacy_pad, self.type)
         self.convolution_param.update(padding)
 

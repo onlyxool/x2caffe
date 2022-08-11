@@ -1,8 +1,8 @@
 from caffe_transform import caffe_layer
 from tensorflow2caffe.op.operator import Operator
 
+from util import handleLegacyPad
 from util import dim_map_nhwc2nchw
-
 
 class Max(Operator):
 
@@ -53,6 +53,11 @@ class Max(Operator):
                     self.reshape_param = dict(shape=dict(dim=self.outputs_shape[0]))
                 else:
                     self.keep_dims = True
+
+                # Padding
+                legacy_pad = self.model.pad.get(self.inputs[0], {'left': 0, 'right': 0, 'top': 0, 'bottom': 0})
+                padding = handleLegacyPad('VALID', self.inputs_shape[0], self.outputs_shape[0], self.pooling_param, legacy_pad, self.type)
+                self.pooling_param.update(padding)
 
                 self.attrs = self.pooling_param
             else:

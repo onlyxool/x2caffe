@@ -194,11 +194,11 @@ class Model(Base):
         self.inputs_minval = list()
         self.constant = dict()
         self.indentity = dict()
+        self.pad = dict()
         self.operations = list()
         self.operators = list()
         self.unsupport = list()
         self.layers = list()
-        self.legacys = list()
         self.setInited()
 
 
@@ -308,8 +308,6 @@ class Model(Base):
 
             if op.status.parsed:
                 self.operators.append(op)
-            else:
-                self.legacys.append(op)
 
         if len(self.unsupport) > 0:
             errorMsg = 'Error: Operator ' + str(list(set(self.unsupport))) + ' does not Support.\n'

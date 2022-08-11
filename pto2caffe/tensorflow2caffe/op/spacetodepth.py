@@ -3,6 +3,8 @@ import numpy as np
 from caffe_transform import caffe_layer
 from tensorflow2caffe.op.operator import Operator
 
+from util import handleLegacyPad
+
 
 class SpaceToDepth(Operator):
 
@@ -55,6 +57,12 @@ class SpaceToDepth(Operator):
         self.convolution_param['kernel_h'] = scale_factor
         self.convolution_param['kernel_w'] = scale_factor
         self.convolution_param['bias_term'] = False
+
+        # Padding
+        legacy_pad = self.model.pad.get(self.inputs[0], {'left': 0, 'right': 0, 'top': 0, 'bottom': 0}) 
+        padding = handleLegacyPad(self.attrs['padding'], self.inputs_shape[0], self.outputs_shape[0], self.convolution_param, legacy_pad, self.type)
+        self.convolution_param.update(padding)
+
         self.attrs = self.convolution_param
 
         self.setParsed()
