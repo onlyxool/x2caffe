@@ -1,6 +1,8 @@
 from caffe_transform import caffe_layer
 from onnx2caffe.op.operator import Operator
 
+from onnx2caffe.utility import computePad
+
 
 class Reduce(Operator):
 
@@ -22,6 +24,11 @@ class Reduce(Operator):
         self.pooling_param['stride_h'] = 1
         self.pooling_param['stride_w'] = 1
         self.pooling_param['ceil_mode'] = False
+
+        # Padding
+        legacy_pad = self.model.pad.get(self.inputs[0], {'left': 0, 'right': 0, 'top': 0, 'bottom': 0})
+        padding = computePad(self.type, self.attrs, self.inputs_shape[0], self.outputs_shape[0], kernel_size, strides, legacy_pad)
+        self.pooling_param.update(padding)
 
         self.attrs = self.pooling_param
 
