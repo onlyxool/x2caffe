@@ -1,7 +1,6 @@
 from caffe_transform import caffe_layer
 from onnx2caffe.op.operator import Operator
 
-from util import getLegacyAttrs
 from onnx2caffe.utility import computePad
 
 
@@ -9,7 +8,6 @@ class Convolution(Operator):
 
     def __init__(self, model, node, index):
         super().__init__(model, node, index)
-        self.convolution_param = dict()
         assert(self.operator_code == 'Conv')
         self.setInited()
 
@@ -25,6 +23,7 @@ class Convolution(Operator):
         self.bias = self.inputs_buf[2] if len(self.inputs_buf) == 3 else None
 
         # Attributes
+        self.convolution_param = dict()
         self.convolution_param['num_output'] = self.weight.shape[0]
 
         strides = self.attrs.get('strides', [1, 1])
@@ -37,7 +36,7 @@ class Convolution(Operator):
         self.convolution_param['bias_term'] = True if self.bias is not None else False
 
         # Padding
-        legacy_pad = getLegacyAttrs(self, 'Pad')
+        legacy_pad = self.model.pad.get(self.inputs[0], {'left': 0, 'right': 0, 'top': 0, 'bottom': 0})
         padding = computePad(self.type, self.attrs, self.inputs_shape[0], self.outputs_shape[0], kernel_size, strides, legacy_pad)
         self.convolution_param.update(padding)
 

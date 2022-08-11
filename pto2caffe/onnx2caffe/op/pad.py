@@ -1,4 +1,3 @@
-import sys
 import numpy as np
 
 from onnx2caffe.op.operator import Operator
@@ -19,26 +18,25 @@ class Pad(Operator):
         if self.attrs.get('value', 0.0) != 0.0 or self.attrs.get('mode', b'constant').decode() != 'constant':
             errorMsg = 'Caffe support constant Pad mode only.'
             print('Warning:', errorMsg)
-#            sys.exit(errorMsg)
 
         if self.model.opset[0] >= 11:
             pad = self.inputs_buf[1].reshape(-1, len(self.inputs_shape[0]))
         else:
             pad = np.array(self.attrs['pads']).reshape(-1, len(self.inputs_shape[0]))
 
-        self.pad = dict()
-        if len(self.inputs_shape[0]) == 4:
-            self.pad['left']    = pad[0][3]
-            self.pad['right']   = pad[1][3]
-            self.pad['top']     = pad[0][2]
-            self.pad['bottom']  = pad[1][2]
-        else:
-            errorMsg = 'Input tensor has' + len(self.inputs_shape[0]) + 'dimentions'
-            sys.exit(errorMsg)
+        self.model.indentity[self.outputs[0]] = self.model.indentity.get(self.inputs[0], self.inputs[0])
+        if np.count_nonzero(pad) > 0:
+            pad_dict = dict()
+            if len(self.inputs_shape[0]) == 4:
+                pad_dict['left']    = pad[0][3]
+                pad_dict['right']   = pad[1][3]
+                pad_dict['top']     = pad[0][2]
+                pad_dict['bottom']  = pad[1][2]
+                self.model.pad[self.inputs[0]] = pad_dict
+            else:
+                self.model.errorMsg.append('[' + self.node.name + ']: Input tensor has' + str(len(self.inputs_shape[0])) + 'dimentions')
+                self.model.unsupport.append(self.operator_code)
 
-        self.attrs = self.pad
-
-        self.isLegacy = True
 
     def convert(self):
         pass

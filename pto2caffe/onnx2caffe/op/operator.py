@@ -18,7 +18,6 @@ class Operator(Base):
         self.pre = []  # ops that before this op which to enable ONNX op
         self.post = []  # ops that after this op which to enable ONNX op
         self.attrs = dict()
-        self.isLegacy = False
 
 
     @property
@@ -68,7 +67,7 @@ class Operator(Base):
 
     def __parseInput__(self):
         for input in self.node.input:
-            self.inputs.append(input)
+            self.inputs.append(self.model.indentity.get(input, input))
             self.inputs_buf.append(self.model.constant.get(input, None))
             if input in self.model.shape:
                 self.inputs_shape.append(self.model.shape[input])

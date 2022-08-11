@@ -41,6 +41,7 @@ from onnx2caffe.op.transpose import Permute
 from onnx2caffe.op.reducemean import Reduce
 from onnx2caffe.op.batchnorm import BatchNorm
 from onnx2caffe.op.convtranspose import Deconvolution
+#from onnx2caffe.op.globalaveragepool import GlobalAveragePool
 from onnx2caffe.op.instancenormalization import InstanceNormalization
 
 from onnx2caffe.op.debug import Debug
@@ -96,6 +97,7 @@ OpMap = {
     'GlobalAveragePool': Pooling,
     'ConvTranspose': Deconvolution,
     'BatchNormalization': BatchNorm,
+#    'GlobalAveragePool': GlobalAveragePool,
     'InstanceNormalization': InstanceNormalization,
     'Upsample': Upsample, #Deprecated
     'Mish': Mish, # Yolov4
@@ -128,13 +130,13 @@ class Model(Base):
         self.inputs_maxval = list()
         self.inputs_minval = list()
         self.constant = dict()
-        self.constant = dict()
+        self.indentity = dict()
+        self.pad = dict()
         self.operators = list()
         self.unsupport = list()
         self.errorMsg = list()
         self.layers = list()
         self.shape = dict()
-        self.legacys = list()
         self.setInited()
 
 
@@ -220,8 +222,6 @@ class Model(Base):
 
             if op.status.parsed:
                 self.operators.append(op)
-            elif op.isLegacy:
-                self.legacys.append(op)
 
         for errorMsg in list(set(self.errorMsg)):
             print(errorMsg)
