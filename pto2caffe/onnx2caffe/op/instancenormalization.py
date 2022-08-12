@@ -23,7 +23,7 @@ class InstanceNormalization(Operator):
         # Attributes
         self.batch_norm_param = dict()
         self.batch_norm_param['eps'] = self.attrs.get('epsilon', 1e-5)
-        self.batch_norm_param['use_global_stats'] = False
+        self.batch_norm_param['use_global_stats'] = True
 
         self.scale_param = dict()
         self.scale_param['bias_term'] = True
