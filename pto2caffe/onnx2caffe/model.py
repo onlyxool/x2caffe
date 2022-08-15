@@ -56,52 +56,54 @@ numpy_dtype = [None, np.float32, np.uint8, np.int8, np.uint16, np.int16, np.int3
 logger = logging.getLogger('ONNX2Caffe')
 
 OpMap = {
+    'Add': Add,
+    'Div': Div,
     'Elu': Elu,
     'Exp': Exp,
     'Log': Log,
-    'Pad': Pad,
     'LRN': LRN,
-    'Add': Add,
-    'Sum': Sum,
-    'Sub': Sub,
     'Mul': Mul,
-    'Div': Div,
+    'Pad': Pad,
     'Pow': Pow,
-    'Tanh': TanH,
-    'Sqrt': Sqrt,
+    'Sub': Sub,
+    'Sum': Sum,
     'Relu': ReLU,
+    'Sqrt': Sqrt,
+    'Tanh': TanH,
     'Clip': ReLUX,
     'PRelu': PReLU,
     'Slice': Slice,
     'Split': Split,
-    'MatMul': MatMul,
     'Concat': Concat,
+    'MatMul': MatMul,
     'Resize': Resize,
     'LeakyRelu': ReLU,
-    'Sigmoid': Sigmoid,
-    'Softmax': Softmax,
     'Dropout': Dropout,
-    'Reshape': Reshape,
-    'Squeeze': Reshape,
     'Flatten': Flatten,
     'MaxPool': Pooling,
+    'Reshape': Reshape,
+    'Sigmoid': Sigmoid,
+    'Softmax': Softmax,
+    'Squeeze': Reshape,
     'Conv': Convolution,
-    'Identity': Reshape,
+#    'Identity': Reshape,
     'Gemm': InnerProduct,
     'Constant': Constant,
     'Softplus': Softplus,
-    'Unsqueeze': Reshape,
     'Transpose': Permute,
+    'Unsqueeze': Reshape,
     'ReduceMean': Reduce,
     'AveragePool': Pooling,
-    'GlobalAveragePool': Pooling,
+#    'GlobalAveragePool': Pooling, # Streamlit == 1
     'ConvTranspose': Deconvolution,
     'BatchNormalization': BatchNorm,
-#    'GlobalAveragePool': GlobalAveragePool,
+    'GlobalAveragePool': GlobalAveragePool,
     'InstanceNormalization': InstanceNormalization,
     'Upsample': Upsample, #Deprecated
     'Mish': Mish, # Yolov4
 
+#    'Gather': Debug,
+#    'ArgMax': Debug,
 #    'Multinomial': Debug,
 #    'Expand': Debug,
 #    'ConstantOfShape': Debug,
@@ -213,7 +215,11 @@ class Model(Base):
         self.param['inputs_shape'] = self.inputs_shape
 
         for index, node in enumerate(self.graph.node):
-            if node.op_type not in OpMap:
+            if node.op_type in ['Identity']: #ignore op
+                self.indentity[node.outputs[0]] = node.inputs[0]
+                continue
+
+            if node.op_type not in OpMap: # Unsupport OP
                 self.unsupport.append(node.op_type)
                 continue
 

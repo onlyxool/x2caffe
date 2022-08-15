@@ -6,7 +6,7 @@ class Reshape(Operator):
 
     def __init__(self, model, node, index):
         super().__init__(model, node, index)
-        assert(self.operator_code in ('Reshape', 'Squeeze', 'Identity', 'Unsqueeze'))
+        assert(self.operator_code in ('Reshape', 'Squeeze', 'Unsqueeze'))
         self.setInited()
 
 
@@ -16,6 +16,8 @@ class Reshape(Operator):
         if self.inputs_buf[0] is not None:
             self.layer_type = 'Constant'
             self.model.constant[self.outputs[0]] = self.inputs_buf[0].reshape(self.outputs_shape[0])
+        elif self.inputs_shape[0] == self.outputs_shape[0]:
+            self.model.indentity[self.outputs[0]] = self.inputs[0]
         else:
             self.layer_type = 'Reshape'
 
