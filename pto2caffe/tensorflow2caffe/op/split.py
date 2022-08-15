@@ -16,7 +16,7 @@ class Split(Operator):
         super().__parse__()
 
         if self.attrs['num_split'] == 1:
-            self.model.indentity[self.op.outputs[0].name] = self.model.indentity.get(self.op.inputs[1].name, self.op.inputs[1].name)
+            self.model.indentity[self.outputs[0]] = self.model.indentity.get(self.inputs[1], self.inputs[1])
         else:
             self.layer_type = 'Slice'
 

@@ -15,7 +15,7 @@ class Squeeze(Operator):
         super().__parse__()
 
         if self.op.inputs[0].shape == self.op.outputs[0].shape:
-            self.model.indentity[self.op.outputs[0].name] = self.model.indentity.get(self.op.inputs[0].name, self.op.inputs[0].name)
+            self.model.indentity[self.outputs[0]] = self.model.indentity.get(self.inputs[0], self.inputs[0])
         else:
             if None not in self.outputs_shape[0]:
                 self.reshape_param = dict(shape=dict(dim=self.outputs_shape[0]))

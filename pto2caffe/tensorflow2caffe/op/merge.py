@@ -15,7 +15,7 @@ class Merge(Operator):
 
         if self.inputs_buf[0] is None and self.inputs_buf[1] is None:
             # Skip Op
-            self.model.indentity[self.op.outputs[0].name] = self.model.indentity.get(self.op.inputs[0].name, self.op.inputs[0].name)
+            self.model.indentity[self.outputs[0]] = self.model.indentity.get(self.inputs[0], self.inputs[0])
         elif self.inputs_buf[0] is not None:
             # Constant Op
             self.model.constant[self.outputs[0]] = self.inputs_buf[0]

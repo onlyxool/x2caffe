@@ -19,8 +19,8 @@ class Switch(Operator):
             self.model.constant[self.outputs[0]] = self.inputs_buf[0]
         else:
             # Skip Op
-            self.model.indentity[self.op.outputs[1].name] = self.model.indentity.get(self.op.inputs[0].name, self.op.inputs[0].name)
-            self.model.indentity[self.op.outputs[0].name] = self.model.indentity.get(self.op.inputs[0].name, self.op.inputs[0].name)
+            self.model.indentity[self.outputs[1]] = self.model.indentity.get(self.inputs[0], self.inputs[0])
+            self.model.indentity[self.outputs[0]] = self.model.indentity.get(self.inputs[0], self.inputs[0])
 
 
     def convert(self):

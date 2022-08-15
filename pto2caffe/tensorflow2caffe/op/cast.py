@@ -16,7 +16,7 @@ class Cast(Operator):
         if self.inputs_buf is not None:
             self.model.constant[self.outputs[0]] = self.inputs_buf[0]
         else:
-            self.model.indentity[op.outputs[0].name] = self.model.indentity.get(op.inputs[0].name, op.inputs[0].name)
+            self.model.indentity[self.outputs[0]] = self.model.indentity.get(self.inputs[0], self.inputs[0])
 
 
     def convert(self):
