@@ -1,15 +1,9 @@
 import numpy as np
 
-from util import trim_one
-from util import compute_scale_axis
 from caffe_transform import caffe_layer
 from onnx2caffe.op.operator import Operator
 
-
-def switch(items:list):
-    temp = items[0]
-    items[0] = items[1]
-    items[1] = temp
+from util import isShapeCompatible
 
 
 class Add(Operator):
@@ -34,19 +28,29 @@ class Add(Operator):
                 self.attrs = self.eltwise_param
             else:
                 self.layer_type = 'Bias'
-                self.bias_param = dict()
 
                 if self.inputs_shape[0].count(1) > self.inputs_shape[1].count(1):
-                    switch(self.inputs)
-                    switch(self.inputs_shape)
+                    self.inputs.reverse()
+                    self.inputs_shape.reverse()
 
-                self.inputs_shape[1] = trim_one(self.inputs_shape[1])
-                self.bias_param['axis'] = compute_scale_axis(self.inputs_shape[0], self.inputs_shape[1])
+                if not isShapeCompatible(self.inputs_shape[0], self.inputs_shape[1]):
+                    bias_shape = list(np.squeeze(np.random.random(self.inputs_shape[1])).shape)
+                    if not isShapeCompatible(self.inputs_shape[0], bias_shape):
+                        self.model.errorMsg.append('[' + self.node.name + ']: Operator Mul Inputs shape uncompatible for Caffe. ' + str(self.inputs_shape[0]) + ' + ' + str(self.inputs_shape[1]))
+                        self.model.unsupport.append(self.operator_code)
+                        return
+                else:
+                    bias_shape = self.inputs_shape[1]
 
-                # Pre-Layer: Reshape
-                self.pre_input = self.inputs[1]
-                self.inputs[1] = 'reshape' + str(self.index)
-                self.reshape_param = dict(shape=dict(dim=self.inputs_shape[1]))
+                if bias_shape != self.inputs_shape[1]:
+                    self.inputs_shape[1] = bias_shape
+                    if self.inputs_buf[1] is not None:
+                        self.inputs_buf[1] = self.inputs_buf[1].reshape(bias_shape)
+                    else:
+                        self.layer_type = 'Reshape+Bias'
+
+                self.bias_param = dict()
+                self.bias_param['axis'] = self.inputs_shape[0].index(self.inputs_shape[1][0]) if len(self.inputs_shape[1]) > 0 else 0
 
                 self.attrs = self.bias_param
         else:
@@ -83,15 +87,18 @@ class Add(Operator):
 
 
     def convert(self):
-        pre_layer = None
+        layers = list()
         if self.type == 'Eltwise':
-            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param)
+            layers.append(caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param))
         elif self.type == 'Scale':
-            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, scale_param=self.scale_param)
+            layers.append(caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, scale_param=self.scale_param))
         elif self.type == 'Bias':
-            pre_layer = caffe_layer('Reshape', 'Reshape'+str(self.index), [self.pre_input], [None], ['reshape'+str(self.index)], reshape_param=self.reshape_param)
-            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, bias_param=self.bias_param)
+            layers.append(caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, bias_param=self.bias_param))
+        elif self.type == 'Reshape+Bias':
+            reshape_out = 'reshape'+str(self.index)
+            layers.append(caffe_layer('Reshape', 'Reshape'+str(self.index), [self.inputs[1]], [None], [reshape_out], reshape_param=dict(shape=dict(dim=self.inputs_shape[1]))))
+            layers.append(caffe_layer('Bias', 'Bais'+str(self.index), [self.inputs[0], reshape_out], self.inputs_buf, self.outputs, bias_param=self.bias_param))
 
         self.setConverted()
 
-        return [layer] if pre_layer is None else [pre_layer, layer]
+        return layers
