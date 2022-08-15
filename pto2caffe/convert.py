@@ -197,7 +197,7 @@ def args_():
             help = 'Specify if we would like to centrally crop input image')
     args.add_argument('-crop_w',        type = int,     required = False,
             help = 'Specify if we would like to centrally crop input image')
-    args.add_argument('-auto_crop',     type = int,     required = False,   default=0,      choices=[0, 1],
+    args.add_argument('-auto_crop',     type = int,     required = False,   default=1,      choices=[0, 1],
             help = 'Crop the input data according to the model inputs size')
     args.add_argument('-dump',          type = int,     required = False,   default=-1,     choices=[0, 1, 2, 3],
             help = 'dump blob  1:print output.  2:print input & ouput')
