@@ -41,7 +41,7 @@ from onnx2caffe.op.transpose import Permute
 from onnx2caffe.op.reducemean import Reduce
 from onnx2caffe.op.batchnorm import BatchNorm
 from onnx2caffe.op.convtranspose import Deconvolution
-#from onnx2caffe.op.globalaveragepool import GlobalAveragePool
+from onnx2caffe.op.globalaveragepool import GlobalAveragePool
 from onnx2caffe.op.instancenormalization import InstanceNormalization
 
 from onnx2caffe.op.debug import Debug
@@ -86,7 +86,6 @@ OpMap = {
     'Softmax': Softmax,
     'Squeeze': Reshape,
     'Conv': Convolution,
-#    'Identity': Reshape,
     'Gemm': InnerProduct,
     'Constant': Constant,
     'Softplus': Softplus,
@@ -94,7 +93,6 @@ OpMap = {
     'Unsqueeze': Reshape,
     'ReduceMean': Reduce,
     'AveragePool': Pooling,
-#    'GlobalAveragePool': Pooling, # Streamlit == 1
     'ConvTranspose': Deconvolution,
     'BatchNormalization': BatchNorm,
     'GlobalAveragePool': GlobalAveragePool,
