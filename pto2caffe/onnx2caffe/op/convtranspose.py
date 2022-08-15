@@ -24,20 +24,18 @@ class Deconvolution(Operator):
 
         # Attributes
         self.convolution_param = dict()
-        self.convolution_param['num_output'] = self.outputs_shape[0][1]
-
-        strides = self.attrs.get('strides', [1, 1])
-        self.convolution_param['stride_h'] = strides[0]
-        self.convolution_param['stride_w'] = strides[1]
-
-        self.convolution_param['dilation'] = self.attrs.get('dilations', [1, 1])
         self.convolution_param['group'] = self.attrs.get('group', 1)
-        self.convolution_param['kernel_size'] = kernel_size = self.attrs['kernel_shape']
+        self.convolution_param['kernel_h'] = self.attrs['kernel_shape'][0]
+        self.convolution_param['kernel_w'] = self.attrs['kernel_shape'][1]
+        self.convolution_param['stride_h'] = self.attrs.get('strides', [1, 1])[0]
+        self.convolution_param['stride_w'] = self.attrs.get('strides', [1, 1])[1]
+        self.convolution_param['dilation'] = self.attrs.get('dilations', [1, 1])
         self.convolution_param['bias_term'] = True if self.bias is not None else False
+        self.convolution_param['num_output'] = self.outputs_shape[0][1]
 
         # Padding
         legacy_pad = self.model.pad.get(self.inputs[0], {'left': 0, 'right': 0, 'top': 0, 'bottom': 0})
-        padding = computePad(self.type, self.attrs, self.inputs_shape[0], self.outputs_shape[0], kernel_size, strides, legacy_pad)
+        padding = computePad(self.type, self.attrs, self.inputs_shape[0], self.outputs_shape[0], self.attrs['kernel_shape'], self.attrs.get('strides', [1, 1]), legacy_pad)
         self.convolution_param.update(padding)
 
         self.attrs = self.convolution_param
