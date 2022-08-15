@@ -32,8 +32,11 @@ class Slice(Operator):
             self.model.unsupport.append(self.operator_code)
             self.model.errorMsg.append('[' + self.node.name + ']: Operator Slice Do not support starts > 1. ' + self.node.name + '\'s starts is ' + str(starts))
 
-        if ends[0] == 9223372036854775807: # int max
-            ends[0] = self.inputs_shape[0][axes[0]]
+        for i, end in enumerate(ends):
+            if end == 9223372036854775807: # int max
+                ends[i] = self.inputs_shape[0][axes[i]]
+            elif end < 0:
+                ends[i] = self.inputs_shape[0][axes[i]] + end
 
         # Attributes
         if max(steps) == 1:
