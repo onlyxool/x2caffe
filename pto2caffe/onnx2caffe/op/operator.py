@@ -72,7 +72,7 @@ class Operator(Base):
             if input in self.model.shape:
                 self.inputs_shape.append(self.model.shape[input])
             elif input in self.model.constant:
-                self.inputs_shape.append(self.model.constant[input].shape)
+                self.inputs_shape.append(list(self.model.constant[input].shape))
             else:
                 self.inputs_shape.append(None)
 
