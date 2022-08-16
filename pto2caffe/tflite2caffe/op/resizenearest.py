@@ -2,6 +2,7 @@ import numpy as np
 
 from caffe_transform import caffe_layer
 from tflite2caffe.op.operator import Operator
+from util import handleLegacyPad
 
 
 class ResizeNearest(Operator):
@@ -43,8 +44,8 @@ class ResizeNearest(Operator):
             self.convolution_param['group'] = self.inputs_shape[0][1]
 
             # Padding
-            legacy_pad = self.model.pad.get(self.inputs[0], {'left': 0, 'right': 0, 'top': 0, 'bottom': 0})
-            padding = handleLegacyPad('VALID', self.inputs_shape[2], self.outputs_shape[0], self.convolution_param, legacy_pad, self.type)
+            legacy_pad = self.model.pad.get(self.op.Inputs(0), {'left': 0, 'right': 0, 'top': 0, 'bottom': 0})
+            padding = handleLegacyPad('VALID', self.inputs_shape[0], self.outputs_shape[0], self.convolution_param, legacy_pad, self.type)
             self.convolution_param.update(padding)
 
             self.attrs = self.convolution_param

@@ -41,7 +41,7 @@ class Pooling(Operator):
         elif opt.Padding() == tflite.Padding.SAME:
             padding_mode = 'SAME'
 
-        legacy_pad = self.model.pad.get(self.inputs[0], {'left': 0, 'right': 0, 'top': 0, 'bottom': 0})
+        legacy_pad = self.model.pad.get(self.op.Inputs(0), {'left': 0, 'right': 0, 'top': 0, 'bottom': 0})
         padding = handleLegacyPad(padding_mode, self.inputs_shape[0], self.outputs_shape[0], self.pooling_param, legacy_pad, self.type)
         self.pooling_param.update(padding)
 
