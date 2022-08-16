@@ -29,7 +29,7 @@ class Pool(Operator):
         self.pooling_param['ceil_mode'] = True if self.attrs['padding'] == 'SAME' else False
 
         # Padding
-        legacy_pad = self.model.pad.get(self.inputs[0], {'left': 0, 'right': 0, 'top': 0, 'bottom': 0})
+        legacy_pad = self.model.pad.get(self.op.inputs[0].name, {'left': 0, 'right': 0, 'top': 0, 'bottom': 0})
         padding = handleLegacyPad(self.attrs['padding'], self.inputs_shape[0], self.outputs_shape[0], self.pooling_param, legacy_pad, self.type)
         self.pooling_param.update(padding)
 

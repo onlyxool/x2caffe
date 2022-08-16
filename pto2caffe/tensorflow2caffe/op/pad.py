@@ -22,7 +22,7 @@ class Pad(Operator):
             pad['right']  = self.inputs_buf[1][2][1]
             pad['top']    = self.inputs_buf[1][1][0]
             pad['bottom'] = self.inputs_buf[1][1][1]
-            self.model.pad[self.inputs[0]] = pad
+            self.model.pad[self.outputs[0]] = pad
 
 
     def convert(self):
