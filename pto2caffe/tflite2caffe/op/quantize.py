@@ -1,6 +1,3 @@
-import tflite
-
-from caffe_transform import caffe_layer
 from tflite2caffe.op.operator import Operator
 
 
@@ -8,9 +5,7 @@ class Quantize(Operator):
 
     def __init__(self, model, tf_op, tf_op_name, index):
         super().__init__(model, tf_op, tf_op_name, index)
-
         assert(self.operator_code in ('QUANTIZE', 'DEQUANTIZE'))
-
         self.setInited()
 
 
@@ -19,16 +14,13 @@ class Quantize(Operator):
         self.parseInputOutput()
 
         if self.inputs_buf[0] is None:
-            self.layer_type = 'Reshape'
-            self.reshape_param = dict(shape=dict(dim=self.outputs_shape[0]))
-            self.setParsed()
+            self.model.indentity[self.outputs[0]] = self.model.indentity.get(self.inputs[0], self.inputs[0])
+            # Handle Legacy Pad for Ignore OP
+            if self.op.Inputs(0) in self.model.pad.keys():
+                self.model.pad[self.op.Outputs(0)] = self.model.pad[self.op.Inputs(0)]
         else:
             self.model.constant[self.outputs[0]] = self.model.constant[self.inputs[0]]
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, reshape_param=self.reshape_param)
-
-        self.setConverted()
-
-        return [layer]
+        pass
