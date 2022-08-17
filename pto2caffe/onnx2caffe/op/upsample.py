@@ -49,7 +49,7 @@ class Upsample(Operator):
             self.convolution_param['stride_w'] = scale_factor
             self.convolution_param['group'] = self.inputs_shape[0][1]
 
-            self.weight = np.ones((self.outputs_shape[0][1], 1, int(self.convolution_param['kernel_size']), int(self.convolution_param['kernel_size'])), dtype=int)
+            self.weight = np.ones((self.outputs_shape[0][1], 1, scale_factor, scale_factor), dtype=np.float32)
             if self.model.opset[0] < 9:
                 self.inputs_buf.append(self.weight)
                 self.inputs_shape.append(self.inputs_buf[1].shape)
@@ -58,7 +58,7 @@ class Upsample(Operator):
                 self.inputs_shape[1] = self.inputs_buf[1].shape
 
             # Padding
-            legacy_pad = self.model.pad.get(self.inputs[0], {'left': 0, 'right': 0, 'top': 0, 'bottom': 0})
+            legacy_pad = self.model.pad.get(self.node.input[0], {'left': 0, 'right': 0, 'top': 0, 'bottom': 0})
             padding = computePad(self.type, self.attrs, self.inputs_shape[0], self.outputs_shape[0], [scale_factor, scale_factor], [scale_factor, scale_factor], legacy_pad)
             self.convolution_param.update(padding)
 

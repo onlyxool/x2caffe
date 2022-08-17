@@ -53,7 +53,7 @@ class Resize(Operator):
                 self.convolution_param['group'] = self.inputs_shape[0][1]
 
                 # Padding
-                legacy_pad = self.model.pad.get(self.inputs[0], {'left': 0, 'right': 0, 'top': 0, 'bottom': 0})
+                legacy_pad = self.model.pad.get(self.node.input[0], {'left': 0, 'right': 0, 'top': 0, 'bottom': 0})
                 padding = computePad(self.type, self.attrs, self.inputs_shape[0], self.outputs_shape[0], [scale_factor, scale_factor], [scale_factor, scale_factor], legacy_pad)
                 self.convolution_param.update(padding)
                 self.attrs = self.convolution_param

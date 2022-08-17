@@ -28,7 +28,7 @@ class Reduce(Operator):
         kernel_size = [self.pooling_param['kernel_h'], self.pooling_param['kernel_w']]
 
         # Padding
-        legacy_pad = self.model.pad.get(self.inputs[0], {'left': 0, 'right': 0, 'top': 0, 'bottom': 0})
+        legacy_pad = self.model.pad.get(self.node.input[0], {'left': 0, 'right': 0, 'top': 0, 'bottom': 0})
         padding = computePad(self.type, self.attrs, self.inputs_shape[0], self.outputs_shape[0], kernel_size, [1, 1], legacy_pad)
         self.pooling_param.update(padding)
 

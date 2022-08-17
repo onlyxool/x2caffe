@@ -32,7 +32,7 @@ class Pad(Operator):
                 pad_dict['right']   = pad[1][3]
                 pad_dict['top']     = pad[0][2]
                 pad_dict['bottom']  = pad[1][2]
-                self.model.pad[self.inputs[0]] = pad_dict
+                self.model.pad[self.outputs[0]] = pad_dict
             else:
                 self.model.errorMsg.append('[' + self.node.name + ']: Input tensor has' + str(len(self.inputs_shape[0])) + 'dimentions')
                 self.model.unsupport.append(self.operator_code)

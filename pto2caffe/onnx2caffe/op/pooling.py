@@ -31,7 +31,7 @@ class Pooling(Operator):
         self.pooling_param['ceil_mode'] = True if self.attrs.get('ceil_mode', False) else False
 
         # Padding
-        legacy_pad = self.model.pad.get(self.inputs[0], {'left': 0, 'right': 0, 'top': 0, 'bottom': 0})
+        legacy_pad = self.model.pad.get(self.node.input[0], {'left': 0, 'right': 0, 'top': 0, 'bottom': 0})
         padding = computePad(self.type, self.attrs, self.inputs_shape[0], self.outputs_shape[0], self.attrs['kernel_shape'], self.attrs.get('strides', [1, 1]), legacy_pad)
         self.pooling_param.update(padding)
 
