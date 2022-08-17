@@ -14,13 +14,14 @@ class Operator(Base):
         self.op = tf_op
         self.operator_code = tf_op_name
         self.layer_type = str()
-        self.inputs = []
-        self.inputs_shape = []
-        self.inputs_buf = []
-        self.outputs = []
-        self.outputs_shape = []
-        self.pre = []  # ops that before this op which to enable TFLite op
-        self.post = []  # ops that after this op which to enable TFLite op
+        self.inputs = list()
+        self.inputs_shape = list()
+        self.inputs_buf = list()
+        self.layout = model.layout
+        self.outputs = list()
+        self.outputs_shape = list()
+        self.pre = list()  # ops that before this op which to enable TFLite op
+        self.post = list()  # ops that after this op which to enable TFLite op
         self.attrs = dict()
 
 
