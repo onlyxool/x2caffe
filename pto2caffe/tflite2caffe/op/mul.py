@@ -1,11 +1,10 @@
-import copy
 import tflite
+import numpy as np
 
 from caffe_transform import caffe_layer
 from tflite2caffe.op.operator import Operator
 
-from util import trim_one
-from util import compute_scale_axis
+from util import isShapeCompatible
 
 
 class Mul(Operator):
@@ -32,23 +31,33 @@ class Mul(Operator):
         if self.inputs_shape[0] != self.inputs_shape[1] or self.inputs_buf[1] is not None:
             # Scale Layer
             self.layer_type = 'Scale'
-            self.scale_param = dict()
 
-            org_shape = copy.deepcopy(self.inputs_shape[1])
-            trim = trim_one(org_shape)
-            if trim != self.inputs_shape[1]:
-                self.pre.append('Reshape')
-                self.inputs_shape[1] = trim
+            if not isShapeCompatible(self.inputs_shape[0], self.inputs_shape[1]):
+                weight_shape = list(np.squeeze(np.random.random(self.inputs_shape[1])).shape)
+                if not isShapeCompatible(self.inputs_shape[0], weight_shape):
+                    self.model.errorMsg.append('Error: Operator Mul Inputs shape uncompatible for Caffe. ' + str(self.inputs_shape[0]) + ' x ' + str(self.inputs_shape[1]))
+                    self.model.unsupport.append(self.operator_code)
+                    return
+            else:
+                weight_shape = self.inputs_shape[1]
+
+            if weight_shape != self.inputs_shape[1]:
+                self.inputs_shape[1] = weight_shape
                 if self.inputs_buf[1] is not None:
-                    self.inputs_buf[1] = self.inputs_buf[1].reshape(tuple(trim))
-
-            axis = compute_scale_axis(self.inputs_shape[0], trim)
-            if axis is not None:
-                self.scale_param['axis'] = axis
+                    self.inputs_buf[1] = self.inputs_buf[1].reshape(weight_shape)
+                else:
+                    self.layer_type = 'Reshape+Scale'
+                    self.inter_blob = 'reshape'+str(self.index)
+                    self.reshape_param=dict(shape=dict(dim=self.inputs_shape[1]))
 
             self.weight = self.inputs_buf[1]
-            self.scale_param['bias_term'] = False
             self.bias = None
+
+            self.scale_param = dict()
+            self.scale_param['axis'] = self.inputs_shape[0].index(self.inputs_shape[1][0]) if len(self.inputs_shape[1]) > 0 else 0
+            self.scale_param['num_axes'] = len(self.inputs_shape[1])
+            self.scale_param['bias_term'] = False
+
             self.attrs = self.scale_param
         else:
             # Eltwise Layer
@@ -65,20 +74,15 @@ class Mul(Operator):
 
 
     def convert(self):
+        layers = list()
         if self.type == 'Eltwise':
-            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param)
+            layers.append(caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param))
         elif self.type == 'Scale':
-            for pre_op in self.pre:
-                if pre_op == 'Reshape':
-                    reshape_param = dict(shape=dict(dim=self.inputs_shape[1]))
-                    pre_layer = caffe_layer('Reshape', 'Reshape'+str(self.index), [self.inputs[1]], [None], ['reshape'+str(self.index)], reshape_param=reshape_param)
-                    self.inputs[1] = 'reshape' + str(self.index)
-
-            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, scale_param=self.scale_param)
-            if len(self.pre) > 0:
-                self.setConverted()
-                return [pre_layer, layer]
+            layers.append(caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, scale_param=self.scale_param))
+        elif self.type == 'Reshape+Scale':
+            layers.append(caffe_layer('Reshape', 'Reshape'+str(self.index), [self.inputs[1]], [None], [self.inter_blob], reshape_param=self.reshape_param))
+            layers.append(caffe_layer('Scale', 'Scale'+str(self.index), [self.inputs[0], self.inter_blob], self.inputs_buf, self.outputs, self.weight, self.bias, scale_param=self.scale_param))
 
         self.setConverted()
 
-        return [layer]
+        return layers
