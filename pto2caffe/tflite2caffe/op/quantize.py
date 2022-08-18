@@ -14,12 +14,9 @@ class Quantize(Operator):
         self.parseInputOutput()
 
         if self.inputs_buf[0] is None:
-            self.model.indentity[self.outputs[0]] = self.model.indentity.get(self.inputs[0], self.inputs[0])
-            # Handle Legacy Pad for Ignore OP
-            if self.op.Inputs(0) in self.model.pad.keys():
-                self.model.pad[self.op.Outputs(0)] = self.model.pad[self.op.Inputs(0)]
+            self.byPassOperator()
         else:
-            self.model.constant[self.outputs[0]] = self.model.constant[self.inputs[0]]
+            self.saveConstant(self.outputs[0], self.model.constant[self.inputs[0]])
 
 
     def convert(self):

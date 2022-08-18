@@ -78,3 +78,18 @@ class Operator(Base):
     def parseInputOutput(self):
         self.__parseInput__()
         self.__parseOutput__()
+
+
+    def byPassOperator(self):
+        if len(self.outputs) == 0 or len(self.inputs) == 0:
+            import sys
+            sys.exit('Error: Use byPassOperator() after parseInputOutput().')
+
+        self.model.indentity[self.outputs[0]] = self.model.indentity.get(self.inputs[0], self.inputs[0])
+        # Handle Legacy Pad for Ignore Op
+        if self.op.Inputs(0) in self.model.pad.keys():
+            self.model.pad[self.op.Outputs(0)] = self.model.pad[self.op.Inputs(0)]
+
+
+    def saveConstant(self, name, constant):
+        self.model.constant[name] = constant

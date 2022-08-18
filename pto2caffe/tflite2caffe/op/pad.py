@@ -20,7 +20,7 @@ class Pad(Operator):
 
         self.parseInputOutput()
 
-        self.model.indentity[self.outputs[0]] = self.model.indentity.get(self.inputs[0], self.inputs[0])
+        self.byPassOperator()
 
         if np.count_nonzero(self.inputs_buf[1]) > 0:
             pad = dict()
