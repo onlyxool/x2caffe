@@ -25,9 +25,13 @@ from tflite2caffe.op.reducemax import ReduceMax
 from tflite2caffe.op.deconv import Deconvolution
 from tflite2caffe.op.reducemean import ReduceMean
 from tflite2caffe.op.depthtospace import DepthToSpace
+from tflite2caffe.op.stridedslice import StridedSlice
 from tflite2caffe.op.fullyconnected import InnerProduct
 from tflite2caffe.op.resizenearest import ResizeNearest
 from tflite2caffe.op.resizebilinear import ResizeBilinear
+
+from tflite2caffe.op.debug import Debug
+
 
 from caffe_transform import save_caffe_model
 from caffe_transform import make_caffe_input_layer
@@ -62,18 +66,18 @@ OpMap = {
     'LEAKY_RELU': LeakyReLU,
     'CONCATENATION': Concat,
     'AVERAGE_POOL_2D': Pooling,
+    'STRIDED_SLICE': StridedSlice,
     'DEPTH_TO_SPACE': DepthToSpace,
     'TRANSPOSE_CONV': Deconvolution,
     'FULLY_CONNECTED': InnerProduct,
     'DEPTHWISE_CONV_2D': Convolution,
     'RESIZE_BILINEAR': ResizeBilinear,
     'RESIZE_NEAREST_NEIGHBOR': ResizeNearest,
+
 #    'DIV': Binary,
 #   'POW': Binary,
 #    'MIRROR_PAD': Pad,
 }
-
-ignore_op = ['CUSTOM']
 
 
 def handleFusedActivation(preop):
@@ -105,6 +109,8 @@ class Model(Base):
         super().__init__(model, model.Subgraphs(0))
         self.version = model.Version()
 
+        self.param = param
+        self.layout = param['layout']
         self.inputs = list()
         self.inputs_shape = list()
         self.inputs_dtype = list()
@@ -116,8 +122,9 @@ class Model(Base):
         self.constant = dict()
         self.indentity = dict()
         self.pad = dict()
-        self.param = param
         self.operators = list()
+        self.unsupport = list()
+        self.errorMsg = list()
         self.layers = list()
         self.setInited()
 
@@ -132,12 +139,13 @@ class Model(Base):
         for i in range(self.graph.InputsLength()):
             print(self.graph.Inputs(i), ':', list(self.graph.Tensors(self.graph.Inputs(i)).ShapeAsNumpy()))
 
-            self.inputs_dtype.append(numpy_dtype[self.graph.Tensors(self.graph.Inputs(i)).Type()])
-            self.inputs_maxval.append(self.graph.Tensors(self.graph.Inputs(i)).Quantization().MaxAsNumpy())
-            self.inputs_minval.append(self.graph.Tensors(self.graph.Inputs(i)).Quantization().MinAsNumpy())
+            tf_dtype = self.graph.Tensors(self.graph.Inputs(i)).Type()
+            self.inputs_dtype.append(numpy_dtype[tf_dtype])
+            self.inputs_maxval.append(self.graph.Tensors(self.graph.Inputs(i)).Quantization().MaxAsNumpy() if tf_dtype != 0 else None)
+            self.inputs_minval.append(self.graph.Tensors(self.graph.Inputs(i)).Quantization().MinAsNumpy() if tf_dtype != 0 else None)
+            self.inputs_scale.append(self.graph.Tensors(self.graph.Inputs(i)).Quantization().ScaleAsNumpy() if tf_dtype != 0 else None)
+            self.inputs_zeropoint.append(self.graph.Tensors(self.graph.Inputs(i)).Quantization().ZeroPointAsNumpy() if tf_dtype != 0 else None)
             self.inputs_shape.append(shape_map_nhwc2nchw(self.graph.Tensors(self.graph.Inputs(i)).ShapeAsNumpy().tolist()))
-            self.inputs_scale.append(self.graph.Tensors(self.graph.Inputs(i)).Quantization().ScaleAsNumpy())
-            self.inputs_zeropoint.append(self.graph.Tensors(self.graph.Inputs(i)).Quantization().ZeroPointAsNumpy())
 
         self.param['inputs_shape'] = self.inputs_shape
 
@@ -171,12 +179,16 @@ class Model(Base):
             tf_op_code = self.model.OperatorCodes(tf_op.OpcodeIndex())
             tf_op_name = tflite.opcode2name(tf_op_code.BuiltinCode())
 
-            if tf_op_name in ignore_op:
+            if tf_op_name in []: #ignore_op
                 continue
+
+            if tf_op_name == 'CUSTOM':
+                self.unsupport.append(tf_op_code.CustomCode().decode())
+                continue
+
             if tf_op_name not in OpMap:
-                import sys
-                errorMsg = 'Error: Operator [' + tf_op_name + '] does not Support.\n'
-                sys.exit(errorMsg)
+                self.unsupport.append(tf_op_name)
+                continue
 
             op = OpMap[tf_op_name](self, tf_op, tf_op_name, index)
             op.parse()
@@ -187,6 +199,14 @@ class Model(Base):
                 if hasattr(op, 'activ_type_code'):
                     act_op = handleFusedActivation(op)
                     self.operators.append(act_op)
+
+        for errorMsg in list(set(self.errorMsg)):
+            print(errorMsg)
+
+        if len(self.unsupport) > 0:
+            import sys
+            errorMsg = 'Error: Operator ' + str(list(set(self.unsupport))) + ' does not Support.\n'
+            sys.exit(errorMsg)
 
         self.setParsed()
 
