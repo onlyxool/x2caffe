@@ -11,15 +11,16 @@ from tflite2caffe.op.relu import ReLU
 from tflite2caffe.op.relux import ReLUX
 from tflite2caffe.op.prelu import PReLU
 from tflite2caffe.op.swish import Swish
-from tflite2caffe.op.split import Slice
+from tflite2caffe.op.slice import Slice
+from tflite2caffe.op.split import Split
 from tflite2caffe.op.concat import Concat
+from tflite2caffe.op.bypass import ByPass
 from tflite2caffe.op.reshape import Reshape
 from tflite2caffe.op.pooling import Pooling
 from tflite2caffe.op.sigmoid import Sigmoid
 from tflite2caffe.op.softmax import Softmax
 from tflite2caffe.op.leakyrelu import LeakyReLU
 from tflite2caffe.op.conv import Convolution
-from tflite2caffe.op.quantize import Quantize
 from tflite2caffe.op.transpose import Permute
 from tflite2caffe.op.reducemax import ReduceMax
 from tflite2caffe.op.deconv import Deconvolution
@@ -48,19 +49,21 @@ OpMap = {
     'MUL': Mul,
     'SUB': Sub,
     'RELU': ReLU,
+    'CAST': ByPass,
     'PRELU': PReLU,
     'RELU6': ReLUX,
-    'SPLIT': Slice,
+    'SLICE': Slice,
+    'SPLIT': Split,
+    'QUANTIZE': ByPass,
     'MEAN': ReduceMean,
     'RESHAPE': Reshape,
     'SQUEEZE': Reshape,
     'SOFTMAX': Softmax,
     'LOGISTIC': Sigmoid,
     'HARD_SWISH': Swish,
-    'QUANTIZE': Quantize,
     'TRANSPOSE': Permute,
+    'DEQUANTIZE': ByPass,
     'CONV_2D': Convolution,
-    'DEQUANTIZE': Quantize,
     'MAX_POOL_2D': Pooling,
     'REDUCE_MAX': ReduceMax,
     'LEAKY_RELU': LeakyReLU,
@@ -137,7 +140,7 @@ class Model(Base):
 
         print('TFlite Model Input size:')
         for i in range(self.graph.InputsLength()):
-            print(self.graph.Inputs(i), ':', list(self.graph.Tensors(self.graph.Inputs(i)).ShapeAsNumpy()))
+            print(self.graph.Tensors(self.graph.Inputs(i)).Name().decode(), ':', list(self.graph.Tensors(self.graph.Inputs(i)).ShapeAsNumpy()))
 
             tf_dtype = self.graph.Tensors(self.graph.Inputs(i)).Type()
             self.inputs_dtype.append(numpy_dtype[tf_dtype])
@@ -220,9 +223,7 @@ class Model(Base):
 
         for op in self.operators:
             logger.debug(op)
-            layers = op.convert()
-            for layer in layers:
-                self.layers.append(layer)
+            self.layers.extend(op.convert())
 
         self.setConverted()
 
