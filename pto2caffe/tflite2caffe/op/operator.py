@@ -62,7 +62,7 @@ class Operator(Base):
         for i in range(self.op.InputsLength()):
             if self.op.Inputs(i) >= 0:
                 self.inputs.append(self.model.indentity.get(self.op.Inputs(i), self.op.Inputs(i)))
-                self.inputs_shape.append(shape_map_nhwc2nchw(self.graph.Tensors(self.inputs[i]).ShapeAsNumpy().tolist()))
+                self.inputs_shape.append(shape_map_nhwc2nchw(self.graph.Tensors(self.op.Inputs(i)).ShapeAsNumpy().tolist()))
                 self.inputs_buf.append(self.model.constant[self.op.Inputs(i)])
             else:
                 self.inputs_buf.append(None)
