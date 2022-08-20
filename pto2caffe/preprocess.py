@@ -32,8 +32,7 @@ def get_one_file(folder_path):
                 return path+'/'+file_name
 
 
-def get_input_tensor(param, input_shape, dtype=None, maxval=None, minval=None):
-    dtype = param['dtype'] if dtype is None else dtype
+def get_input_tensor(param, input_shape, quantization_parameter=None):
     root_path = param.get('root_folder', None)
 
     if root_path is not None and os.path.isfile(root_path):
@@ -42,14 +41,9 @@ def get_input_tensor(param, input_shape, dtype=None, maxval=None, minval=None):
         param['input_file'] = get_one_file(root_path)
         tensor = load_file2tensor(param['input_file'], param)
     else:
-        if np.issubdtype(dtype, np.integer):
-            maxval = np.iinfo(dtype).max if maxval is None else maxval
-            minval = np.iinfo(dtype).min if minval is None else minval
-            return np.random.randint(low=minval, high=maxval, size=input_shape, dtype=dtype)
-        elif np.issubdtype(dtype, np.floating):
-            return np.random.uniform(size=input_shape).astype(dtype)
-        else:
-            raise NotImplementedError('Can\'t support %s as input data type')
+        maxval = 1. if quantization_parameter is None else quantization_parameter['maxval']
+        minval = 0. if quantization_parameter is None else quantization_parameter['minval']
+        tensor = np.random.uniform(low=minval, high=maxval, size=input_shape).astype(np.float32)
 
     return preprocess(tensor, param)
 
@@ -121,4 +115,7 @@ def preprocess(tensor, param):
         bin_file = param['model'][:-len(model_ext)] + 'bin'
         tensor.tofile(bin_file)
 
-    return np.expand_dims(tensor, axis=0).astype(np.float32) # Unsqueeze CHW->NCHW
+    if param.get('root_folder', None) is None:
+        return tensor
+    else:
+        return np.expand_dims(tensor, axis=0).astype(np.float32) # Unsqueeze CHW->NCHW

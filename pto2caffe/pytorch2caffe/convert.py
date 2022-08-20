@@ -15,7 +15,7 @@ def check_model_file(pytorch_file):
 def convert(pytorch_file, caffe_model_path, param=None):
     check_model_file(pytorch_file)
 
-    input_tensor = get_input_tensor(param, param['input_shape'])
+    input_tensor = get_input_tensor(param, param['input_shape'], None)
 
     model = Model(pytorch_file, param, input_tensor)
     model.parse()

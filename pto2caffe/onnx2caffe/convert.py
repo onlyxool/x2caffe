@@ -39,7 +39,7 @@ def convert(onnx_file, caffe_model_path, param=None):
     model.convert()
     model.save(caffe_model_path)
 
-    input_tensor = get_input_tensor(param, model.inputs_shape[0], model.inputs_dtype[0], model.inputs_maxval[0], model.inputs_minval[0])
+    input_tensor = get_input_tensor(param, model.inputs_shape[0], None)
 
     if opset >= 7:
         compare('onnx', onnx_model, caffe_model_path, input_tensor, param.get('compare', -1))
