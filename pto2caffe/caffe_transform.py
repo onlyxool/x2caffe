@@ -136,6 +136,8 @@ def save_caffe_model(caffe_model_path, layers):
     model_save_path = caffe_model_path + '.caffemodel'
     model.save(model_save_path)
 
+    return model
+
 
 dtype_map = {np.uint8: 0, np.int16: 1, np.float32: 2}
 
