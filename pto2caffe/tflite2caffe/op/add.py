@@ -4,6 +4,8 @@ import numpy as np
 from caffe_transform import caffe_layer
 from tflite2caffe.op.operator import Operator
 
+from util import isShapeCompatible
+
 
 class Add(Operator):
 
@@ -18,30 +20,46 @@ class Add(Operator):
 
 
     def parse(self):
+        self.parseInputOutput()
 
         op_opt = self.op.BuiltinOptions()
         opt = tflite.AddOptions()
         opt.Init(op_opt.Bytes, op_opt.Pos)
 
-        self.parseInputOutput()
-
-        # Attributes
-        if self.inputs_buf[1] is not None:
-            # Scale Layer
-            self.layer_type = 'Scale'
-            self.scale_param = dict()
-            self.weight = np.ones(self.inputs_shape[1], dtype=int, order='C')
-            self.bias = self.inputs_buf[1]
-            if self.inputs_shape[1] != []:
-                self.scale_param['axis'] = self.inputs_shape[0].index(self.inputs_shape[1][0])
-            self.scale_param['bias_term'] = True
-            self.attrs = self.scale_param
-        else:
-            # Eltwise Layer
+        if self.inputs_buf[0] is None and self.inputs_buf[1] is None and self.inputs_shape[0] == self.inputs_shape[1]:
             self.layer_type = 'Eltwise'
             self.eltwise_param = dict()
             self.eltwise_param['operation'] = 1
             self.attrs = self.eltwise_param
+        elif self.inputs_shape[0] != self.inputs_shape[1]:
+            self.layer_type = 'Bias'
+
+            backup = self.inputs_shape[1]
+            if not isShapeCompatible(self.inputs_shape[0], self.inputs_shape[1]):
+                self.inputs_shape[1] = list(np.squeeze(np.random.random(self.inputs_shape[1])).shape)
+                if not isShapeCompatible(self.inputs_shape[0], self.inputs_shape[1]):
+                    self.model.errorMsg.append('Error: Operator ADD Inputs shape uncompatible for Caffe. ' + str(self.inputs_shape[0]) + ' + ' + str(backup))
+                    self.model.unsupport.append(self.operator_code)
+                    return
+
+            if self.inputs_buf[1] is not None:
+#self.inputs_buf[1] = self.inputs_buf[1].transpose(2, 0, 1)
+#lite-model_seefood_segmenter_mobile_food_segmenter_V1_1.tflite
+                self.inputs_buf[1] = self.inputs_buf[1].reshape(self.inputs_shape[1])
+                self.bias = self.inputs_buf[1]
+            else:
+                self.layer_type = 'Reshape+Bias'
+                self.inter_blob = 'reshape'+str(self.index)
+                self.reshape_param=dict(shape=dict(dim=self.inputs_shape[1]))
+                self.bias = None
+
+            self.bias_param = dict()
+            self.bias_param['axis'] = self.inputs_shape[0].index(self.inputs_shape[1][0]) if len(self.inputs_shape[1]) > 0 else 0
+            self.bias_param['num_axes'] = len(self.inputs_shape[1])
+            self.attrs = self.bias_param
+        else:
+            print(self.inputs_shape, self.inputs_buf)
+            raise NotImplementedError
 
         activ_type_code = opt.FusedActivationFunction()
         if activ_type_code is not tflite.ActivationFunctionType.NONE:
@@ -51,11 +69,15 @@ class Add(Operator):
 
 
     def convert(self):
+        layers = list()
         if self.type == 'Eltwise':
-            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param)
-        elif self.type == 'Scale':
-            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, scale_param=self.scale_param)
+            layers.append(caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param))
+        elif self.type == 'Bias':
+            layers.append(caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.bias, bias_param=self.bias_param))
+        elif self.type == 'Reshape+Bias':
+            layers.append(caffe_layer('Reshape', 'Reshape'+str(self.index), [self.inputs[1]], [None], [self.inter_blob], reshape_param=self.reshape_param))
+            layers.append(caffe_layer('Bias', 'Bias'+str(self.index), [self.inputs[0], self.inter_blob], self.inputs_buf, self.outputs, self.bias, bias_param=self.bias_param))
 
         self.setConverted()
 
-        return [layer]
+        return layers
