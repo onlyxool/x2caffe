@@ -14,7 +14,7 @@ class Add(Operator):
     def parse(self):
         super().__parse__()
 
-        if self.inputs_buf[0] is None and self.inputs_buf[1] is None:
+        if self.inputs_buf[0] is None and self.inputs_buf[1] is None and self.inputs_shape[0] == self.inputs_shape[1]:
             self.layer_type = 'Eltwise'
             self.eltwise_param = dict()
             self.eltwise_param['operation'] = 1
