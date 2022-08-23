@@ -1,7 +1,9 @@
 import tflite
 import logging
+import numpy as np
+import tensorflow as tf
+
 from base import Base
-from util import *
 
 from tflite2caffe.op.pad import Pad
 from tflite2caffe.op.add import Add
@@ -33,13 +35,14 @@ from tflite2caffe.op.resizebilinear import ResizeBilinear
 
 from tflite2caffe.op.debug import Debug
 
-
+from util import shape_map_nhwc2nchw
 from caffe_transform import save_caffe_model
 from caffe_transform import make_caffe_input_layer
-from tflite2caffe.quantize import Dequantize, isQuantilize
 
 
 numpy_dtype = [np.float32, np.float16, np.int32, np.uint8, np.int64, 'string', np.bool, np.int16, np.complex64, np.int8, np.float64, np.complex128]
+
+tf_dtype_map = [tf.float32, tf.float16, tf.qint32, tf.quint8, tf.int64, 'string', tf.bool, tf.qint16, tf.complex64, tf.qint8, tf.float64, tf.complex128]
 
 logger = logging.getLogger('TFLite2Caffe')
 
@@ -76,10 +79,6 @@ OpMap = {
     'DEPTHWISE_CONV_2D': Convolution,
     'RESIZE_BILINEAR': ResizeBilinear,
     'RESIZE_NEAREST_NEIGHBOR': ResizeNearest,
-
-#    'DIV': Binary,
-#   'POW': Binary,
-#    'MIRROR_PAD': Pad,
 }
 
 
@@ -108,22 +107,22 @@ def handleFusedActivation(preop):
 
 class Model(Base):
 
-    def __init__(self, model:tflite.Model, param):
+    def __init__(self, model:tflite.Model, param, model_byte):
         super().__init__(model, model.Subgraphs(0))
         self.version = model.Version()
+        self.model_byte = model_byte
 
         self.param = param
         self.layout = param['layout']
+
         self.inputs = list()
         self.inputs_shape = list()
         self.inputs_dtype = list()
-        self.inputs_maxval = list()
-        self.inputs_minval = list()
-        self.inputs_scale = list()
-        self.inputs_zeropoint = list()
+        self.inputs_quantization_parameter = list()
 
         self.constant = dict()
         self.indentity = dict()
+
         self.pad = dict()
         self.operators = list()
         self.unsupport = list()
@@ -138,41 +137,26 @@ class Model(Base):
         if self.model.SubgraphsLength() > 1:
             raise ValueError('TFLite model include ' + str(self.model.SubgraphsLength()) + ' graphs.')
 
-        print('TFlite Model Input size:')
+        print('TFLite Model Input size: (graph version=%d)' %self.version)
         for i in range(self.graph.InputsLength()):
             print(self.graph.Tensors(self.graph.Inputs(i)).Name().decode(), ':', list(self.graph.Tensors(self.graph.Inputs(i)).ShapeAsNumpy()))
-
-            tf_dtype = self.graph.Tensors(self.graph.Inputs(i)).Type()
-            self.inputs_dtype.append(numpy_dtype[tf_dtype])
-            self.inputs_maxval.append(self.graph.Tensors(self.graph.Inputs(i)).Quantization().MaxAsNumpy() if tf_dtype != 0 else None)
-            self.inputs_minval.append(self.graph.Tensors(self.graph.Inputs(i)).Quantization().MinAsNumpy() if tf_dtype != 0 else None)
-            self.inputs_scale.append(self.graph.Tensors(self.graph.Inputs(i)).Quantization().ScaleAsNumpy() if tf_dtype != 0 else None)
-            self.inputs_zeropoint.append(self.graph.Tensors(self.graph.Inputs(i)).Quantization().ZeroPointAsNumpy() if tf_dtype != 0 else None)
+            self.inputs.append(self.graph.Inputs(i))
+            self.inputs_dtype.append(numpy_dtype[self.graph.Tensors(self.graph.Inputs(i)).Type()])
             self.inputs_shape.append(shape_map_nhwc2nchw(self.graph.Tensors(self.graph.Inputs(i)).ShapeAsNumpy().tolist()))
-
-        self.param['inputs_shape'] = self.inputs_shape
+            self.inputs_quantization_parameter.append(self.get_tensor_quantization_parameter(self.graph.Inputs(i)))
 
         # Tensors
         for i in range(self.graph.TensorsLength()):
-            type_id = self.graph.Tensors(i).Type()
-            buffer_id = self.graph.Tensors(i).Buffer()
+            quantization_parameter = self.get_tensor_quantization_parameter(i)
 
-            buf = self.model.Buffers(buffer_id).DataAsNumpy()
-            shape = self.graph.Tensors(i).ShapeAsNumpy()
+            raw = self.model.Buffers(self.graph.Tensors(i).Buffer()).DataAsNumpy()
 
-            if isinstance(buf, int) and buf == 0:
+            if isinstance(raw, int) and raw == 0:
                 self.constant[i] = None
-            elif isinstance(buf, np.ndarray):
-                nparray = np.frombuffer(buf, dtype=numpy_dtype[type_id]).reshape(shape)
-                if self.graph.Tensors(i).Quantization() is not None:
-                    quantizedDimmension = self.graph.Tensors(i).Quantization().QuantizedDimension()
-                    scale = self.graph.Tensors(i).Quantization().ScaleAsNumpy()
-                    zero_point = self.graph.Tensors(i).Quantization().ZeroPointAsNumpy()
-
-                    if isQuantilize(self.graph.Tensors(i).Quantization().ScaleLength(), self.graph.Tensors(i).Quantization().ZeroPointLength()):
-                        nparray = Dequantize(nparray, scale, zero_point, quantizedDimmension, np.float32)
-
-                self.constant[i] = nparray
+            elif isinstance(raw, np.ndarray):
+                constant = np.frombuffer(raw, dtype=numpy_dtype[self.graph.Tensors(i).Type()]).reshape(self.graph.Tensors(i).ShapeAsNumpy())
+                constant = self.dequantize(constant, i)
+                self.constant[i] = constant
             else:
                 raise NotImplementedError
 
@@ -217,9 +201,8 @@ class Model(Base):
     def convert(self):
         logger.debug("Converting the Model...")
 
-        for i in range(self.graph.InputsLength()):
-            input_shape = self.graph.Tensors(self.graph.Inputs(i)).ShapeAsNumpy()
-            self.layers.append(make_caffe_input_layer(self.graph.Inputs(i), shape_map_nhwc2nchw(input_shape.tolist()), i, self.param))
+        for index, input_name in enumerate(self.inputs):
+            self.layers.append(make_caffe_input_layer(input_name, self.inputs_shape[index], index, self.param))
 
         for op in self.operators:
             logger.debug(op)
@@ -229,4 +212,109 @@ class Model(Base):
 
 
     def save(self, caffe_model_path):
-        save_caffe_model(caffe_model_path, self.layers)
+        return save_caffe_model(caffe_model_path, self.layers)
+
+
+    def quantize(self, tensor, index):
+        quantization_parameter = self.get_tensor_quantization_parameter(index)
+
+        if quantization_parameter is not None:
+            dtype = quantization_parameter['dtype']
+            scale = quantization_parameter['scale']
+            min_range = quantization_parameter['minval']
+            max_range = quantization_parameter['maxval']
+            zero_point = quantization_parameter['zero_point']
+            axis = quantization_parameter['quantized_dimension']
+            return (tensor/scale + zero_point).astype(np.uint8)
+#            return tf.raw_ops.QuantizeV2(input=tensor, min_range=min_range, max_range=max_range, T=dtype, mode='MIN_COMBINED',
+#                    round_mode='HALF_AWAY_FROM_ZERO', narrow_range=False, axis=-1, ensure_minimum_range=0.01, name=None)[0].numpy()
+        else:
+            return tensor
+
+
+    def dequantize(self, tensor, index):
+        quantization_parameter = self.get_tensor_quantization_parameter(index)
+
+        if quantization_parameter is not None:
+            dtype = quantization_parameter['dtype']
+            scale = quantization_parameter['scale']
+            zero_point = quantization_parameter['zero_point']
+            min_range = quantization_parameter['minval']
+            max_range = quantization_parameter['maxval']
+            axis = quantization_parameter['quantized_dimension']
+#            return tf.raw_ops.Dequantize(input=tf.constant(tensor, dtype=dtype), min_range=min_range, max_range=max_range,
+#                            mode='MIN_COMBINED',  narrow_range=False, axis=-1, dtype=tf.dtypes.float32, name=None).numpy()
+            return (tensor.astype(np.float32) - zero_point) * scale
+        else:
+            return tensor
+
+
+    def get_tensor_quantization_parameter(self, index):
+        dtype = self.graph.Tensors(index).Type()
+        maxval = self.graph.Tensors(index).Quantization().MaxAsNumpy()
+        minval = self.graph.Tensors(index).Quantization().MinAsNumpy()
+        scale = self.graph.Tensors(index).Quantization().ScaleAsNumpy()
+        zero_point = self.graph.Tensors(index).Quantization().ZeroPointAsNumpy()
+        quantized_dimension = self.graph.Tensors(index).Quantization().QuantizedDimension()
+
+        if isinstance(scale, np.ndarray) and isinstance(zero_point, np.ndarray):
+            return {'dtype': tf_dtype_map[dtype],
+                    'maxval':maxval, 'minval': minval,
+                    'scale': scale, 'zero_point': zero_point,
+                    'quantized_dimension': quantized_dimension}
+        else:
+            return None
+
+
+
+    def forward(self, output_name, input_tensor):
+        if isinstance(output_name, str):
+            try:
+                output_name = int(output_name.split('_')[0])
+            except:
+                return None
+
+
+        def OutputsOffset(subgraph, j):
+            import flatbuffers
+            o = flatbuffers.number_types.UOffsetTFlags.py_type(subgraph._tab.Offset(8))
+            if o != 0:
+                a = subgraph._tab.Vector(o)
+                return a + flatbuffers.number_types.UOffsetTFlags.py_type(j * 4)
+            return 0
+
+        from tensorflow.lite.python import schema_py_generated as schema_fb
+        fb_model_root = schema_fb.Model.GetRootAsModel(self.model_byte, 0)
+        output_tensor_index_offset = OutputsOffset(fb_model_root.Subgraphs(0), 0)
+
+        # Flatbuffer scalars are stored in little-endian.
+        new_tensor_i_bytes = bytes([
+             output_name & 0x000000FF, \
+            (output_name & 0x0000FF00) >> 8, \
+            (output_name & 0x00FF0000) >> 16, \
+            (output_name & 0xFF000000) >> 24 \
+        ])
+        # Replace the 4 bytes corresponding to the first output tensor index
+        model = self.model_byte[:output_tensor_index_offset] + new_tensor_i_bytes + self.model_byte[output_tensor_index_offset + 4:]
+
+
+        interpreter = tf.lite.Interpreter(model_content=model, num_threads=None)
+        interpreter.allocate_tensors()
+        input_details = interpreter.get_input_details()
+        output_details = interpreter.get_output_details()
+
+        # Quantize Input
+        for input_info in input_details:
+            input_tensor = self.quantize(input_tensor, input_info['index'])
+            input_tensor = input_tensor.transpose(0, 2, 3, 1) if self.layout == 'NHWC' and input_info['shape'].size == 4 else input_tensor
+            interpreter.set_tensor(input_info['index'], input_tensor)
+
+        # Model Inference
+        interpreter.invoke()
+        output_tensor = interpreter.get_tensor(output_details[0]["index"])
+
+        # Dequantize Output
+        for output_info in output_details:
+            output_tensor = self.dequantize(output_tensor, output_info['index'])
+
+        return output_tensor.transpose(0, 3, 1, 2) if self.layout == 'NHWC' and len(output_tensor.shape) == 4 else output_tensor
