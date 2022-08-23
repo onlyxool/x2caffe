@@ -1,12 +1,9 @@
-import copy
 import tflite
 import numpy as np
 
 from caffe_transform import caffe_layer
 from tflite2caffe.op.operator import Operator
-
-from util import trim_one
-from util import compute_scale_axis
+from util import get_layout
 
 
 class Sub(Operator):
@@ -20,35 +17,76 @@ class Sub(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Scale'
+        self.parseInputOutput()
 
         op_opt = self.op.BuiltinOptions()
         opt = tflite.SubOptions()
         opt.Init(op_opt.Bytes, op_opt.Pos)
 
-        self.parseInputOutput()
+        if self.inputs_buf[0] is None and self.inputs_buf[1] is None and self.inputs_shape[0] == self.inputs_shape[1]:
+            self.layer_type = 'Eltwise'
+            self.eltwise_param = dict()
+            self.eltwise_param['operation'] = 3 # Caffe Eltwise SUB
+            self.attrs = self.eltwise_param
+        elif self.inputs_buf[0] is None and self.inputs_buf[1] is not None:
+            self.layer_type = 'Scale'
 
-        # Attributes
-        if self.inputs_shape[0] != self.inputs_shape[1] or self.inputs_buf[1] is not None:
+            # Weight
+            self.weight = np.ones(self.inputs_shape[0]).astype(np.float32)
+
+            # Bias
+            if len(self.inputs_shape[1]) == 4 and self.layout == 'NHWC':
+                self.bias = -self.inputs_buf[1].transpose(0, 3, 1, 2)
+            elif len(self.inputs_shape[1]) == 3 and get_layout(self.inputs_shape[1]) == 'XHW' and self.layout == 'NHWC':
+                self.bias = -self.inputs_buf[1].transpose(2, 0, 1)
+            else:
+                self.bias = -self.inputs_buf[1]
+
             self.scale_param = dict()
-
-            org_shape = copy.deepcopy(self.inputs_shape[1])
-            trim = trim_one(org_shape)
-            if trim != self.inputs_shape[1]:
-                self.pre.append('Reshape')
-                self.inputs_shape[1] = trim
-                if self.inputs_buf[1] is not None:
-                    self.inputs_buf[1] = self.inputs_buf[1].reshape(tuple(trim))
-
-            axis = compute_scale_axis(self.inputs_shape[0], trim)
-            if axis is not None:
-                self.scale_param['axis'] = axis
-
-            self.weight = np.ones([1], dtype=int, order='C')
+            self.scale_param['axis'] = 0
+            self.scale_param['num_axes'] = len(self.weight.shape)
             self.scale_param['bias_term'] = True
-            self.bias = np.multiply(-1, self.inputs_buf[1])
+
             self.attrs = self.scale_param
+        elif self.inputs_buf[0] is not None and self.inputs_buf[1] is None:
+            self.layer_type = 'Scale+Scale'
+
+            self.inputs.reverse()
+            self.inputs_shape.reverse()
+            self.inputs_buf.reverse()
+
+            self.scale0 = 'Scale_split_sub'+str(self.index)
+            self.scale1 = 'Scale_split_neg'+str(self.index)
+            self.scale0_outputs = ['Scale_split_sub'+str(self.index)]
+            self.scale1_inputs = ['Scale_split_sub'+str(self.index), 'Scale_split_neg_weight']
+
+            # Weight
+            self.weight0 = np.ones(self.inputs_shape[0]).astype(np.float32)
+            self.weight1 = np.ones(self.outputs_shape[0]).astype(np.float32) * -1
+
+            # Bias
+            if len(self.inputs_shape[1]) == 4:
+                self.bias0 = -self.inputs_buf[1].transpose(0,3,1,2)
+            elif len(self.inputs_shape[1]) == 3 and get_layout(self.inputs_shape[1]) == 'XHW' and self.layout == 'NHWC':
+                self.bias0 = -self.inputs_buf[1].transpose(2,0,1)
+            else:
+                self.bias0 = -self.inputs_buf[1]
+            self.bias1 = None
+
+            # Attribute
+            self.scale_param0 = dict()
+            self.scale_param0['axis'] = 0
+            self.scale_param0['num_axes'] = len(self.weight0.shape)
+            self.scale_param0['bias_term'] = True
+
+            self.scale_param1 = dict()
+            self.scale_param1['axis'] = 0
+            self.scale_param1['num_axes'] = len(self.weight1.shape)
+            self.scale_param1['bias_term'] = False
+
+            self.attrs = self.scale_param0
         else:
+            print(self.inputs_buf, self.inputs_shape)
             raise NotImplementedError(self.operator_code)
 
 
@@ -60,17 +98,15 @@ class Sub(Operator):
 
 
     def convert(self):
-        for pre_op in self.pre:
-            if pre_op == 'Reshape':
-                reshape_param = dict(shape=dict(dim=self.inputs_shape[1]))
-                pre_layer = caffe_layer('Reshape', 'Reshape'+str(self.index), [self.inputs[1]], [None], ['reshape'+str(self.index)], reshape_param=reshape_param)
-                self.inputs[1] = 'reshape' + str(self.index)
-
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, scale_param=self.scale_param)
-        if len(self.pre) > 0:
-            self.setConverted()
-            return [pre_layer, layer]
+        layers = list()
+        if self.type == 'Eltwise':
+            layers.append(caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param))
+        elif self.type == 'Scale':
+            layers.append(caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, scale_param=self.scale_param))
+        elif self.type == 'Scale+Scale':
+            layers.append(caffe_layer('Scale', self.scale0, self.inputs, self.inputs_buf, self.scale0_outputs, self.weight0, self.bias0, scale_param=self.scale_param0))
+            layers.append(caffe_layer('Scale', self.scale1, self.scale1_inputs, [None, self.weight1], self.outputs, self.weight1, self.bias1, scale_param=self.scale_param1))
 
         self.setConverted()
 
-        return [layer]
+        return layers

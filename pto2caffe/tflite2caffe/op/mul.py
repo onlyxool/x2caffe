@@ -11,11 +11,9 @@ class Mul(Operator):
 
     def __init__(self, model, tf_op, tf_op_name, index):
         super().__init__(model, tf_op, tf_op_name, index)
-
         assert(self.operator_code == 'MUL')
         assert(self.op.InputsLength() == 2)
         assert(self.op.OutputsLength() == 1)
-
         self.setInited()
 
 
