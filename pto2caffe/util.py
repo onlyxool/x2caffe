@@ -133,67 +133,20 @@ def isShapeCompatible(data_shape:list, weight_shape:list) -> bool:
             data_shape[0:1], data_shape[0:2], data_shape[0:3], data_shape[0:4],
             data_shape[1:2], data_shape[1:3], data_shape[1:4],
             data_shape[2:3], data_shape[2:4],
-            data_shape[3:4]]
+            data_shape[3:4], []]
 
         return weight_shape in compatible_shape
     elif len(data_shape) >= 4 and len(weight_shape) >= 4: # TODO
         return True
     elif len(data_shape) == 3 and len(weight_shape) <= 3: # TODO
-        return True
+        compatible_shape = [
+            data_shape[0:1], data_shape[0:2], data_shape[0:3],
+            data_shape[1:2], data_shape[1:3],
+            data_shape[2:3], []]
+
+        return weight_shape in compatible_shape
     elif weight_shape == [] or weight_shape == ():
         return True
     else:
         print(data_shape, weight_shape)
         raise NotImplementedError
-
-
-# Scale Axis
-def trim_one(scale_shape):
-    if len(scale_shape) <= 1 or scale_shape is None:
-        return scale_shape
-
-    # Remove 1 from head
-    while True:
-        if len(scale_shape) > 1 and scale_shape[0] == 1:
-            scale_shape.remove(1)
-        else:
-            break
-
-    # Remove 1 from tail
-    while True:
-        if len(scale_shape) > 1 and scale_shape[-1] == 1:
-            scale_shape.pop()
-        else:
-            break
-
-    return scale_shape
-
-
-def compute_scale_axis(bottom_shape, scale_shape):
-    '''
-    The first axis of bottom[0] (the first input Blob) along which to apply
-    bottom[1] (the second input Blob).  May be negative to index from the end
-    (e.g., -1 for the last axis).
-
-    For example, if bottom[0] is 4D with shape 100x3x40x60, the output
-    top[0] will have the same shape, and bottom[1] may have any of the
-    following shapes (for the given value of axis):
-       (axis == 0 == -4) 100; 100x3; 100x3x40; 100x3x40x60
-       (axis == 1 == -3)          3;     3x40;     3x40x60
-       (axis == 2 == -2)                   40;       40x60
-       (axis == 3 == -1)                                60
-    Furthermore, bottom[1] may have the empty shape (regardless of the value of
-    "axis") -- a scalar multiplier.
-    '''
-    if scale_shape == []:
-        return 0
-
-    shapeA = np.array(bottom_shape)
-    shapeB = np.array(scale_shape)
-
-    for i in range(len(shapeA)):
-        shape_map = list(shapeA[i:(len(shapeB)+i)] == shapeB)
-
-        if isinstance(shape_map, list) and shape_map.count(True) == len(shapeB):
-            return i
-    return None
