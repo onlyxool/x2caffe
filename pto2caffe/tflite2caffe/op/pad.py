@@ -31,9 +31,9 @@ class Pad(Operator):
             pad['channel'] = self.inputs_buf[1][3].tolist()
             self.model.pad[self.op.Outputs(0)] = pad
 
-        if pad['channel'] != [0, 0]:
-            self.model.errorMsg.append('Error: Operator PAD: Caffe do not support pad on Channel. ' + str(self.inputs) + ' -> ' + str(self.outputs))
-            self.model.unsupport.append(self.operator_code)
+            if pad['channel'] != [0, 0]:
+                self.model.errorMsg.append('Error: Operator PAD: Caffe do not support pad on Channel. ' + str(self.inputs) + ' -> ' + str(self.outputs))
+                self.model.unsupport.append(self.operator_code)
 
 
     def convert(self):
