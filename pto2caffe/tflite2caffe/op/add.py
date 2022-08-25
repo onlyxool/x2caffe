@@ -34,6 +34,11 @@ class Add(Operator):
         elif self.inputs_shape[0] != self.inputs_shape[1]:
             self.layer_type = 'Bias'
 
+            if self.inputs_buf[0] is not None and self.inputs_buf[1] is None:
+                self.inputs.reverse()
+                self.inputs_shape.reverse()
+                self.inputs_buf.reverse()
+
             backup = self.inputs_shape[1]
             if not isShapeCompatible(self.inputs_shape[0], self.inputs_shape[1]):
                 self.inputs_shape[1] = list(np.squeeze(np.random.random(self.inputs_shape[1])).shape)
@@ -43,8 +48,6 @@ class Add(Operator):
                     return
 
             if self.inputs_buf[1] is not None:
-#self.inputs_buf[1] = self.inputs_buf[1].transpose(2, 0, 1)
-#lite-model_seefood_segmenter_mobile_food_segmenter_V1_1.tflite
                 self.inputs_buf[1] = self.inputs_buf[1].reshape(self.inputs_shape[1])
                 self.bias = self.inputs_buf[1]
             else:
