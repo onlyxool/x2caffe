@@ -114,7 +114,11 @@ class Operator(Base):
 
 
     def byPassOperator(self):
-        self.model.indentity[self.node.output[0]] = self.model.indentity.get(self.node.input[0], self.node.input[0])
+        if len(self.outputs) == 0 or len(self.inputs) == 0:
+            import sys
+            sys.exit('Error: Use byPassOperator() after parseInputOutput().')
+
+        self.model.indentity[self.outputs[0]] = self.model.indentity.get(self.inputs[0], self.inputs[0])
         # Handle Legacy Pad for Ignore Op
         if self.node.input[0] in self.model.pad.keys():
             self.model.pad[self.node.output[0]] = self.model.pad[self.node.input[0]]
