@@ -22,7 +22,7 @@ class PReLU(Operator):
 
         # Attributes
         self.prelu_param = dict()
-        self.prelu_param['channel_shared'] = True if self.slope.shape[0] == 1 else False
+        self.prelu_param['channel_shared'] = True if self.slope.size == self.inputs_shape[0][1] else False
         self.attrs = self.prelu_param
 
         self.setParsed()
