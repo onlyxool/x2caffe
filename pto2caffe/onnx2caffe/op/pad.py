@@ -24,7 +24,8 @@ class Pad(Operator):
         else:
             pad = np.array(self.attrs['pads']).reshape(-1, len(self.inputs_shape[0]))
 
-        self.model.indentity[self.outputs[0]] = self.model.indentity.get(self.inputs[0], self.inputs[0])
+        self.byPassOperator()
+
         if np.count_nonzero(pad) > 0:
             pad_dict = dict()
             if len(self.inputs_shape[0]) == 4:

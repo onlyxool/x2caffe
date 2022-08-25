@@ -113,6 +113,17 @@ class Operator(Base):
         self.__parseAttributes__()
 
 
+    def byPassOperator(self):
+        self.model.indentity[self.node.output[0]] = self.model.indentity.get(self.node.input[0], self.node.input[0])
+        # Handle Legacy Pad for Ignore Op
+        if self.node.input[0] in self.model.pad.keys():
+            self.model.pad[self.node.output[0]] = self.model.pad[self.node.input[0]]
+
+
+    def saveConstant(self, name, constant):
+        self.model.constant[name] = constant
+
+
     def propagatableTensors(self):
         """Get all layout propagable tensors of this operator.
 

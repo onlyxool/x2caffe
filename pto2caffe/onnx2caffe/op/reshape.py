@@ -15,9 +15,9 @@ class Reshape(Operator):
 
         if self.inputs_buf[0] is not None:
             self.layer_type = 'Constant'
-            self.model.constant[self.outputs[0]] = self.inputs_buf[0].reshape(self.outputs_shape[0])
+            self.saveConstant(self.outputs[0], self.inputs_buf[0].reshape(self.outputs_shape[0]))
         elif self.inputs_shape[0] == self.outputs_shape[0]:
-            self.model.indentity[self.outputs[0]] = self.inputs[0]
+            self.byPassOperator()
         else:
             self.layer_type = 'Reshape'
 

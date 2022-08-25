@@ -12,8 +12,7 @@ class Constant(Operator):
         self.layer_type = 'Constant'
         super().__parse__()
 
-        # Attributes
-        self.model.constant[self.node.output[0]] = self.attrs['value']
+        self.saveConstant(self.node.output[0], self.attrs['value'])
 
 
     def convert(self):
