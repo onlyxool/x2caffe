@@ -24,7 +24,8 @@ class ReduceMean(Operator):
         opt.Init(op_opt.Bytes, op_opt.Pos)
 
         if self.inputs_buf[1].ndim == 0:
-            axis = int(self.inputs_buf[1])
+            axis = int(self.inputs_buf[1]) if int(self.inputs_buf[1]) > 0 else len(self.inputs_shape[0]) + int(self.inputs_buf[1])
+            axis = [dim_map_nhwc2nchw[axis]] if self.layout == 'NHWC' and len(self.inputs_shape[0]) == 4 else [axis]
         elif self.inputs_buf[1].size >= 1:
             axis = [dim_map_nhwc2nchw[dim] for dim in self.inputs_buf[1]]
 
@@ -44,16 +45,20 @@ class ReduceMean(Operator):
             self.pooling_param.update(padding)
 
             self.attrs = self.pooling_param
-        elif not opt.KeepDims():
+        else:
             self.layer_type = 'Reduction'
+
+            if axis != [i for i in range(len(self.inputs_shape[0]))][-len(axis):]:
+                self.model.unsupport.append(self.operator_code)
+                self.model.errorMsg.append('Error: Op (MEAN): Do not support axis:' + str(axis))
+                return
+
             self.reduction_param = dict()
             self.reduction_param['operation'] = 4
-            self.reduction_param['axis'] = axis if isinstance(axis, int) else axis[0]
+            self.reduction_param['axis'] = axis[0]
             self.reduction_param['coeff'] = 1.0
+
             self.attrs = self.reduction_param
-        else:
-            print(opt.KeepDims(), axis, len(self.inputs_shape[0]))
-            raise NotImplementedError
 
         self.setParsed()
 
