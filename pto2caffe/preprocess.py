@@ -49,7 +49,6 @@ def get_input_tensor(param, input_shape, dtype, quantization_parameter=None):
 
     elif np.issubdtype(dtype, np.integer) and quantization_parameter is None:
         tensor = np.random.randint(low=np.iinfo(dtype).min, high=np.iinfo(dtype).max, size=input_shape, dtype=dtype)
-
     elif np.issubdtype(dtype, np.floating) and quantization_parameter is None:
         tensor = np.random.uniform(size=input_shape).astype(dtype)
     else:
@@ -117,7 +116,7 @@ def preprocess(tensor, param):
     if param['std'] is not None:
         tensor = std(tensor, param['std'])
 
-    if param['crop_h'] is not None and param['crop_w'] is not None:
+    if param['crop_h'] is not None and param['crop_w'] is not None and param.get('root_folder', None) is not None:
         tensor = crop(tensor, param['crop_h'], param['crop_w'])
 
     if param.get('savetensor', 0) == 1:
