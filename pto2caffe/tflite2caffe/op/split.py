@@ -17,33 +17,34 @@ class Split(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Slice'
-
         self.parseInputOutput()
 
         op_opt = self.op.BuiltinOptions()
         opt = tflite.SplitOptions()
         opt.Init(op_opt.Bytes, op_opt.Pos)
 
-        # Attributes
-        self.slice_param = dict()
-        # Axis
-        if isinstance(self.inputs_buf[0], np.ndarray):
-            self.slice_param['axis'] = dim_map_nhwc2nchw[self.inputs_buf[0][0]]
-        elif isinstance(self.inputs_buf[0], int):
-            self.slice_param['axis'] = dim_map_nhwc2nchw[self.inputs_buf[0]]
+        if self.inputs_shape[1] == self.outputs_shape[0]:
+            self.byPassOperator()
+        else:
+            self.layer_type = 'Slice'
+            self.slice_param = dict()
+            # Axis
+            if isinstance(self.inputs_buf[0], np.ndarray):
+                self.slice_param['axis'] = dim_map_nhwc2nchw[self.inputs_buf[0][0]]
+            elif isinstance(self.inputs_buf[0], int) or isinstance(self.inputs_buf[0], np.int32):
+                self.slice_param['axis'] = dim_map_nhwc2nchw[self.inputs_buf[0]]
 
-        assert((self.inputs_shape[1][self.slice_param['axis']] / opt.NumSplits()) == (self.outputs_shape[0][self.slice_param['axis']]))
+            assert((self.inputs_shape[1][self.slice_param['axis']] / opt.NumSplits()) == (self.outputs_shape[0][self.slice_param['axis']]))
 
-        # Slice Points
-        slice_points = []
-        for i in range(opt.NumSplits()):
-            slice_points.append(self.outputs_shape[i][self.slice_param['axis']])
-        self.slice_param['slice_point'] = slice_points
+            # Slice Points
+            slice_points = []
+            for i in range(opt.NumSplits()):
+                slice_points.append(self.outputs_shape[i][self.slice_param['axis']])
+            self.slice_param['slice_point'] = slice_points
 
-        self.attrs = self.slice_param
+            self.attrs = self.slice_param
 
-        self.setParsed()
+            self.setParsed()
 
 
     def convert(self):
