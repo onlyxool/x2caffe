@@ -74,27 +74,15 @@ from tensorflow2caffe.op.resizenearestneighbor import ResizeNearestNeighbor
 from tensorflow2caffe.op.placeholderwithdefault import PlaceholderWithDefault
 from tensorflow2caffe.op.sparsetensordensematmul import SparseTensorDenseMatMul
 
-from tensorflow2caffe.op.debug import Debug
 
 from caffe_transform import save_caffe_model
 from caffe_transform import make_caffe_input_layer
 from util import shape_map_nhwc2nchw, shape_map_nchw2nhwc
 
 
-
-
-
 logger = logging.getLogger('TensorFlow2Caffe')
 
 OpMap = {
-#    'ExtractImagePatches': Debug,
-#    'Size': Debug,
-#    'SpaceToBatchND': Debug,
-#    'Snapshot': Debug,
-#    'MatrixBandPart': Debug,
-#    'Pow': Debug,
-#'All': Debug,
-
     'Abs': Abs,
     'Add': Add,
     'Exp': Exp,

@@ -44,7 +44,6 @@ from onnx2caffe.op.convtranspose import Deconvolution
 from onnx2caffe.op.globalaveragepool import GlobalAveragePool
 from onnx2caffe.op.instancenormalization import InstanceNormalization
 
-from onnx2caffe.op.debug import Debug
 
 from onnx2caffe.op.mish import Mish
 
@@ -99,12 +98,6 @@ OpMap = {
     'InstanceNormalization': InstanceNormalization,
     'Upsample': Upsample, #Deprecated
     'Mish': Mish, # Yolov4
-
-#    'Gather': Debug,
-#    'ArgMax': Debug,
-#    'Multinomial': Debug,
-#    'Expand': Debug,
-#    'ConstantOfShape': Debug,
 }
 
 
