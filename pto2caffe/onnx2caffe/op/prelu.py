@@ -18,11 +18,10 @@ class PReLU(Operator):
 
         # Slope
         self.slope = np.squeeze(self.inputs_buf[1])
-        self.inputs_shape[1] = self.slope.shape
+        self.inputs_shape[1] = [1] if self.slope.ndim == 0 else self.slope.shape
 
-        # Attributes
         self.prelu_param = dict()
-        self.prelu_param['channel_shared'] = True if self.slope.size == self.inputs_shape[0][1] else False
+        self.prelu_param['channel_shared'] = True if self.inputs_shape[1][0] == 1 else False
         self.attrs = self.prelu_param
 
         self.setParsed()
