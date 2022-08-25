@@ -1,8 +1,8 @@
-import tflite
+import numpy as np
 
 from caffe_transform import caffe_layer
 from tflite2caffe.op.operator import Operator
-
+from util import dim_map_nhwc2nchw
 
 class Slice(Operator):
 
@@ -20,10 +20,26 @@ class Slice(Operator):
         if self.inputs_shape[0] == self.outputs_shape[0]:
             self.byPassOperator()
         else:
-            raise NotImplementedError
             self.layer_type = 'Slice'
+
             self.slice_param = dict()
-            self.slice_param['axis'] = 0
+
+            if len(np.where(self.inputs_buf[2]>0)) > 1:
+                self.model.unsupport.append(self.operator_code)
+                self.model.errorMsg.append('Error: Op (SLICE): Do not support begin:' + str(self.inputs_buf[1]))
+                return
+
+            op_axis = (self.inputs_buf[2]>0).tolist().index(True)
+            self.slice_param['axis'] = op_axis if len(self.inputs_shape) < 4 else dim_map_nhwc2nchw[op_axis]
+
+            if self.inputs_buf[1][op_axis] == 0:
+                slice_points = self.inputs_buf[2][op_axis]
+                self.outputs.insert(0, self.name+'_useless')
+            elif self.inputs_buf[1][op_axis] > 0:
+                slice_points = self.inputs_buf[1][op_axis]
+                self.outputs.append(self.name+'_useless')
+            else:
+                raise NotImplementedError
             self.slice_param['slice_point'] = slice_points
 
             self.attrs = self.slice_param
