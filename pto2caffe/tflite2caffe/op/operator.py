@@ -62,7 +62,10 @@ class Operator(Base):
         for i in range(self.op.InputsLength()):
             if self.op.Inputs(i) >= 0:
                 self.inputs.append(self.model.indentity.get(self.op.Inputs(i), self.op.Inputs(i)))
-                self.inputs_shape.append(shape_map_nhwc2nchw(self.graph.Tensors(self.op.Inputs(i)).ShapeAsNumpy().tolist()))
+                if not isinstance(self.graph.Tensors(self.op.Inputs(i)).ShapeAsNumpy(), np.ndarray):
+                    self.inputs_shape.append([])
+                else:
+                    self.inputs_shape.append(shape_map_nhwc2nchw(self.graph.Tensors(self.op.Inputs(i)).ShapeAsNumpy().tolist()))
                 self.inputs_buf.append(self.model.constant[self.op.Inputs(i)])
             else:
                 self.inputs_buf.append(None)
@@ -72,7 +75,10 @@ class Operator(Base):
         for i in range(self.op.OutputsLength()):
             if self.op.Outputs(i) >= 0:
                 self.outputs.append(self.op.Outputs(i))
-                self.outputs_shape.append(shape_map_nhwc2nchw(self.graph.Tensors(self.outputs[0]).ShapeAsNumpy().tolist()))
+                if not isinstance(self.graph.Tensors(self.op.Outputs(i)).ShapeAsNumpy(), np.ndarray):
+                    self.outputs_shape.append([])
+                else:
+                    self.outputs_shape.append(shape_map_nhwc2nchw(self.graph.Tensors(self.op.Outputs(i)).ShapeAsNumpy().tolist()))
 
 
     def parseInputOutput(self):
