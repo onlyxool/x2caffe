@@ -32,18 +32,28 @@ def get_one_file(folder_path):
                 return path+'/'+file_name
 
 
-def get_input_tensor(param, input_shape, quantization_parameter=None):
+def get_input_tensor(param, input_shape, dtype, quantization_parameter=None):
     root_path = param.get('root_folder', None)
 
     if root_path is not None and os.path.isfile(root_path):
         tensor = load_file2tensor(root_path, param)
+
     elif root_path is not None and os.path.isdir(root_path):
         param['input_file'] = get_one_file(root_path)
         tensor = load_file2tensor(param['input_file'], param)
-    else:
-        maxval = 1. if quantization_parameter is None or isinstance(quantization_parameter['maxval'], int) else quantization_parameter['maxval']
-        minval = 0. if quantization_parameter is None or isinstance(quantization_parameter['minval'], int) else quantization_parameter['minval']
+
+    elif np.issubdtype(dtype, np.integer) and quantization_parameter is not None:
+        maxval = 1. if isinstance(quantization_parameter['maxval'], int) else quantization_parameter['maxval']
+        minval = 0. if isinstance(quantization_parameter['minval'], int) else quantization_parameter['minval']
         tensor = np.random.uniform(low=minval, high=maxval, size=input_shape).astype(np.float32)
+
+    elif np.issubdtype(dtype, np.integer) and quantization_parameter is None:
+        tensor = np.random.randint(low=np.iinfo(dtype).min, high=np.iinfo(dtype).max, size=input_shape, dtype=dtype)
+
+    elif np.issubdtype(dtype, np.floating) and quantization_parameter is None:
+        tensor = np.random.uniform(size=input_shape).astype(dtype)
+    else:
+        raise NotImplementedError
 
     return preprocess(tensor, param)
 

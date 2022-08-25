@@ -190,6 +190,6 @@ def convert(pb_file, caffe_model_path, param=None):
     model.convert()
     model.save(caffe_model_path)
 
-    input_tensor = get_input_tensor(param, model.inputs_shape[0], None)
+    input_tensor = get_input_tensor(param, model.inputs_shape[0], model.inputs_dtype[0], None)
 
     compare('tensorflow', model, caffe_model_path, input_tensor, param.get('compare', -1))

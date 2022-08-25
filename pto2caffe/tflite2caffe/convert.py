@@ -15,6 +15,6 @@ def convert(tf_file, caffe_model_path, param=None):
     model.convert()
     caffe_net = model.save(caffe_model_path)
 
-    input_tensor = get_input_tensor(param, model.inputs_shape[0], quantization_parameter=model.inputs_quantization_parameter[0])
+    input_tensor = get_input_tensor(param, model.inputs_shape[0], model.inputs_dtype[0], quantization_parameter=model.inputs_quantization_parameter[0])
 
     compare2(model, caffe_net, input_tensor, param.get('compare', -1))
