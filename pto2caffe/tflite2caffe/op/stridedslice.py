@@ -43,7 +43,8 @@ class StridedSlice(Operator):
 
             if axis_index.size > 1:
                 self.model.unsupport.append(self.operator_code)
-                self.model.errorMsg.append('Error: Op (STRIDED_SLICE): Can\'t slice more than one axis')
+                self.model.errorMsg.append('Error: Op (STRIDED_SLICE): Can\'t slice more than one axis, begin: '
+                        + str(self.inputs_buf[1]) + ' ends: ' + str(self.inputs_buf[2]))
                 return
             else:
                 axis_index = int(axis_index)
