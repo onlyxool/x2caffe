@@ -14,6 +14,10 @@ class Slice(Operator):
         self.layer_type = 'Slice'
         super().__parse__()
 
+        if self.inputs_shape[0] == self.outputs_shape[0]:
+            self.byPassOperator()
+            return
+
         # num_slices, starts, ends, axes, steps
         if self.model.opset[0] < 10:
             num_slices = len(self.attrs['starts'])
@@ -38,7 +42,6 @@ class Slice(Operator):
             elif end < 0:
                 ends[i] = self.inputs_shape[0][axes[i]] + end
 
-        # Attributes
         if max(steps) == 1:
             axis_length = self.inputs_shape[0][axes[0]]
             self.slice_param = dict()
