@@ -17,71 +17,51 @@ class Add(Operator):
     def parse(self):
         super().__parse__()
 
-        if self.inputs_buf[0] is None and self.inputs_buf[1] is None:
-            if self.inputs_shape[0] == self.inputs_shape[1]:
-                # Eltwise Layer
-                self.layer_type = 'Eltwise'
-
-                # Attributes
-                self.eltwise_param = dict()
-                self.eltwise_param['operation'] = 1 # Caffe Eltwise SUM
-                self.attrs = self.eltwise_param
-            else:
-                self.layer_type = 'Bias'
-
-                if self.inputs_shape[0].count(1) > self.inputs_shape[1].count(1):
-                    self.inputs.reverse()
-                    self.inputs_shape.reverse()
-
-                if not isShapeCompatible(self.inputs_shape[0], self.inputs_shape[1]):
-                    bias_shape = list(np.squeeze(np.random.random(self.inputs_shape[1])).shape)
-                    if not isShapeCompatible(self.inputs_shape[0], bias_shape):
-                        self.model.errorMsg.append('[' + self.node.name + ']: Operator Mul Inputs shape uncompatible for Caffe. ' + str(self.inputs_shape[0]) + ' + ' + str(self.inputs_shape[1]))
-                        self.model.unsupport.append(self.operator_code)
-                        return
-                else:
-                    bias_shape = self.inputs_shape[1]
-
-                if bias_shape != self.inputs_shape[1]:
-                    self.inputs_shape[1] = bias_shape
-                    if self.inputs_buf[1] is not None:
-                        self.inputs_buf[1] = self.inputs_buf[1].reshape(bias_shape)
-                    else:
-                        self.layer_type = 'Reshape+Bias'
-
-                self.bias_param = dict()
-                self.bias_param['axis'] = self.inputs_shape[0].index(self.inputs_shape[1][0]) if len(self.inputs_shape[1]) > 0 else 0
-
-                self.attrs = self.bias_param
+        if self.inputs_buf[0] is None and self.inputs_buf[1] is None and self.inputs_shape[0] == self.inputs_shape[1]:
+            self.layer_type = 'Eltwise'
+            self.eltwise_param = dict()
+            self.eltwise_param['operation'] = 1 # Caffe Eltwise SUM
+            self.attrs = self.eltwise_param
         else:
-            # Scale Layer
-            self.layer_type = 'Scale'
+            self.layer_type = 'Bias'
 
-            if self.inputs_buf[0] is not None:
-                bias_index = 0
-                input_index = 1
+            inputs_size0 = np.multiply.reduce(self.inputs_shape[0], axis=None)
+            inputs_size1 = np.multiply.reduce(self.inputs_shape[1], axis=None)
+
+            if self.inputs_buf[0] is not None and self.inputs_buf[1] is None:
+                self.inputs.reverse()
+                self.inputs_shape.reverse()
+                self.inputs_buf.reverse()
+            elif inputs_size0 < inputs_size1:
+                self.inputs.reverse()
+                self.inputs_shape.reverse()
+                self.inputs_buf.reverse()
+
+            if self.inputs_buf[1] is not None and np.all(self.inputs_buf[1] == 0):
+                self.byPassOperator()
+                return
+
+            if not isShapeCompatible(self.inputs_shape[0], self.inputs_shape[1]):
+                bias_shape = list(np.squeeze(np.random.random(self.inputs_shape[1])).shape)
+                if not isShapeCompatible(self.inputs_shape[0], bias_shape):
+                    self.model.errorMsg.append('[' + self.node.name + ']: Operator Mul Inputs shape uncompatible for Caffe. ' + str(self.inputs_shape[0]) + ' + ' + str(self.inputs_shape[1]))
+                    self.model.unsupport.append(self.operator_code)
+                    return
+                self.inputs_shape[1] = bias_shape
             else:
-                bias_index = 1
-                input_index = 0
+                bias_shape = self.inputs_shape[1]
 
-            # Weight
-            self.weight = np.ones(self.inputs_shape[bias_index], dtype=float, order='C')
-
-            # Bias
-            self.bias = self.inputs_buf[bias_index]
-
-            # Attributes
-            self.scale_param = dict()
-            self.scale_param['bias_term'] = True
-
-            # Axis
-            if self.bias.shape != () and self.bias.shape != []:
-                self.scale_param['axis'] = self.inputs_shape[input_index].index(self.bias.shape[0])
-                self.scale_param['num_axes'] = len(self.bias.shape)
+            if self.inputs_buf[1] is not None:
+                self.inputs_buf[1] = self.inputs_buf[1].reshape(bias_shape)
             else:
-                self.scale_param['num_axes'] = 0
+                self.layer_type = 'Reshape+Bias'
 
-            self.attrs = self.scale_param
+            self.bias_param = dict()
+            self.bias_param['axis'] = self.inputs_shape[0].index(self.inputs_shape[1][0]) if len(self.inputs_shape[1]) > 0 else 0
+
+            self.bias = self.inputs_buf[1]
+
+            self.attrs = self.bias_param
 
         self.setParsed()
 
@@ -90,14 +70,12 @@ class Add(Operator):
         layers = list()
         if self.type == 'Eltwise':
             layers.append(caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param))
-        elif self.type == 'Scale':
-            layers.append(caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, scale_param=self.scale_param))
         elif self.type == 'Bias':
-            layers.append(caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, bias_param=self.bias_param))
+            layers.append(caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.bias, bias_param=self.bias_param))
         elif self.type == 'Reshape+Bias':
             reshape_out = 'reshape'+str(self.index)
             layers.append(caffe_layer('Reshape', 'Reshape'+str(self.index), [self.inputs[1]], [None], [reshape_out], reshape_param=dict(shape=dict(dim=self.inputs_shape[1]))))
-            layers.append(caffe_layer('Bias', 'Bais'+str(self.index), [self.inputs[0], reshape_out], self.inputs_buf, self.outputs, bias_param=self.bias_param))
+            layers.append(caffe_layer('Bias', 'Bais'+str(self.index), [self.inputs[0], reshape_out], self.inputs_buf, self.outputs, self.bias, bias_param=self.bias_param))
 
         self.setConverted()
 
