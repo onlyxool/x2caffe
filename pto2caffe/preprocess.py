@@ -44,7 +44,7 @@ def get_input_tensor(param, input_shape, dtype, quantization_parameter=None):
 
     elif np.issubdtype(dtype, np.integer) and quantization_parameter is not None:
         maxval = 1. if isinstance(quantization_parameter['maxval'], int) else quantization_parameter['maxval']
-        minval = 0. if isinstance(quantization_parameter['minval'], int) else quantization_parameter['minval']
+        minval = -1. if isinstance(quantization_parameter['minval'], int) else quantization_parameter['minval']
         tensor = np.random.uniform(low=minval, high=maxval, size=input_shape).astype(np.float32)
 
     elif np.issubdtype(dtype, np.integer) and quantization_parameter is None:
