@@ -54,7 +54,10 @@ numpy_dtype = [None, np.float32, np.uint8, np.int8, np.uint16, np.int16, np.int3
 
 logger = logging.getLogger('ONNX2Caffe')
 
+#from onnx2caffe.op.debug import Debug
 OpMap = {
+#    'NonMaxSuppression': Debug,
+
     'Add': Add,
     'Div': Div,
     'Elu': Elu,
@@ -196,6 +199,8 @@ class Model(Base):
         for input in self.graph.input:
             if input.name not in self.constant:
                 print(input.name, self.shape[input.name])
+                if not all(self.shape[input.name]):
+                    sys.exit('Error: Dynamic Model input detected, Please Use -input_shape to overwrite input shape.')
 
                 self.inputs.append(input.name)
                 self.inputs_shape.append(self.shape[input.name])
@@ -246,3 +251,19 @@ class Model(Base):
 
     def save(self, caffe_model_path):
         save_caffe_model(caffe_model_path, self.layers)
+
+
+#    def forward(self, output_name, input_tensor):
+#        for value_info in self.model.graph.value_info:
+#            if value_info.name == blob_name:
+#                # insert output
+#                shape_list = shape_proto2list(value_info.type.tensor_type.shape)
+#                blob_info = helper.make_tensor_value_info(blob_name, onnx.TensorProto.FLOAT, shape_list)
+#                model.graph.output.insert(0, blob_info)
+#                output = onnx_run(model, input_tensor)
+#                return np.array(output[0])
+#            else:
+#                for index, output in enumerate(model.graph.output):
+#                    if blob_name == output.name:
+#                        outputs = onnx_run(model, input_tensor)
+#                        return np.array(outputs[index])
