@@ -17,7 +17,6 @@ class Mul(Operator):
         super().__parse__()
 
         if (self.inputs_buf[0] is not None or self.inputs_buf[1] is not None) or (self.inputs_shape[0] != self.inputs_shape[1]):
-            # Scale Layer
             self.layer_type = 'Scale'
 
             if not isShapeCompatible(self.inputs_shape[0], self.inputs_shape[1]):
@@ -26,21 +25,18 @@ class Mul(Operator):
                     self.model.errorMsg.append('[' + self.node.name + ']: Operator Mul Inputs shape uncompatible for Caffe. ' + str(self.inputs_shape[0]) + ' x ' + str(self.inputs_shape[1]))
                     self.model.unsupport.append(self.operator_code)
                     return
+                self.inputs_shape[1] = weight_shape
             else:
                 weight_shape = self.inputs_shape[1]
 
-            if weight_shape != self.inputs_shape[1]:
-                self.inputs_shape[1] = weight_shape
-                if self.inputs_buf[1] is not None:
-                    self.inputs_buf[1] = self.inputs_buf[1].reshape(weight_shape)
-                else:
-                    self.layer_type = 'Reshape+Scale'
+            if self.inputs_buf[1] is not None:
+                self.inputs_buf[1] = self.inputs_buf[1].reshape(weight_shape)
+            else:
+                self.layer_type = 'Reshape+Scale'
 
-            # Attributes
             self.scale_param = dict()
             self.scale_param['bias_term'] = False
 
-            # Axis
             if self.model.opset[0] >= 7:
                 self.scale_param['axis'] = self.inputs_shape[0].index(self.inputs_shape[1][0]) if len(self.inputs_shape[1]) > 0 else 0
             else:
@@ -55,10 +51,7 @@ class Mul(Operator):
             # Bias
             self.bias = None
         else:
-            # Eltwise Layer
             self.layer_type = 'Eltwise'
-
-            # Attributes
             self.eltwise_param = dict()
             self.eltwise_param['operation'] = 0 # Caffe Eltwise PROD
             self.attrs = self.eltwise_param
