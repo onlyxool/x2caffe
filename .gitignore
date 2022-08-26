@@ -1,5 +1,7 @@
 assets/
 *.bak
 .dbg_log.txt
-release/
+*build*/
+*debug*/
+*release*/
 script/
