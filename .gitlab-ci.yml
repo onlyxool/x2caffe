@@ -1,10 +1,10 @@
 ---
-image: onlyxool/vimicro-ai:gpu
-
 stages:
   - build
   - test
-
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE != "merge_request_event"
 variables:
   CONDA_EXE: "/usr/local/bin/conda"
   CONDA_PREFIX: "/usr/local/envs/mc"
@@ -15,26 +15,25 @@ variables:
 
 pre-job:
   stage: .pre
+  rules:
+    - if: $GITLAB_CI_PRE_STAGE_ENABLE == "true"
   script:
     - echo "This job runs in the .pre stage, before all other stages."
-    - env
-    - hostname
 
 build-job:
   stage: build
   timeout: 30m
+  image: test:cpu
   before_script:
     - TZ=UTC-8 date "+%Y-%m-%d %H:%M:%S"
   script:
     - echo "This job builds the target of pto2caffe"
-    - pushd pto2caffe
-    - python3 compile.py
-    - popd
+    - python3 build.py
   after_script:
     - TZ=UTC-8 date "+%Y-%m-%d %H:%M:%S"
   artifacts:
     paths:
-      - release
+      - target*
 
 test-job:
   stage: test
@@ -42,14 +41,16 @@ test-job:
     - TZ=UTC-8 date "+%Y-%m-%d %H:%M:%S"
   script:
     - echo "This job tests pto2caffe."
-    - mkdir tests
+    - mkdir test
   after_script:
     - TZ=UTC-8 date "+%Y-%m-%d %H:%M:%S"
   artifacts:
     paths:
-      - tests
+      - test
 
 post-job:
   stage: .post
+  rules:
+    - if: $GITLAB_CI_POST_STAGE_ENABLE == "true"
   script:
     - echo "This job runs in the .post stage, after all other stages."
