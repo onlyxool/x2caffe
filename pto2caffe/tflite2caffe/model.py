@@ -9,10 +9,12 @@ from tflite2caffe.op.pad import Pad
 from tflite2caffe.op.add import Add
 from tflite2caffe.op.mul import Mul
 from tflite2caffe.op.sub import Sub
+from tflite2caffe.op.pack import Pack
 from tflite2caffe.op.relu import ReLU
 from tflite2caffe.op.relux import ReLUX
 from tflite2caffe.op.prelu import PReLU
 from tflite2caffe.op.swish import Swish
+from tflite2caffe.op.shape import Shape
 from tflite2caffe.op.slice import Slice
 from tflite2caffe.op.split import Split
 from tflite2caffe.op.concat import Concat
@@ -33,7 +35,6 @@ from tflite2caffe.op.fullyconnected import InnerProduct
 from tflite2caffe.op.resizenearest import ResizeNearest
 from tflite2caffe.op.resizebilinear import ResizeBilinear
 
-from tflite2caffe.op.debug import Debug
 
 from util import shape_map_nhwc2nchw
 from caffe_transform import save_caffe_model
@@ -51,10 +52,12 @@ OpMap = {
     'ADD': Add,
     'MUL': Mul,
     'SUB': Sub,
+    'PACK': Pack,
     'RELU': ReLU,
     'CAST': ByPass,
     'PRELU': PReLU,
     'RELU6': ReLUX,
+    'SHAPE': Shape,
     'SLICE': Slice,
     'SPLIT': Split,
     'QUANTIZE': ByPass,
@@ -154,7 +157,10 @@ class Model(Base):
             if isinstance(raw, int) and raw == 0:
                 self.constant[i] = None
             elif isinstance(raw, np.ndarray):
-                constant = np.frombuffer(raw, dtype=numpy_dtype[self.graph.Tensors(i).Type()]).reshape(self.graph.Tensors(i).ShapeAsNumpy())
+                if isinstance(self.graph.Tensors(i).ShapeAsNumpy(), int) and self.graph.Tensors(i).ShapeAsNumpy() == 0:
+                    constant = np.frombuffer(raw, dtype=numpy_dtype[self.graph.Tensors(i).Type()])[0]
+                else:
+                    constant = np.frombuffer(raw, dtype=numpy_dtype[self.graph.Tensors(i).Type()]).reshape(self.graph.Tensors(i).ShapeAsNumpy())
                 constant = self.dequantize(constant, i)
                 self.constant[i] = constant
             else:
@@ -166,12 +172,15 @@ class Model(Base):
             tf_op_code = self.model.OperatorCodes(tf_op.OpcodeIndex())
             tf_op_name = tflite.opcode2name(tf_op_code.BuiltinCode())
 
-            if tf_op_name in []: #ignore_op
+            if tf_op_name in (): #ignore_op
                 continue
 
             if tf_op_name == 'CUSTOM':
-                self.unsupport.append(tf_op_code.CustomCode().decode())
-                continue
+                if tf_op_code.CustomCode().decode() in ('TFLite_Detection_PostProcess',):
+                    continue
+                else:
+                    self.unsupport.append(tf_op_code.CustomCode().decode())
+                    continue
 
             if tf_op_name not in OpMap:
                 self.unsupport.append(tf_op_name)
@@ -251,6 +260,9 @@ class Model(Base):
 
     def get_tensor_quantization_parameter(self, index):
         dtype = self.graph.Tensors(index).Type()
+        if dtype == 0:
+            return None
+
         maxval = self.graph.Tensors(index).Quantization().MaxAsNumpy()
         minval = self.graph.Tensors(index).Quantization().MinAsNumpy()
         scale = self.graph.Tensors(index).Quantization().ScaleAsNumpy()
@@ -267,7 +279,7 @@ class Model(Base):
 
 
 
-    def forward(self, output_name, input_tensor):
+    def forward(self, output_name, inputs_tensor):
         if isinstance(output_name, str):
             try:
                 output_name = int(output_name.split('_')[0])
@@ -304,8 +316,8 @@ class Model(Base):
         output_details = interpreter.get_output_details()
 
         # Quantize Input
-        for input_info in input_details:
-            input_tensor = self.quantize(input_tensor, input_info['index'])
+        for index, input_info in enumerate(input_details):
+            input_tensor = self.quantize(inputs_tensor[index], input_info['index'])
             input_tensor = input_tensor.transpose(0, 2, 3, 1) if self.layout == 'NHWC' and input_info['shape'].size == 4 else input_tensor
             interpreter.set_tensor(input_info['index'], input_tensor)
 
