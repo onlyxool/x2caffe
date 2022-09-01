@@ -1,8 +1,8 @@
 import sys
+import onnx
 import logging
 import numpy as np
 from base import Base
-from onnx import numpy_helper
 
 
 from onnx2caffe.op.elu import Elu
@@ -108,6 +108,7 @@ class Model(Base):
 
     def __init__(self, onnx_model, param):
         super().__init__(onnx_model, onnx_model.graph)
+        self.param = param
         self.model_version = onnx_model.model_version
         self.producer = onnx_model.producer_name +' '+ onnx_model.producer_version
 
@@ -119,20 +120,28 @@ class Model(Base):
             else:
                 sys.exit('Error: Model opset > 13 or <= 3, it may cause incompatiblility issue. (opset:{})\n'.format(opset_version))
 
-        self.param = param
+
         self.inputs = list()
         self.inputs_shape = list()
         self.inputs_dtype = list()
         self.inputs_maxval = list()
         self.inputs_minval = list()
-        self.constant = dict()
-        self.indentity = dict()
+
+        self.outputs = list()
+        self.outputs_shape = list()
+        self.outputs_dtype = list()
+        self.outputs_maxval = list()
+        self.outputs_minval = list()
+
         self.pad = dict()
+        self.shape = dict()
+        self.layers = list()
+        self.constant = dict()
+        self.errorMsg = list()
+        self.indentity = dict()
         self.operators = list()
         self.unsupport = list()
-        self.errorMsg = list()
-        self.layers = list()
-        self.shape = dict()
+
         self.setInited()
 
 
@@ -188,27 +197,31 @@ class Model(Base):
 
         # Get Weight & Bias
         for tensor in self.model.graph.initializer:
-            self.constant[tensor.name] =  numpy_helper.to_array(tensor)
+            self.constant[tensor.name] =  onnx.numpy_helper.to_array(tensor)
         for tensor in self.model.graph.sparse_initializer:
-            self.constant[tensor.name] =  numpy_helper.to_array(tensor)
+            self.constant[tensor.name] =  onnx.numpy_helper.to_array(tensor)
 
         if len(self.graph.input) == 0 or self.graph.input is None:
-            sys.exit('model input can\'t be none')
+            sys.exit('model input can\'t be None')
 
         print('ONNX Model Input size: (opset=%d)' %self.opset[0])
         for input in self.graph.input:
             if input.name not in self.constant:
                 print(input.name, self.shape[input.name])
-                if not all(self.shape[input.name]):
-                    sys.exit('Error: Dynamic Model input detected, Please Use -input_shape to overwrite input shape.')
-
                 self.inputs.append(input.name)
                 self.inputs_shape.append(self.shape[input.name])
                 self.inputs_dtype.append(numpy_dtype[input.type.tensor_type.elem_type])
                 self.inputs_maxval.append(None)
                 self.inputs_minval.append(None)
+                if not all(self.shape[input.name]):
+                    sys.exit('Error: Dynamic Model input detected, Please Use -input_shape to overwrite input shape.')
 
-        self.param['inputs_shape'] = self.inputs_shape
+        for output in self.graph.output:
+            self.outputs.append(output.name)
+            self.outputs_shape.append(self.shape[output.name])
+            self.outputs_dtype.append(numpy_dtype[output.type.tensor_type.elem_type])
+            self.outputs_maxval.append(None)
+            self.outputs_minval.append(None)
 
         for index, node in enumerate(self.graph.node):
             if node.op_type in ['Identity']: #ignore op
@@ -242,28 +255,40 @@ class Model(Base):
             self.layers.append(make_caffe_input_layer(input, self.shape[input], index, self.param))
 
         for op in self.operators:
-            layers = op.convert()
-            for layer in layers:
-                self.layers.append(layer)
+            self.layers.extend(op.convert())
 
         self.setConverted()
 
 
     def save(self, caffe_model_path):
-        save_caffe_model(caffe_model_path, self.layers)
+        return save_caffe_model(caffe_model_path, self.layers)
 
 
-#    def forward(self, output_name, input_tensor):
-#        for value_info in self.model.graph.value_info:
-#            if value_info.name == blob_name:
-#                # insert output
-#                shape_list = shape_proto2list(value_info.type.tensor_type.shape)
-#                blob_info = helper.make_tensor_value_info(blob_name, onnx.TensorProto.FLOAT, shape_list)
-#                model.graph.output.insert(0, blob_info)
-#                output = onnx_run(model, input_tensor)
-#                return np.array(output[0])
-#            else:
-#                for index, output in enumerate(model.graph.output):
-#                    if blob_name == output.name:
-#                        outputs = onnx_run(model, input_tensor)
-#                        return np.array(outputs[index])
+    def forward(self, output_name, inputs_tensor):
+        if output_name.find('split') >= 0 or output_name.find('useless') >= 0:
+            return None
+
+        def onnx_run(model, inputs_tensor):
+            import onnxruntime
+            onnxruntime.set_default_logger_severity(4)
+
+            if onnxruntime.get_device() == 'GPU':
+                onnx_session = onnxruntime.InferenceSession(model.SerializeToString(), providers=['CUDAExecutionProvider', 'CPUExecutionProvider'])
+            if onnxruntime.get_device() == 'CPU':
+                onnx_session = onnxruntime.InferenceSession(model.SerializeToString(), providers=['CPUExecutionProvider'])
+
+            output_name = list()
+            output_name.extend([node.name for node in onnx_session.get_outputs()])
+
+            input_feed = {}
+            for index, name in enumerate(self.inputs):
+                input_feed[name] = inputs_tensor[index]
+
+            return onnx_session.run(output_name, input_feed=input_feed)
+
+        if output_name in self.outputs:
+            outputs = onnx_run(self.model, inputs_tensor)
+            return outputs[self.outputs.index(output_name)]
+        else:
+            self.model.graph.output.insert(len(self.outputs), onnx.helper.make_tensor_value_info(output_name, onnx.TensorProto.FLOAT, self.shape[output_name]))
+            return onnx_run(self.model, inputs_tensor)[len(self.outputs)]
