@@ -25,7 +25,23 @@ class StridedSlice(Operator):
         opt = tflite.StridedSliceOptions()
         opt.Init(op_opt.Bytes, op_opt.Pos)
 
-        if self.inputs_shape[0] == self.outputs_shape[0]: # Skip
+        if self.inputs_buf[0] is not None:
+            import tensorflow as tf
+            x = tf.constant(self.inputs_buf[0])
+            begin = tf.constant(self.inputs_buf[1])
+            end = tf.constant(self.inputs_buf[2])
+            strides = tf.constant(self.inputs_buf[3])
+
+            begin_mask = opt.BeginMask()
+            end_mask = opt.EndMask()
+            ellipsis_mask = opt.EllipsisMask()
+            new_axis_mask = opt.NewAxisMask()
+            shrink_axis_mask = opt.ShrinkAxisMask()
+
+            self.saveConstant(self.outputs[0], tf.strided_slice(x, begin=begin, end=end, strides=strides,
+                    begin_mask=begin_mask, end_mask=end_mask, ellipsis_mask=ellipsis_mask, new_axis_mask=new_axis_mask,
+                    shrink_axis_mask=shrink_axis_mask).numpy())
+        elif self.inputs_shape[0] == self.outputs_shape[0]: # Skip
             self.model.indentity[self.outputs[0]] = self.model.indentity.get(self.inputs[0], self.inputs[0])
         else:
             # Check Stride != 1
