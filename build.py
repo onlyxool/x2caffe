@@ -33,7 +33,7 @@ def main():
 
     current_dir = os.getcwd()
     project_root = os.path.dirname(os.path.realpath(sys.argv[0]))
-    target_dir = f'{current_dir}/target-{build_type}'
+    target_dir = f'{current_dir}/build_{build_type}'
     shutil.rmtree(target_dir, ignore_errors=True)
 
     # compile py to pyc
