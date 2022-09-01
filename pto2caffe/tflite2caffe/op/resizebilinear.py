@@ -19,15 +19,16 @@ class ResizeBilinear(Operator):
     def parse(self):
         self.parseInputOutput()
 
-        # Attributes
-        self.layer_type = 'Interp'
         op_opt = self.op.BuiltinOptions()
         opt = tflite.ResizeBilinearOptions()
         opt.Init(op_opt.Bytes, op_opt.Pos)
+
+        self.layer_type = 'Interp'
+
         self.interp_param = dict()
         self.interp_param['align_corners'] = opt.AlignCorners()
-        self.interp_param['height'] = self.inputs_buf[1][0]
-        self.interp_param['width'] = self.inputs_buf[1][1]
+        self.interp_param['height'] = self.outputs_shape[0][2]
+        self.interp_param['width'] = self.outputs_shape[0][3]
 
         self.attrs = self.interp_param
         #opt.HalfPixelCenters()
