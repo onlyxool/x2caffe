@@ -32,7 +32,7 @@ class Add(Operator):
                 self.inputs.reverse()
                 self.inputs_shape.reverse()
                 self.inputs_buf.reverse()
-            elif inputs_size0 < inputs_size1:
+            elif not any(self.inputs_buf) and inputs_size0 < inputs_size1:
                 self.inputs.reverse()
                 self.inputs_shape.reverse()
                 self.inputs_buf.reverse()
