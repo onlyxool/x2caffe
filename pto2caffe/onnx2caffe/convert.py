@@ -1,24 +1,40 @@
+import sys
 import onnx
 from compare import compare
-from onnx import shape_inference
 from preprocess import get_input_tensor
 from onnx2caffe.model import Model
 
 
-def set_batch_size(onnx_model):
-    inputs = onnx_model.graph.input
-    for input in inputs:
-        if len(input.type.tensor_type.shape.dim):
-            dim = input.type.tensor_type.shape.dim[0]
-            if dim.dim_value == 0:
-                dim.dim_value = 1
+def check_dynamic_input(onnx_model, input_shape):
+    if input_shape is not None:
+        if len(onnx_model.graph.input) > 1:
+            for index, input in enumerate(onnx_model.graph.input):
+                for i, dim in enumerate(input.type.tensor_type.shape.dim):
+                    input.type.tensor_type.shape.dim[i].dim_value = input_shape[index][i]
+        else:
+             for i, dim in enumerate(onnx_model.graph.input[0].type.tensor_type.shape.dim):
+                onnx_model.graph.input[0].type.tensor_type.shape.dim[i].dim_value = input_shape[i]
+    else:
+        input_str = str()
+        input_dict = dict()
+        for input in onnx_model.graph.input:
+            input_shape = list()
+            for dim in input.type.tensor_type.shape.dim:
+                input_shape.append(dim.dim_value)
+            if input_shape.count(0) > 0:
+                input_str = input_str + ' ' + input.name + str(input_shape)
+
+        if len(input_str) > 0:
+            sys.exit('Error: Dynamic Model input detected, Please Use -input_shape to overwrite input shape.' + input_str + '\n')
 
 
 def convert(onnx_file, caffe_model_path, param=None):
     onnx_model = onnx.load(onnx_file)
     opset = onnx_model.opset_import[0].version
-    set_batch_size(onnx_model)
 
+    check_dynamic_input(onnx_model, param['input_shape'])
+
+    onnx_model = onnx.shape_inference.infer_shapes(onnx_model)
     # ONNX Simplifier
     if param.get('simplifier', 0) == 1:
         if opset >= 7:
@@ -28,7 +44,6 @@ def convert(onnx_file, caffe_model_path, param=None):
         else:
             print('Warning: Model\'s opset Version < 7.')
 
-    onnx_model = shape_inference.infer_shapes(onnx_model)
     try:
         onnx.checker.check_model(onnx_model)
     except onnx.checker.ValidationError as e:
