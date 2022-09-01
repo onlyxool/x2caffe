@@ -50,7 +50,7 @@ class ResizeNearestNeighbor(Operator):
 
             # Padding
             legacy_pad = self.model.pad.get(self.op.inputs[0].name, {'left': 0, 'right': 0, 'top': 0, 'bottom': 0})
-            padding = handleLegacyPad(self.attrs['padding'], self.inputs_shape[0], self.outputs_shape[0], self.convolution_param, legacy_pad, self.type)
+            padding = handleLegacyPad('VALID', self.inputs_shape[0], self.outputs_shape[0], self.convolution_param, legacy_pad, self.type)
             self.convolution_param.update(padding)
 
             self.attrs = self.convolution_param
