@@ -129,7 +129,11 @@ def CheckParam(param):
 
     # Input Shape
     if 'input_shape' in param and param['input_shape'] is not None:
-        param['input_shape'] = eval(param['input_shape'])
+        try:
+            param['input_shape'] = eval(param['input_shape'])
+        except:
+            errorMsg = errorMsg + 'Pass input_shape arguments as: -input_shape=[1,3,100,100] or -input_shape=[1,3,100,100],[1,3,200,200]\n'
+            sys.exit(errorMsg)
 
 
 def Convert(param=None):
