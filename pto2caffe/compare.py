@@ -114,9 +114,9 @@ def compare(platform, target_model, caffe_model_path, input_tensor, level=-1):
         print('  max_ratio: %8f'% max_ratio, '\n')
 
 
-def dump_caffe_model2(caffe_net, input_tensor, level):
+def dump_caffe_model2(caffe_net, inputs_tensor, level):
     for i, input_name in enumerate(caffe_net.inputs):
-        caffe_net.blobs[input_name].data[...] = input_tensor
+        caffe_net.blobs[input_name].data[...] = inputs_tensor[i]
 
     caffe_output_dict = dict()
     blob2layer_map = dict()
@@ -138,12 +138,12 @@ def dump_caffe_model2(caffe_net, input_tensor, level):
     return caffe_output_dict, blob2layer_map
 
 
-def compare2(model, caffe_net, input_tensor, level=-1):
+def compare2(model, caffe_net, inputs_tensor, level=-1):
 
-    caffe_output_dict, blob2layer_map = dump_caffe_model2(caffe_net, input_tensor, level)
+    caffe_output_dict, blob2layer_map = dump_caffe_model2(caffe_net, inputs_tensor, level)
 
     for blob_name in caffe_output_dict:
-        target_output = model.forward(blob_name, input_tensor)
+        target_output = model.forward(blob_name, inputs_tensor)
 
         if target_output is None:
             continue

@@ -1,6 +1,6 @@
 import sys
 import onnx
-from compare import compare
+from compare import compare2
 from preprocess import get_input_tensor
 from onnx2caffe.model import Model
 
@@ -35,6 +35,7 @@ def convert(onnx_file, caffe_model_path, param=None):
     check_dynamic_input(onnx_model, param['input_shape'])
 
     onnx_model = onnx.shape_inference.infer_shapes(onnx_model)
+
     # ONNX Simplifier
     if param.get('simplifier', 0) == 1:
         if opset >= 7:
@@ -52,9 +53,11 @@ def convert(onnx_file, caffe_model_path, param=None):
     model = Model(onnx_model, param)
     model.parse()
     model.convert()
-    model.save(caffe_model_path)
+    caffe_net = model.save(caffe_model_path)
 
-    input_tensor = get_input_tensor(param, model.inputs_shape[0], model.inputs_dtype[0], None)
+    inputs_tensor = list()
+    for index, input_name in enumerate(model.inputs):
+        inputs_tensor.append(get_input_tensor(param, model.inputs_shape[index], model.inputs_dtype[index], None))
 
     if opset >= 7:
-        compare('onnx', onnx_model, caffe_model_path, input_tensor, param.get('compare', -1))
+        compare2(model, caffe_net, inputs_tensor, param.get('compare', -1))

@@ -15,6 +15,8 @@ def convert(tf_file, caffe_model_path, param=None):
     model.convert()
     caffe_net = model.save(caffe_model_path)
 
-    input_tensor = get_input_tensor(param, model.inputs_shape[0], model.inputs_dtype[0], quantization_parameter=model.inputs_quantization_parameter[0])
+    inputs_tensor = list()
+    for index, input_name in model.inputs:
+        inputs_tensor.append(get_input_tensor(param, model.inputs_shape[index], model.inputs_dtype[index], quantization_parameter=model.inputs_quantization_parameter[index]))
 
-    compare2(model, caffe_net, input_tensor, param.get('compare', -1))
+    compare2(model, caffe_net, inputs_tensor, param.get('compare', -1))
