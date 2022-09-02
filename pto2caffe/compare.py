@@ -143,7 +143,7 @@ def compare2(model, caffe_net, inputs_tensor, level=-1):
     caffe_output_dict, blob2layer_map = dump_caffe_model2(caffe_net, inputs_tensor, level)
 
     for blob_name in caffe_output_dict:
-        target_output = model.forward(blob_name, inputs_tensor)
+        target_output = model.forward([blob_name], inputs_tensor)
 
         if target_output is None:
             continue

@@ -145,7 +145,8 @@ class Model(Base):
             print(self.graph.Tensors(self.graph.Inputs(i)).Name().decode(), ':', list(self.graph.Tensors(self.graph.Inputs(i)).ShapeAsNumpy()))
             self.inputs.append(self.graph.Inputs(i))
             self.inputs_dtype.append(numpy_dtype[self.graph.Tensors(self.graph.Inputs(i)).Type()])
-            self.inputs_shape.append(shape_map_nhwc2nchw(self.graph.Tensors(self.graph.Inputs(i)).ShapeAsNumpy().tolist()))
+            input_shape = self.graph.Tensors(self.graph.Inputs(i)).ShapeAsNumpy().tolist()
+            self.inputs_shape.append(shape_map_nhwc2nchw(input_shape) if self.layout == 'NHWC' else input_shape)
             self.inputs_quantization_parameter.append(self.get_tensor_quantization_parameter(self.graph.Inputs(i)))
 
         # Tensors
@@ -280,9 +281,9 @@ class Model(Base):
 
 
     def forward(self, output_name, inputs_tensor):
-        if isinstance(output_name, str):
+        if isinstance(output_name[0], str):
             try:
-                output_name = int(output_name.split('_')[0])
+                output_name[0] = int(output_name[0].split('_')[0])
             except:
                 return None
 
@@ -301,10 +302,10 @@ class Model(Base):
 
         # Flatbuffer scalars are stored in little-endian.
         new_tensor_i_bytes = bytes([
-             output_name & 0x000000FF, \
-            (output_name & 0x0000FF00) >> 8, \
-            (output_name & 0x00FF0000) >> 16, \
-            (output_name & 0xFF000000) >> 24 \
+             output_name[0] & 0x000000FF, \
+            (output_name[0] & 0x0000FF00) >> 8, \
+            (output_name[0] & 0x00FF0000) >> 16, \
+            (output_name[0] & 0xFF000000) >> 24 \
         ])
         # Replace the 4 bytes corresponding to the first output tensor index
         model = self.model_byte[:output_tensor_index_offset] + new_tensor_i_bytes + self.model_byte[output_tensor_index_offset + 4:]

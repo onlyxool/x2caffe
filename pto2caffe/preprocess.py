@@ -56,6 +56,7 @@ def get_input_tensor(param, input_shape, dtype, quantization_parameter=None):
 
     return preprocess(tensor, param)
 
+
 def mean(tensor, means):
     if len(means) == tensor.shape[0]:
         for i, mean in enumerate(means):
