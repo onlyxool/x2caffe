@@ -13,7 +13,7 @@ class GatherV2(Operator):
         self.layer_type = 'GatherV2'
         super().__parse__()
 
-        if self.inputs_buf[0] is not None:
+        if self.inputs_buf[1] is not None:
             import tensorflow as tf
             params = tf.constant(self.inputs_buf[0], dtype=self.op.inputs[0].dtype)
             indices = tf.constant(self.inputs_buf[1], dtype=self.op.inputs[1].dtype)
