@@ -213,11 +213,11 @@ class Model(Base):
                 inputs_tensor2 = list()
 
                 for input_shape in self.inputs_shape:
-                    inputs_tensor1.append(np.random.random(shape_map_nchw2nhwc(input_shape)).astype(self.param['dtype']))
-                    inputs_tensor2.append(np.random.random(shape_map_nchw2nhwc(input_shape)).astype(self.param['dtype']))
+                    inputs_tensor1.append(np.random.random((input_shape)).astype(self.param['dtype']))
+                    inputs_tensor2.append(np.random.random((input_shape)).astype(self.param['dtype']))
 
-                output1 = self.forward(inputs_tensor1, self.inputs, [op.outputs[0].name])
-                output2 = self.forward(inputs_tensor2, self.inputs, [op.outputs[0].name])
+                output1 = self.forward([op.outputs[0].name], inputs_tensor1)
+                output2 = self.forward([op.outputs[0].name], inputs_tensor2)
 
                 if output1 is not None and output2 is not None and np.allclose(output1, output2):
                     self.constant[op.outputs[0].name] = output1
@@ -230,7 +230,7 @@ class Model(Base):
 
     def parse_input(self, operations):
         for op in operations:
-            if op.type == 'Placeholder' and 'unused_control_flow_input' not in op.outputs[0].name and op.outputs[0].shape.is_fully_defined():
+            if op.type == 'Placeholder' and 'unused_control_flow_input' not in op.outputs[0].name:# and op.outputs[0].shape.is_fully_defined():
                 dtype = type(op.get_attr('dtype').as_numpy_dtype()) if op.get_attr('dtype').is_numpy_compatible else None
                 input_shape = shape_map_nhwc2nchw(op.outputs[0].shape.as_list()) if self.layout == 'NHWC' else op.outputs[0].shape.as_list()
 
@@ -315,7 +315,11 @@ class Model(Base):
         self.setConverted()
 
 
-    def forward(self, inputs_tensor, inputs_name, outputs_name=None):
+    def save(self, caffe_model_path):
+        return save_caffe_model(caffe_model_path, self.layers)
+
+
+    def forward(self, outputs_name, inputs_tensor):
         if outputs_name[0].find('split') >= 0:
             return None
 
@@ -331,9 +335,19 @@ class Model(Base):
                 tf.nest.map_structure(import_graph.as_graph_element, outputs))
 
         # Wrap frozen graph to ConcreteFunctions
-        frozen_func = wrap_frozen_graph(graph_def=self.graph, inputs=inputs_name, outputs=outputs_name, print_graph=True)
+        frozen_func = wrap_frozen_graph(graph_def=self.graph, inputs=self.inputs, outputs=outputs_name, print_graph=True)
 
-        outputs = frozen_func(tf.constant((inputs_tensor[0])))
+        for index, input_tensor in enumerate(inputs_tensor):
+            inputs_tensor[index] = inputs_tensor[index].transpose(0, 2, 3, 1) if self.layout == 'NHWC' and len(self.inputs_shape[index]) == 4 else inputs_tensor[index]
+
+        if len(self.inputs) == 1:
+            outputs = frozen_func(tf.constant(inputs_tensor[0]))
+        elif len(self.inputs) == 2:
+            outputs = frozen_func(tf.constant(inputs_tensor[0]), tf.constant(inputs_tensor[1]))
+        elif len(self.inputs) == 3:
+            outputs = frozen_func(tf.constant(inputs_tensor[0]), tf.constant(inputs_tensor[1]), tf.constant(inputs_tensor[2]))
+        else:
+            raise NotImplementedError
 
         for index, output in enumerate(outputs):
             if output.dtype.is_numpy_compatible:
@@ -342,7 +356,3 @@ class Model(Base):
                 outputs[index] = None
 
         return outputs[0]
-
-
-    def save(self, caffe_model_path):
-        save_caffe_model(caffe_model_path, self.layers)

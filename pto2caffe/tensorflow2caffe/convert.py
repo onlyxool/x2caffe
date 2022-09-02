@@ -6,7 +6,7 @@ from tensorflow.core.protobuf import saved_model_pb2
 from tensorflow.core.framework import graph_pb2
 from tensorflow.python.framework.convert_to_constants import convert_variables_to_constants_v2
 
-from compare import compare
+from compare import compare2
 from preprocess import get_input_tensor
 from tensorflow2caffe.model import Model
 
@@ -113,8 +113,11 @@ def search_io(graph_def): #TODO: search all outputs
 
 def shape_inference(graph, inputs_name, param):
     if param['input_shape'] is not None:
-        for input_name in inputs_name:
-            graph.get_tensor_by_name(input_name).set_shape(param['input_shape'])
+        if len(inputs_name) > 1:
+            for index, input_name in enumerate(inputs_name):
+                graph.get_tensor_by_name(input_name).set_shape(param['input_shape'][index])
+        else:
+            graph.get_tensor_by_name(input_name[0]).set_shape(param['input_shape'])
 
         with tf.Graph().as_default() as inferred_graph:
             tf.import_graph_def(graph.as_graph_def(add_shapes=True), name="")
@@ -188,8 +191,10 @@ def convert(pb_file, caffe_model_path, param=None):
     model = Model(frozen_func, graph_def, param)
     model.parse()
     model.convert()
-    model.save(caffe_model_path)
+    caffe_net = model.save(caffe_model_path)
 
-    input_tensor = get_input_tensor(param, model.inputs_shape[0], model.inputs_dtype[0], None)
+    inputs_tensor = list()
+    for index, input_name in enumerate(model.inputs):
+        inputs_tensor.append(get_input_tensor(param, model.inputs_shape[index], model.inputs_dtype[index], None))
 
-    compare('tensorflow', model, caffe_model_path, input_tensor, param.get('compare', -1))
+    compare2(model, caffe_net, inputs_tensor, param.get('compare', -1))
