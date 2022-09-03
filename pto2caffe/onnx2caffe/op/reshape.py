@@ -21,17 +21,23 @@ class Reshape(Operator):
         else:
             self.layer_type = 'Reshape'
 
-            # Attributes
             if 'shape' in self.attrs:
                 self.reshape_param = dict(shape=dict(dim=self.attrs['shape']))
-            else:
+            elif len(self.outputs_shape[0]) > 0:
                 self.reshape_param = dict(shape=dict(dim=self.outputs_shape[0]))
+            elif len(self.inputs_buf) >= 2 and self.inputs_buf[1] is not None:
+                self.reshape_param = dict(shape=dict(dim=self.inputs_buf[1].tolist()))
+            else:
+                import sys
+                sys.exit('Can\'t Get Output Shape in ' + self.node.name)
+
             self.attrs = self.reshape_param
             self.setParsed()
 
 
     def convert(self):
-        if self.type == 'Reshape':
-            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, reshape_param=self.reshape_param)
-            self.setConverted()
-            return [layer]
+        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, reshape_param=self.reshape_param)
+
+        self.setConverted()
+
+        return [layer]
