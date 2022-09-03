@@ -13,7 +13,14 @@ class Concat(Operator):
         self.layer_type = 'Concat'
         super().__parse__()
 
-        if self.inputs_buf[0] is not None:
+        for input_buf in self.inputs_buf:
+            if input_buf is not None:
+                constant = True
+            else:
+                constant = False
+                break
+
+        if constant:
             import numpy as np
             self.saveConstant(self.node.output[0], np.concatenate(self.inputs_buf, axis=self.attrs['axis']))
         else:
