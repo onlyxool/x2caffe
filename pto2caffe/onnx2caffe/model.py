@@ -21,9 +21,11 @@ from onnx2caffe.op.sqrt import Sqrt
 from onnx2caffe.op.relu import ReLU
 from onnx2caffe.op.clip import ReLUX
 from onnx2caffe.op.prelu import PReLU
+from onnx2caffe.op.shape import Shape
 from onnx2caffe.op.slice import Slice
 from onnx2caffe.op.split import Split
 from onnx2caffe.op.concat import Concat
+from onnx2caffe.op.gather import Gather
 from onnx2caffe.op.resize import Resize
 from onnx2caffe.op.matmul import MatMul
 from onnx2caffe.op.sigmoid import Sigmoid
@@ -74,9 +76,11 @@ OpMap = {
     'Tanh': TanH,
     'Clip': ReLUX,
     'PRelu': PReLU,
+    'Shape': Shape,
     'Slice': Slice,
     'Split': Split,
     'Concat': Concat,
+    'Gather': Gather,
     'MatMul': MatMul,
     'Resize': Resize,
     'LeakyRelu': ReLU,
@@ -197,9 +201,9 @@ class Model(Base):
 
         # Get Weight & Bias
         for tensor in self.model.graph.initializer:
-            self.constant[tensor.name] =  onnx.numpy_helper.to_array(tensor)
+            self.constant[tensor.name] = onnx.numpy_helper.to_array(tensor)
         for tensor in self.model.graph.sparse_initializer:
-            self.constant[tensor.name] =  onnx.numpy_helper.to_array(tensor)
+            self.constant[tensor.name] = onnx.numpy_helper.to_array(tensor)
 
         if len(self.graph.input) == 0 or self.graph.input is None:
             sys.exit('model input can\'t be None')
@@ -224,7 +228,7 @@ class Model(Base):
             self.outputs_minval.append(None)
 
         for index, node in enumerate(self.graph.node):
-            if node.op_type in ['Identity']: #ignore op
+            if node.op_type in ['Identity'] and node.name not in self.inputs: #ignore op
                 self.indentity[node.outputs[0]] = node.inputs[0]
                 continue
 

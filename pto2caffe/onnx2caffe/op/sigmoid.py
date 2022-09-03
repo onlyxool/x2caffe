@@ -14,7 +14,6 @@ class Sigmoid(Operator):
         self.layer_type = 'Sigmoid'
         super().__parse__()
 
-        # Attributes
         self.sigmoid_param = dict()
         self.attrs = self.sigmoid_param
 
