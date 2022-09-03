@@ -16,7 +16,9 @@ class Mul(Operator):
     def parse(self):
         super().__parse__()
 
-        if (self.inputs_buf[0] is not None or self.inputs_buf[1] is not None) or (self.inputs_shape[0] != self.inputs_shape[1]):
+        if self.inputs_buf[0] is not None and self.inputs_buf[0] is not None:
+            self.saveConstant(self.node.output[0], self.inputs_buf[0] * self.inputs_buf[1])
+        elif (self.inputs_buf[0] is not None or self.inputs_buf[1] is not None) or (self.inputs_shape[0] != self.inputs_shape[1]):
             self.layer_type = 'Scale'
 
             if not isShapeCompatible(self.inputs_shape[0], self.inputs_shape[1]):
