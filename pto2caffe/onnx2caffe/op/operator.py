@@ -128,6 +128,10 @@ class Operator(Base):
         self.model.constant[name] = constant
 
 
+    def unSupported(self):
+        self.model.unsupport.append(self.operator_code)
+
+
     def propagatableTensors(self):
         """Get all layout propagable tensors of this operator.
 
