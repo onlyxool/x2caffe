@@ -34,7 +34,6 @@ def convert(onnx_file, caffe_model_path, param=None):
 
     check_dynamic_input(onnx_model, param['input_shape'])
 
-    onnx_model = onnx.shape_inference.infer_shapes(onnx_model)
 
     # ONNX Simplifier
     if param.get('simplifier', 0) == 1:
@@ -44,6 +43,8 @@ def convert(onnx_file, caffe_model_path, param=None):
             assert check, "Simplified ONNX model could not be validated"
         else:
             print('Warning: Model\'s opset Version < 7.')
+    else:
+        onnx_model = onnx.shape_inference.infer_shapes(onnx_model)
 
     try:
         onnx.checker.check_model(onnx_model)
