@@ -32,7 +32,7 @@ class Add(Operator):
                 self.inputs.reverse()
                 self.inputs_shape.reverse()
                 self.inputs_buf.reverse()
-            elif not any(self.inputs_buf) and inputs_size0 < inputs_size1:
+            elif self.inputs_buf[0] is None and self.inputs_buf[1] is None and inputs_size0 < inputs_size1:
                 self.inputs.reverse()
                 self.inputs_shape.reverse()
                 self.inputs_buf.reverse()
@@ -58,6 +58,7 @@ class Add(Operator):
 
             self.bias_param = dict()
             self.bias_param['axis'] = self.inputs_shape[0].index(self.inputs_shape[1][0]) if len(self.inputs_shape[1]) > 0 else 0
+            self.bias_param['num_axes'] = len(self.inputs_shape[1])
 
             self.bias = self.inputs_buf[1]
 
