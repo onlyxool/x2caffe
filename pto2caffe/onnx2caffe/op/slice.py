@@ -32,6 +32,21 @@ class Slice(Operator):
             axes = list(self.inputs_buf[3]) if len(self.inputs_buf) >= 4 else None
             steps = list(self.inputs_buf[4]) if len(self.inputs_buf) >= 5 else [1]*num_slices
 
+        if self.inputs_buf[0] is not None:
+            if len(axes) == 1:
+                output = self.inputs_buf[0][starts[0]:ends[0]]
+            elif len(axes) == 2:
+                output = self.inputs_buf[0][starts[0]:ends[0], starts[1]:ends[1]]
+            elif len(axes) == 3:
+                output = self.inputs_buf[0][starts[0]:ends[0], starts[1]:ends[1], starts[2]:ends[2]]
+            elif len(axes) == 4:
+                output = self.inputs_buf[0][starts[0]:ends[0], starts[1]:ends[1], starts[2]:ends[2], starts[3]:ends[3]]
+            else:
+                raise NotImplementedError
+
+            self.saveConstant(self.node.output[0], output)
+            return
+
         if len(starts) > 1 or len(ends) > 1 or len(axes) > 1 or num_slices > 1:
             self.model.unsupport.append(self.operator_code)
             self.model.errorMsg.append('[' + self.node.name + ']: Operator Slice Do not support starts > 1. ' + self.node.name + '\'s starts is ' + str(starts))
