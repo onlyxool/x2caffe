@@ -14,11 +14,11 @@ class Gather(Operator):
         self.layer_type = 'Gather'
         super().__parse__()
 
-        if self.inputs_buf[0] is not None:
+        if self.inputs_buf[0] is not None and self.inputs_buf[0].size > 0:
             output = torch.gather(torch.tensor(self.inputs_buf[0]), dim=self.attrs['axis'], index=torch.tensor(self.inputs_buf[1]), sparse_grad=False)
             self.saveConstant(self.node.output[0], output.numpy())
         else:
-            self.model.unsupport.append(self.operator_code)
+            self.unSupported()
 
 
     def convert(self):
