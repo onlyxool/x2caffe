@@ -13,13 +13,16 @@ class Concat(Operator):
         self.layer_type = 'Concat'
         super().__parse__()
 
-        # Attributes
-        self.concat_param = dict()
-        self.concat_param['axis'] = self.attrs['axis']
+        if self.inputs_buf[0] is not None:
+            import numpy as np
+            self.saveConstant(self.node.output[0], np.concatenate(self.inputs_buf, axis=self.attrs['axis']))
+        else:
+            self.concat_param = dict()
+            self.concat_param['axis'] = self.attrs['axis']
 
-        self.attrs = self.concat_param
+            self.attrs = self.concat_param
 
-        self.setParsed()
+            self.setParsed()
 
 
     def convert(self):
