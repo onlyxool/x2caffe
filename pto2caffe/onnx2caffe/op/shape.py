@@ -14,7 +14,10 @@ class Shape(Operator):
         self.layer_type = 'Shape'
         super().__parse__()
 
-        self.saveConstant(self.node.output[0], np.array(self.model.shape[self.inputs[0]]))
+        if len(self.inputs_shape[0]) > 0:
+            self.saveConstant(self.node.output[0], np.array(self.model.shape[self.inputs[0]]))
+        else:
+            self.unSupported()
 
 
     def convert(self):
