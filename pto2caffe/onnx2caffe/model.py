@@ -15,11 +15,13 @@ from onnx2caffe.op.add import Add
 from onnx2caffe.op.sum import Sum
 from onnx2caffe.op.sub import Sub
 from onnx2caffe.op.div import Div
+from onnx2caffe.op.cast import Cast
 from onnx2caffe.op.tanh import TanH
 from onnx2caffe.op.power import Pow
 from onnx2caffe.op.sqrt import Sqrt
 from onnx2caffe.op.relu import ReLU
 from onnx2caffe.op.clip import ReLUX
+from onnx2caffe.op.floor import Floor
 from onnx2caffe.op.prelu import PReLU
 from onnx2caffe.op.shape import Shape
 from onnx2caffe.op.slice import Slice
@@ -60,6 +62,7 @@ logger = logging.getLogger('ONNX2Caffe')
 OpMap = {
 #    'NonMaxSuppression': Debug,
 
+
     'Add': Add,
     'Div': Div,
     'Elu': Elu,
@@ -71,10 +74,12 @@ OpMap = {
     'Pow': Pow,
     'Sub': Sub,
     'Sum': Sum,
+    'Cast': Cast,
     'Relu': ReLU,
     'Sqrt': Sqrt,
     'Tanh': TanH,
     'Clip': ReLUX,
+    'Floor': Floor,
     'PRelu': PReLU,
     'Shape': Shape,
     'Slice': Slice,
@@ -233,6 +238,7 @@ class Model(Base):
                 continue
 
             if node.op_type not in OpMap: # Unsupport OP
+                logger.debug(node.op_type, node.name)
                 self.unsupport.append(node.op_type)
                 continue
 
