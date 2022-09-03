@@ -229,7 +229,7 @@ class Model(Base):
 
         for index, node in enumerate(self.graph.node):
             if node.op_type in ['Identity'] and node.name not in self.inputs: #ignore op
-                self.indentity[node.outputs[0]] = node.inputs[0]
+                self.indentity[node.output[0]] = node.input[0]
                 continue
 
             if node.op_type not in OpMap: # Unsupport OP
