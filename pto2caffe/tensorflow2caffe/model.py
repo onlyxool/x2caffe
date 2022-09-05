@@ -186,6 +186,7 @@ class Model(Base):
         self.operations = list()
         self.operators = list()
         self.unsupport = list()
+        self.errorMsg = list()
         self.layers = list()
         self.setInited()
 
@@ -230,7 +231,7 @@ class Model(Base):
 
     def parse_input(self, operations):
         for op in operations:
-            if op.type == 'Placeholder' and 'unused_control_flow_input' not in op.outputs[0].name:# and op.outputs[0].shape.is_fully_defined():
+            if op.type == 'Placeholder' and 'unused_control_flow_input' not in op.outputs[0].name and op.outputs[0].shape.is_fully_defined():
                 dtype = type(op.get_attr('dtype').as_numpy_dtype()) if op.get_attr('dtype').is_numpy_compatible else None
                 input_shape = shape_map_nhwc2nchw(op.outputs[0].shape.as_list()) if self.layout == 'NHWC' else op.outputs[0].shape.as_list()
 
@@ -249,10 +250,10 @@ class Model(Base):
         # Check Input Shape
         for input_shape in self.inputs_shape:
             if None in input_shape:
-                sys.exit('Error: Dynamic Model input detected, Please Use -input_shape to overwrite input shape.')
+                sys.exit('Error: Dynamic Model input detected, Please Use -input_shape to overwrite input shape.\n')
 
         if len(self.inputs_shape) == 0:
-            sys.exit('Error: Dynamic Model input detected, Please Use -input_shape to overwrite input shape.')
+            sys.exit('Error: Dynamic Model input detected, Please Use -input_shape to overwrite input shape.\n')
 
 
     def parse(self):
@@ -297,6 +298,9 @@ class Model(Base):
             if op.status.parsed:
                 self.operators.append(op)
 
+        for errorMsg in list(set(self.errorMsg)):
+            print(errorMsg)
+
         if len(self.unsupport) > 0:
             errorMsg = 'Error: Operator ' + str(list(set(self.unsupport))) + ' does not Support.\n'
             sys.exit(errorMsg)
@@ -337,15 +341,18 @@ class Model(Base):
         # Wrap frozen graph to ConcreteFunctions
         frozen_func = wrap_frozen_graph(graph_def=self.graph, inputs=self.inputs, outputs=outputs_name, print_graph=True)
 
-        for index, input_tensor in enumerate(inputs_tensor):
-            inputs_tensor[index] = inputs_tensor[index].transpose(0, 2, 3, 1) if self.layout == 'NHWC' and len(self.inputs_shape[index]) == 4 else inputs_tensor[index]
-
-        if len(self.inputs) == 1:
-            outputs = frozen_func(tf.constant(inputs_tensor[0]))
+        if len(self.inputs) == 1: #TODO
+            input0 = inputs_tensor[0].transpose(0, 2, 3, 1) if self.layout == 'NHWC' and len(self.inputs_shape[0]) == 4 else inputs_tensor[0]
+            outputs = frozen_func(tf.constant(input0))
         elif len(self.inputs) == 2:
-            outputs = frozen_func(tf.constant(inputs_tensor[0]), tf.constant(inputs_tensor[1]))
+            input0 = inputs_tensor[0].transpose(0, 2, 3, 1) if self.layout == 'NHWC' and len(self.inputs_shape[0]) == 4 else inputs_tensor[0]
+            input1 = inputs_tensor[1].transpose(0, 2, 3, 1) if self.layout == 'NHWC' and len(self.inputs_shape[1]) == 4 else inputs_tensor[1]
+            outputs = frozen_func(tf.constant(input0), tf.constant(input1))
         elif len(self.inputs) == 3:
-            outputs = frozen_func(tf.constant(inputs_tensor[0]), tf.constant(inputs_tensor[1]), tf.constant(inputs_tensor[2]))
+            input0 = inputs_tensor[0].transpose(0, 2, 3, 1) if self.layout == 'NHWC' and len(self.inputs_shape[0]) == 4 else inputs_tensor[0]
+            input1 = inputs_tensor[1].transpose(0, 2, 3, 1) if self.layout == 'NHWC' and len(self.inputs_shape[1]) == 4 else inputs_tensor[1]
+            input1 = inputs_tensor[2].transpose(0, 2, 3, 1) if self.layout == 'NHWC' and len(self.inputs_shape[2]) == 4 else inputs_tensor[2]
+            outputs = frozen_func(tf.constant(input0), tf.constant(input1), tf.constant(input2))
         else:
             raise NotImplementedError
 
