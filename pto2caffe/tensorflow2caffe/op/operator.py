@@ -123,3 +123,24 @@ class Operator(Base):
         self.__parseAttributes__()
         self.__parseInput__()
         self.__parseOutput__()
+
+
+    def byPassOperator(self):
+        if len(self.outputs) == 0 or len(self.inputs) == 0:
+            import sys
+            sys.exit('Error: Use byPassOperator() after parseInputOutput().')
+
+        self.model.indentity[self.outputs[0]] = self.model.indentity.get(self.inputs[0], self.inputs[0])
+        # Handle Legacy Pad for Ignore Op
+        if self.node.input[0] in self.model.pad.keys():
+            self.model.pad[self.node.output[0]] = self.model.pad[self.node.input[0]]
+
+
+    def saveConstant(self, name, constant):
+        self.model.constant[name] = constant
+
+
+    def unSupported(self, errorMsg=None):
+        if errorMsg is not None:
+            self.model.errorMsg.append('Error: Op ' + self.op.name + ' (' + self.operator_code + '): ' + errorMsg)
+        self.model.unsupport.append(self.operator_code)
