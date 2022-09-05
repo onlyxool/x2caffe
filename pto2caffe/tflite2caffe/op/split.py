@@ -12,7 +12,6 @@ class Split(Operator):
         super().__init__(model, tf_op, tf_op_name, index)
         assert(self.operator_code == 'SPLIT')
         assert(self.op.InputsLength() == 2 or self.op.InputsLength() == 4)
-        assert(self.op.OutputsLength() == 1)
         self.setInited()
 
 
@@ -28,11 +27,11 @@ class Split(Operator):
         else:
             self.layer_type = 'Slice'
             self.slice_param = dict()
-            # Axis
+
             if isinstance(self.inputs_buf[0], np.ndarray):
-                self.slice_param['axis'] = dim_map_nhwc2nchw[self.inputs_buf[0][0]]
+                self.slice_param['axis'] = dim_map_nhwc2nchw[self.inputs_buf[0][0]] if self.layout == 'NHWC' and len(self.inputs_shape[1]) == 4 else self.inputs_buf[0][0]
             elif isinstance(self.inputs_buf[0], int) or isinstance(self.inputs_buf[0], np.int32):
-                self.slice_param['axis'] = dim_map_nhwc2nchw[self.inputs_buf[0]]
+                self.slice_param['axis'] = dim_map_nhwc2nchw[self.inputs_buf[0]] if self.layout == 'NHWC' and len(self.inputs_shape[1]) == 4 else self.inputs_buf[0]
 
             assert((self.inputs_shape[1][self.slice_param['axis']] / opt.NumSplits()) == (self.outputs_shape[0][self.slice_param['axis']]))
 
