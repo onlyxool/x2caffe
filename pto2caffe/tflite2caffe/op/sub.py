@@ -85,6 +85,9 @@ class Sub(Operator):
             self.scale_param1['bias_term'] = False
 
             self.attrs = self.scale_param0
+        elif self.inputs_buf[0] is None and self.inputs_buf[1] is None:
+            print(self.inputs_buf, self.inputs_shape)
+            raise NotImplementedError(self.operator_code)
         else:
             print(self.inputs_buf, self.inputs_shape)
             raise NotImplementedError(self.operator_code)
