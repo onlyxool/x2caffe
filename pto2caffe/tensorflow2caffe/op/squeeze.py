@@ -14,16 +14,17 @@ class Squeeze(Operator):
         self.layer_type = 'Reshape'
         super().__parse__()
 
-        if self.op.inputs[0].shape == self.op.outputs[0].shape:
-            self.model.indentity[self.outputs[0]] = self.model.indentity.get(self.inputs[0], self.inputs[0])
+        if self.op.inputs[0].shape == self.op.outputs[0].shape and self.inputs_buf[0] is None:
+            self.byPassOperator()
+        elif self.inputs_buf[0] is not None:
+            self.saveConstant(self.outputs[0], np.squeeze(self.inputs_buf[0], axis=self.attrs['squeeze_dims']))
         else:
-            if None not in self.outputs_shape[0]:
+            if self.outputs_shape[0] is not None:
                 self.reshape_param = dict(shape=dict(dim=self.outputs_shape[0]))
-            elif self.inputs_buf[0] is not None:
-                self.reshape_param = dict(shape=dict(dim=list(self.inputs_buf[0])))
             else:
-                import sys
-                sys.exit('Error: Dynamic Model input detected, Please Use -inputs_shape overwirte input shape.')
+                errorMsg = 'Can\'t Support Output Shape = ' + str(self.outputs_shape[0])
+                self.unSupported(errorMsg)
+                return
 
             self.attrs = self.reshape_param
 
