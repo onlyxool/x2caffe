@@ -6,10 +6,15 @@ from onnx2caffe.model import Model
 
 
 def check_dynamic_input(onnx_model, input_shape):
+    inputs_id = list()
+    for index, input in enumerate(onnx_model.graph.input):
+        if input.name not in [tensor.name for tensor in onnx_model.graph.initializer] + [tensor.name for tensor in onnx_model.graph.sparse_initializer]:
+            inputs_id.append(index)
+
     if input_shape is not None:
-        if len(onnx_model.graph.input) > 1:
-            for index, input in enumerate(onnx_model.graph.input):
-                for i, dim in enumerate(input.type.tensor_type.shape.dim):
+        if len(inputs_id) > 1:
+            for index, input_id in enumerate(inputs_id):
+                for i, dim in enumerate(onnx_model.graph.input[input_id].type.tensor_type.shape.dim):
                     input.type.tensor_type.shape.dim[i].dim_value = input_shape[index][i]
         else:
              for i, dim in enumerate(onnx_model.graph.input[0].type.tensor_type.shape.dim):
