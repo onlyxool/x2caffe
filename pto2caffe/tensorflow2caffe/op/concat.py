@@ -16,10 +16,9 @@ class Concat(Operator):
     def parse(self):
         super().__parse__()
 
-        # Axis
         for index, input in enumerate(self.inputs):
             if input.lower().find('axis') != -1:
-                axis = dim_map_nhwc2nchw[int(self.inputs_buf[index])] if self.layout == 'NHWC' and self.outputs_shape[0] != self.op.outputs[0].shape.as_list() else int(self.inputs_buf[index])
+                axis = dim_map_nhwc2nchw[int(self.inputs_buf[index])] if self.layout == 'NHWC' else int(self.inputs_buf[index])
 
         for input_buf in self.inputs_buf:
             if input_buf is not None:
