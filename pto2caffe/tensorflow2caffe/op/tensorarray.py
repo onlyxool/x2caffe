@@ -29,35 +29,41 @@ class TensorArray(Operator):
             self.model.constant[self.outputs[0]] = outputs[0]
             self.model.constant[self.outputs[1]] = outputs[1]
         elif self.operator_code == 'TensorArraySizeV3':
+            if self.inputs_buf[1] is None:
+                self.unSupported()
+                return
+
             handle = tf.constant(self.inputs_buf[0], dtype=self.op.inputs[0].dtype)
             flow_in = tf.constant(self.inputs_buf[1], dtype=self.op.inputs[1].dtype)
             self.model.constant[self.outputs[0]] = tf.raw_ops.TensorArraySizeV3(handle=handle, flow_in=flow_in, name=None)
         elif self.operator_code == 'TensorArrayWriteV3':
             if self.inputs_buf[2] is None:
-                self.model.unsupport.append(self.operator_code)
+                self.unSupported()
                 return
 
             handle = tf.constant(self.inputs_buf[0], dtype=self.op.inputs[0].dtype)
             index = tf.constant(self.inputs_buf[1], dtype=self.op.inputs[1].dtype)
             value = tf.constant(self.inputs_buf[2], dtype=self.op.inputs[2].dtype)
             flow_in = tf.constant(self.inputs_buf[3], dtype=self.op.inputs[3].dtype)
-
             self.model.constant[self.outputs[0]] = tf.raw_ops.TensorArrayWriteV3(handle=handle, index=index, value=value, flow_in=flow_in, name=None)
         elif self.operator_code == 'TensorArrayReadV3':
+            if self.inputs_buf[2] is None:
+                self.unSupported()
+                return
+
             handle = tf.constant(self.inputs_buf[0], dtype=self.op.inputs[0].dtype)
             index = tf.constant(self.inputs_buf[1], dtype=self.op.inputs[1].dtype)
             flow_in = tf.constant(self.inputs_buf[2], dtype=self.op.inputs[2].dtype)
             self.model.constant[self.outputs[0]] = tf.raw_ops.TensorArrayReadV3(handle=handle, index=index, flow_in=flow_in, dtype=self.attrs['dtype'], name=None)
         elif self.operator_code == 'TensorArrayScatterV3':
             if self.inputs_buf[2] is None:
-                self.model.unsupport.append(self.operator_code)
+                self.unSupported()
                 return
 
             handle = tf.constant(self.inputs_buf[0], dtype=self.op.inputs[0].dtype)
             indices = tf.constant(self.inputs_buf[1], dtype=self.op.inputs[1].dtype)
             value = tf.constant(self.inputs_buf[2], dtype=self.op.inputs[2].dtype)
             flow_in = tf.constant(self.inputs_buf[3], dtype=self.op.inputs[3].dtype)
-
             self.model.constant[self.outputs[0]] = tf.raw_ops.TensorArrayScatterV3(handle=handle, indices=indices, value=value, flow_in=flow_in, name=None)
 
 
