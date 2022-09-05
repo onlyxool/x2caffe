@@ -20,10 +20,13 @@ class ExpandDims(Operator):
             self.model.constant[self.outputs[0]] = np.expand_dims(self.inputs_buf[0], int(self.inputs_buf[1]))
         else:
             dim = int(self.inputs_buf[1])
-            if all(self.outputs_shape[0]):
+
+            if self.outputs_shape[0] is not None and all(self.outputs_shape[0]):
                 target_shape = list(np.expand_dims(np.random.random(self.inputs_shape[0]), dim).shape)
             else:
-                raise NotImplementedError(self.op.name)
+                errorMsg = 'Can\'t Support Output Shape is ' + str(self.outputs_shape[0])
+                self.unSupported(errorMsg)
+                return
 
             self.reshape_param = dict(shape=dict(dim=target_shape))
 
