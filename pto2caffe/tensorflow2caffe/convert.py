@@ -117,7 +117,7 @@ def shape_inference(graph, inputs_name, param):
             for index, input_name in enumerate(inputs_name):
                 graph.get_tensor_by_name(input_name).set_shape(param['input_shape'][index])
         else:
-            graph.get_tensor_by_name(input_name[0]).set_shape(param['input_shape'])
+            graph.get_tensor_by_name(inputs_name[0]).set_shape(param['input_shape'])
 
         with tf.Graph().as_default() as inferred_graph:
             tf.import_graph_def(graph.as_graph_def(add_shapes=True), name="")
