@@ -228,29 +228,32 @@ class Model(Base):
 
 
     def parse_input(self, operations):
+        print('Tensorflow GraphDef Input size: (graph version=%d)' %self.graph.version)
+
         for op in operations:
-            if op.type == 'Placeholder' and 'unused_control_flow_input' not in op.outputs[0].name and op.outputs[0].shape.is_fully_defined():
-                dtype = type(op.get_attr('dtype').as_numpy_dtype()) if op.get_attr('dtype').is_numpy_compatible else None
-                input_shape = shape_map_nhwc2nchw(op.outputs[0].shape.as_list()) if self.layout == 'NHWC' else op.outputs[0].shape.as_list()
+            if op.type == 'Placeholder' and 'unused_control_flow_input' not in op.outputs[0].name:
+                if op.outputs[0].shape.is_fully_defined():
+                    input_shape = shape_map_nhwc2nchw(op.outputs[0].shape.as_list()) if self.layout == 'NHWC' else op.outputs[0].shape.as_list()
+                    self.inputs_shape.append(input_shape)
+                else:
+                    print(op.outputs[0].name, op.outputs[0].shape)
 
                 self.inputs.append(op.outputs[0].name)
-                self.inputs_shape.append(input_shape)
-                self.inputs_dtype.append(dtype)
+                self.inputs_dtype.append(type(op.get_attr('dtype').as_numpy_dtype()) if op.get_attr('dtype').is_numpy_compatible else None)
                 self.inputs_maxval.append(op.get_attr('dtype').max)
                 self.inputs_minval.append(op.get_attr('dtype').min)
 
-                self.layers.append(make_caffe_input_layer(op.outputs[0].name, input_shape, len(self.inputs), self.param))
 
-        print('Tensorflow GraphDef Input size: (graph version=%d)' %self.graph.version)
         for i, shape in enumerate(self.inputs_shape):
             print(self.inputs[i], shape_map_nchw2nhwc(shape))
+            self.layers.append(make_caffe_input_layer(self.inputs[i], input_shape, i, self.param))
 
         # Check Input Shape
-        for input_shape in self.inputs_shape:
-            if None in input_shape:
-                sys.exit('Error: Dynamic Model input detected, Please Use -input_shape to overwrite input shape.\n')
-
-        if len(self.inputs_shape) == 0:
+        if len(self.inputs_shape) > 0:
+            for input_shape in self.inputs_shape:
+                if None in input_shape:
+                    sys.exit('Error: Dynamic Model input detected, Please Use -input_shape to overwrite input shape.\n')
+        else:
             sys.exit('Error: Dynamic Model input detected, Please Use -input_shape to overwrite input shape.\n')
 
 
