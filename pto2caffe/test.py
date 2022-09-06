@@ -4,64 +4,46 @@ import sys
 ext2platform = {'pb':'tensorflow', 'tflite': 'tflite', 'onnx': 'onnx', 'pt': 'pytorch'}
 exts = ['pb', 'tflite', 'onnx', 'pt']
 
-error_log = open('error_log', 'w+')
-
 
 def search_model(path, exts):
     assert(os.path.isdir(path))
 
-    models = []
+    models_path = list()
+    models = list()
     current_folder = os.walk(path)
     for path, dir_list, file_list in current_folder:
         for file_name in file_list:
             if file_name.split('.')[-1].lower() in exts:
                 file_abs = path+'/'+file_name
-                models.append(file_abs)
+                models.append(file_name)
+                models_path.append(file_abs)
 
-    return models 
+    return models, models_path
 
 
-def get_channel(inputs_shape):
-    if len(inputs_shape) >= 1:
-        if len(inputs_shape[0]) >= 2:
-            return inputs_shape[0][1]
+def run_convert(model_path, ext, op):
+    if op is not None and ext == 'onnx':
+        import onnx
+        onnx_model = onnx.load(model_path)
+        for index, node in enumerate(onnx_model.graph.node):
+            if node.op_type == op:
+                break
         else:
-            return 3
-    else:
-        return 3
-
-
-def run_convert(model_path, ext):
-    channel = 3
-    if ext.lower() == 'onnx':
-        from onnx2caffe.preload import get_input_shape
-        input_shape = get_input_shape(model_path)
-        channel = get_channel(input_shape)
+            return 0
 
     platform = ext2platform[model_path.split('.')[-1].lower()]
-    root_folder = ' -root_folder=/workspace/trunk/vc0768/tools/python_mc/pto2caffe/assets/data/bin_2560x1440/ '
-
-    mean_std_scale = '-mean 0.485 0.456 0.406 -scale 255 255 255 -std 0.229 0.224 0.225 '
-    bin_shape = '-bin_shape 3 2560 1440 '
-
-    if channel == 1:
-        mean_std_scale = '-mean 0.485 -scale 255 -std 0.229 '
-        bin_shape = '-bin_shape 1 2560 4320 '
-    elif channel == 4:
-        mean_std_scale = '-mean 0.485 0.456 0.406 0.4 -scale 255 255 255 255 -std 0.229 0.224 0.225 0.2 '
-        bin_shape = '-bin_shape 4 640 4320 '
 
     if platform == 'pytorch':
-        appex = '-compare=1 -crop_h=600 -crop_w=600 '
+        appex = ' -compare=1 -crop_h=600 -crop_w=600 '
     else:
-        appex = '-compare=1 -auto_crop=1 '
+        appex = ' -compare=1 -auto_crop=1 '
 
     if platform == 'onnx':
         simplifier = '-simplifier=1'
     else:
         simplifier = ''
 
-    command = 'python convert.py -platform=' + platform + ' -model=' + model_path + root_folder + mean_std_scale + bin_shape + appex + simplifier
+    command = 'python convert.py -platform=' + platform + ' -model=' + model_path + appex + simplifier
 
     ret = os.system(command)
     if ret != 0:
@@ -79,20 +61,21 @@ def main():
         sys.exit('Input model path.')
 
     if len(sys.argv) >= 3 and sys.argv[2] in exts:
-        models = search_model(search_path, [sys.argv[2]])
+        models, models_path = search_model(search_path, [sys.argv[2]])
     else:
-        models = search_model(search_path, exts)
+        models, models_path = search_model(search_path, exts)
 
-    success = 0
-    error = 0
-    for model in models:
-        ret = run_convert(model, sys.argv[2])
-        if ret == 0: 
-            success = success + 1 
-        else:
-            error = error + 1
 
-    print('Total:', len(models), 'Success:', success, 'Error:', error)
+    success = list()
+    error = list()
+    for index, model_path in enumerate(models_path):
+        ret = run_convert(model_path, sys.argv[2], sys.argv[3] if len(sys.argv) >= 4 else None)
+
+        success.append(models[index]) if ret == 0 else error.append(models[index])
+
+    print(success)
+    print(error)
+    print('Total:', len(models_path), 'Success:', len(success), 'Error:', len(error))
 
 
 if __name__ == "__main__":
