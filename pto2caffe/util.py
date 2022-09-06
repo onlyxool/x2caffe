@@ -128,25 +128,35 @@ def handleLegacyPad(padding_mode, input_size, output_size, proto_param:dict, leg
 
 # Caffe Scale Operand Shape Compatible
 def isShapeCompatible(data_shape:list, weight_shape:list) -> bool:
-    if len(data_shape) == 4 and len(weight_shape) <= 4:
+    if len(weight_shape) == weight_shape.count(1):
+        return True
+
+    if len(data_shape) == 5 and len(weight_shape) <= 5:
+        compatible_shape = [
+            data_shape[0:1], data_shape[0:2], data_shape[0:3], data_shape[0:4], data_shape[0:5],
+            data_shape[1:2], data_shape[1:3], data_shape[1:4], data_shape[1:5],
+            data_shape[2:3], data_shape[2:4], data_shape[2:5],
+            data_shape[3:4], data_shape[3:5],
+            data_shape[4:5], []]
+    elif len(data_shape) == 4 and len(weight_shape) <= 4:
         compatible_shape = [
             data_shape[0:1], data_shape[0:2], data_shape[0:3], data_shape[0:4],
             data_shape[1:2], data_shape[1:3], data_shape[1:4],
             data_shape[2:3], data_shape[2:4],
             data_shape[3:4], []]
-
-        return weight_shape in compatible_shape
-    elif len(data_shape) >= 4 and len(weight_shape) >= 4: # TODO
-        return True
-    elif len(data_shape) == 3 and len(weight_shape) <= 3: # TODO
+    elif len(data_shape) == 3 and len(weight_shape) <= 3:
         compatible_shape = [
             data_shape[0:1], data_shape[0:2], data_shape[0:3],
             data_shape[1:2], data_shape[1:3],
             data_shape[2:3], []]
-
-        return weight_shape in compatible_shape
+    elif len(data_shape) == 2 and len(weight_shape) <= 2:
+        compatible_shape = [
+            data_shape[0:1], data_shape[0:2],
+            data_shape[1:2], []]
     elif weight_shape == [] or weight_shape == ():
         return True
     else:
         print(data_shape, weight_shape)
         raise NotImplementedError
+
+    return weight_shape in compatible_shape
