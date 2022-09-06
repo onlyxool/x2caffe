@@ -23,7 +23,7 @@ class Resize(Operator):
             else:
                 scale = self.inputs_buf[2]
 
-        if len(scale) >= 4:
+        if hasattr(scale, '__iter__') and len(scale) >= 4:
             scale_factor = int(scale[2] if scale[2] == scale[3] else 0)
         else:
             input_h = self.inputs_shape[0][2]
@@ -34,7 +34,6 @@ class Resize(Operator):
             scale_factor_w = output_w / input_w
             scale_factor = int(scale_factor_h if scale_factor_h == scale_factor_w else 0)
 
-        # Attributes
         self.mode = str(self.attrs['mode'], encoding = "utf8")
         coordinate = str(self.attrs.get('coordinate_transformation_mode', b''), encoding = "utf8")
         if self.mode == 'nearest':
@@ -89,7 +88,7 @@ class Resize(Operator):
         elif self.type == 'Upsample':
             layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, upsample_param=self.upsample_param)
         elif self.type == 'Interp':
-            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, interp_param=self.interp_param)
+            layer = caffe_layer(self.type, self.name, self.inputs[:1], self.inputs_buf, self.outputs, interp_param=self.interp_param)
 
         self.setConverted()
 
