@@ -132,8 +132,8 @@ class Operator(Base):
 
         self.model.indentity[self.outputs[0]] = self.model.indentity.get(self.inputs[0], self.inputs[0])
         # Handle Legacy Pad for Ignore Op
-        if self.node.input[0] in self.model.pad.keys():
-            self.model.pad[self.node.output[0]] = self.model.pad[self.node.input[0]]
+        if self.inputs[0] in self.model.pad.keys():
+            self.model.pad[self.outputs[0]] = self.model.pad[self.inputs[0]]
 
 
     def saveConstant(self, name, constant):
