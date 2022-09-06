@@ -15,13 +15,26 @@ class Pow(Operator):
         self.layer_type = 'Pow'
         super().__parse__()
 
-        if self.inputs_buf[0] is not None:
+        if self.inputs_buf[0] is not None and self.inputs_buf[1] is not None:
             x = tf.constant(self.inputs_buf[0], dtype=self.op.inputs[0].dtype)
             y = tf.constant(self.inputs_buf[1], dtype=self.op.inputs[1].dtype)
-            self.model.constant[self.outputs[0]] = tf.raw_ops.Pow(x=x, y=y, name=None)
+            self.saveConstant(self.outputs[0], tf.raw_ops.Pow(x=x, y=y, name=None).numpy())
+        elif self.inputs_buf[1] is not None and self.inputs_buf[1].size == 1:
+            self.power_param = dict()
+
+            self.power_param['power'] = int(self.inputs_buf[1])
+            self.power_param['scale'] = 1
+            self.power_param['shift'] = 0
+
+            self.attrs = self.power_param
+            self.setParsed()
         else:
-            self.model.unsupport.append(self.operator_code)
+            self.unSupported()
 
 
     def convert(self):
-        pass
+        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, power_param=self.power_param)
+
+        self.setConverted()
+
+        return [layer]
