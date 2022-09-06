@@ -72,7 +72,6 @@ from tensorflow2caffe.op.maxpoolwithargmax import MaxPoolWithArgmax
 from tensorflow2caffe.op.conv2dbackpropinput import Conv2DBackpropInput
 from tensorflow2caffe.op.resizenearestneighbor import ResizeNearestNeighbor
 from tensorflow2caffe.op.placeholderwithdefault import PlaceholderWithDefault
-from tensorflow2caffe.op.sparsetensordensematmul import SparseTensorDenseMatMul
 
 
 from caffe_transform import save_caffe_model
@@ -165,7 +164,6 @@ OpMap = {
     'DepthwiseConv2dNative': ConvolutionDepthwise,
     'ResizeNearestNeighbor': ResizeNearestNeighbor,
     'PlaceholderWithDefault': PlaceholderWithDefault,
-    'SparseTensorDenseMatMul': SparseTensorDenseMatMul,
 }
 
 
