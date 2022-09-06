@@ -42,7 +42,7 @@ class StridedSlice(Operator):
                     begin_mask=begin_mask, end_mask=end_mask, ellipsis_mask=ellipsis_mask, new_axis_mask=new_axis_mask,
                     shrink_axis_mask=shrink_axis_mask).numpy())
         elif self.inputs_shape[0] == self.outputs_shape[0]: # Skip
-            self.model.indentity[self.outputs[0]] = self.model.indentity.get(self.inputs[0], self.inputs[0])
+            self.byPassOperator()
         else:
             # Check Stride != 1
             if self.inputs_buf[3].size != list(self.inputs_buf[3]).count(1):
