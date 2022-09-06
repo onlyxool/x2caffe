@@ -28,7 +28,8 @@ class Deconvolution(Operator):
         self.parseInputOutput()
 
         # Weight
-        self.weight = self.inputs_buf[1].transpose(0, 3, 1, 2)
+        self.weight = self.inputs_buf[1].transpose(3, 0, 1, 2)
+
         self.inputs_buf[1] = self.weight
         self.inputs_shape[1] = list(self.inputs_buf[1].shape)
 
