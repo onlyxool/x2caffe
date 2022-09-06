@@ -28,12 +28,13 @@ build-job:
     - TZ=UTC-8 date "+%Y-%m-%d %H:%M:%S"
   script:
     - echo "This job builds the target of pto2caffe"
+    - python3 build.py --help
     - python3 build.py
   after_script:
     - TZ=UTC-8 date "+%Y-%m-%d %H:%M:%S"
   artifacts:
     paths:
-      - target*
+      - build_*
 
 test-job:
   stage: test
