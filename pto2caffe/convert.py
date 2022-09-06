@@ -115,11 +115,6 @@ def CheckParam(param):
         param['std'] = RGB2BGR(param['std'])
         param['scale'] = RGB2BGR(param['scale'])
 
-    if 'auto_crop' in param and param['auto_crop'] == 1:
-        if param['platform'] == 'pytorch':
-            errorMsg = errorMsg + 'Pytorch model support dynamic shape, auto_crop can\'t apply. Use crop_h & crop_w instead.'
-            sys.exit(errorMsg)
-
     # Layout
     if 'layout' not in param or param['layout'] is None:
         if param['platform'] == 'tensorflow' or param['platform'] == 'tflite':
