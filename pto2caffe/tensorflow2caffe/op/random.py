@@ -15,9 +15,9 @@ class Random(Operator):
         super().__parse__()
 
         if self.operator_code == 'RandomStandardNormal':
-            self.model.constant[self.outputs[0]] = tf.random.normal(shape=self.op.outputs[0].shape, dtype=self.attrs['dtype'], seed=None, name=None).numpy()
+            self.saveConstant(self.outputs[0], tf.random.normal(shape=self.op.outputs[0].shape, dtype=self.attrs['dtype'], seed=None, name=None).numpy())
         elif self.operator_code == 'RandomUniform':
-            self.model.constant[self.outputs[0]] = tf.random.uniform(shape=self.op.outputs[0].shape, dtype=self.attrs['dtype'], seed=None, name=None).numpy()
+            self.saveConstant(self.outputs[0], tf.random.uniform(shape=self.op.outputs[0].shape, dtype=self.attrs['dtype'], seed=None, name=None).numpy())
 
 
     def convert(self):

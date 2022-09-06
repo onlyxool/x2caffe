@@ -14,9 +14,9 @@ class Enter(Operator):
         super().__parse__()
 
         if self.attrs['is_constant'] or self.inputs_buf[0] is not None:
-            self.model.constant[self.outputs[0]] = self.inputs_buf[0]
+            self.saveConstant(self.outputs[0], self.inputs_buf[0])
         else:
-            self.model.indentity[self.outputs[0]] = self.model.indentity.get(self.inputs[0], self.inputs[0])
+            self.byPassOperator()
 
 
     def convert(self):

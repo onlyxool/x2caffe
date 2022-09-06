@@ -16,7 +16,7 @@ class Mul(Operator):
         super().__parse__()
 
         if self.inputs_buf[0] is not None and self.inputs_buf[1] is not None:
-            self.model.constant[self.outputs[0]] = self.inputs_buf[0] * self.inputs_buf[1]
+            self.saveConstant(self.outputs[0], self.inputs_buf[0] * self.inputs_buf[1])
 
         elif (self.inputs_buf[0] is not None or self.inputs_buf[1] is not None) or (self.inputs_shape[0] != self.inputs_shape[1]):
             self.layer_type = 'Scale'

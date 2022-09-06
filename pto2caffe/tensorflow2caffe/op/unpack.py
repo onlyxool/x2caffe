@@ -19,7 +19,7 @@ class Unpack(Operator):
         if self.inputs_buf[0] is not None:
             outputs_buf = np.split(self.inputs_buf[0], indices_or_sections=self.attrs['num'], axis=self.attrs['axis'])
             for index, output in enumerate(self.outputs):
-                self.model.constant[self.outputs[index]] = np.squeeze(outputs_buf[index], axis=self.attrs['axis'])
+                self.saveConstant(self.outputs[index], np.squeeze(outputs_buf[index], axis=self.attrs['axis']))
         else:
             if self.attrs['num'] == 1:
                 self.layer_type = 'Reshape'

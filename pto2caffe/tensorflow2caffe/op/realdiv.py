@@ -16,7 +16,7 @@ class RealDiv(Operator):
         super().__parse__()
 
         if self.inputs_buf[0] is not None and self.inputs_buf[1] is not None:
-            self.model.constant[self.outputs[0]] = self.inputs_buf[0] / self.inputs_buf[1]
+            self.saveConstant(self.outputs[0], self.inputs_buf[0] / self.inputs_buf[1])
         elif self.inputs_buf[1] is not None or self.inputs_buf[0] is not None:
             self.layer_type = 'Scale'
 
@@ -48,7 +48,7 @@ class RealDiv(Operator):
             self.attrs = self.scale_param
             self.setParsed()
         else:
-            raise NotImplementedError
+            self.unSupported()
 
 
     def convert(self):

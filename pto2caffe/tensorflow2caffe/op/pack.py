@@ -1,5 +1,3 @@
-import numpy as np
-
 from caffe_transform import caffe_layer
 from tensorflow2caffe.op.operator import Operator
 
@@ -25,7 +23,8 @@ class Pack(Operator):
                 break
 
         if constant:
-            self.model.constant[self.outputs[0]] = np.stack(self.inputs_buf)
+            import numpy as np
+            self.saveConstant(self.outputs[0], np.stack(self.inputs_buf))
         else:
             self.layer_type = 'Concat'
 
@@ -40,9 +39,7 @@ class Pack(Operator):
             elif self.attrs['axis'] == len(self.outputs_shape[0]) - 1:
                 self.reshape_param = dict(shape=dict(dim=self.inputs_shape[index]+[1]))
             else:
-                self.model.unsupport.append(self.operator_code)
-                errorMsg = 'Error: Op Pack (' + self.op.name + ') unsupport: axis is ' + str(self.attrs['axis'])
-                print(errorMsg)
+                self.unSupported('Can\'t support: axis == ' + str(self.attrs['axis']))
                 return
 
             # Concat Attribute

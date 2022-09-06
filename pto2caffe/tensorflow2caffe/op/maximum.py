@@ -1,5 +1,4 @@
 import numpy as np
-import tensorflow as tf
 
 from caffe_transform import caffe_layer
 from tensorflow2caffe.op.operator import Operator
@@ -18,26 +17,22 @@ class Maximum(Operator):
         super().__parse__()
 
         if self.inputs_buf[0] is not None and self.inputs_buf[1] is not None:
+            import tensorflow as tf
             x = tf.constant(self.inputs_buf[0], dtype=self.op.inputs[0].dtype)
             y = tf.constant(self.inputs_buf[1], dtype=self.op.inputs[1].dtype)
-            self.model.constant[self.outputs[0]] = tf.raw_ops.Maximum(x=x, y=y, name=None).numpy()
+            self.saveConstant(self.outputs[0], tf.raw_ops.Maximum(x=x, y=y, name=None).numpy())
         elif self.inputs_buf[0] is None and self.inputs_buf[1] is None:
             self.layer_type = 'Eltwise'
-
-            # Attribute
             self.eltwise_param = dict()
             self.eltwise_param['operation'] = 2
-
             self.attrs = self.eltwise_param
-
             self.setParsed()
         elif self.inputs_buf[1] is not None:
             self.layer_type = 'ReLU'
 
             # Check weather y == 0
             if np.count_nonzero(self.inputs_buf[1]) > 0:
-                self.model.unsupport.append(self.operator_code)
-                print('Error: Operator [ Maximum ] does not Support y != 0.\n')
+                self.unSupported('Does not Support y != 0.')
                 return
 
             # Attribute

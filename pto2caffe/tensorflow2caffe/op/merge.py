@@ -15,12 +15,12 @@ class Merge(Operator):
 
         if self.inputs_buf[0] is None and self.inputs_buf[1] is None:
             # Skip Op
-            self.model.indentity[self.outputs[0]] = self.model.indentity.get(self.inputs[0], self.inputs[0])
+            self.byPassOperator()
         elif self.inputs_buf[0] is not None:
             # Constant Op
-            self.model.constant[self.outputs[0]] = self.inputs_buf[0]
+            self.saveConstant(self.outputs[0], self.inputs_buf[0])
         else:
-            raise NotImplementedError(self.op.name)
+            self.unSupported()
 
 
     def convert(self):

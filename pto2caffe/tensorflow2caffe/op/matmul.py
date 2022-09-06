@@ -14,8 +14,12 @@ class MatMul(Operator):
         self.layer_type = 'InnerProduct'
         super().__parse__()
 
-        if len(self.inputs_shape[0]) != 2 or len(self.inputs_shape[1]) != 2:
-            raise NotImplementedError('MatMul only support input dimentions == 2')
+        if self.inputs_shape[0] is None or len(self.inputs_shape[0]) != 2:
+            self.unSupported('MatMul only support input dimentions == 2')
+            return
+        if self.inputs_shape[1] is None or len(self.inputs_shape[1]) != 2:
+            self.unSupported('MatMul only support input dimentions == 2')
+            return
 
         if self.inputs_buf[0] is not None and self.inputs_buf[1] is None:
             self.inputs.reverse()

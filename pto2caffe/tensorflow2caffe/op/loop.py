@@ -17,12 +17,12 @@ class Loop(Operator):
         if self.inputs_buf[0] is not None:
             if self.operator_code == 'LoopCond':
                 input = tf.constant(self.inputs_buf[0], dtype=self.op.inputs[0].dtype)
-                self.model.constant[self.outputs[0]] = tf.raw_ops.LoopCond(input=input, name=None).numpy()
+                self.saveConstant(self.outputs[0], tf.raw_ops.LoopCond(input=input, name=None).numpy())
             elif self.operator_code == 'NextIteration':
                 data = tf.constant(self.inputs_buf[0], dtype=self.op.inputs[0].dtype)
-                self.model.constant[self.outputs[0]] = tf.raw_ops.NextIteration(data=data, name=None).numpy()
+                self.saveConstant(self.outputs[0],tf.raw_ops.NextIteration(data=data, name=None).numpy())
         else:
-            self.model.unsupport.append(self.operator_code)
+            self.unSupported()
 
 
     def convert(self):

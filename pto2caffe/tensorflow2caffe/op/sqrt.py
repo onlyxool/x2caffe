@@ -16,9 +16,8 @@ class Sqrt(Operator):
 
         if self.inputs_buf[0] is not None:
             import numpy as np
-            self.model.constant[self.outputs[0]] = np.sqrt(self.inputs_buf[0])
+            self.saveConstant(self.outputs[0], np.sqrt(self.inputs_buf[0]))
         else:
-            # Attributes
             self.power_param = dict()
             self.power_param['power'] = 0.5
             self.power_param['scale'] = 1

@@ -15,11 +15,21 @@ class Range(Operator):
         self.layer_type = 'Range'
         super().__parse__()
 
+        if self.inputs_buf[0] is None:
+            self.unSupported('Can\'t Support Start = None')
+            return
+        if self.inputs_buf[1] is None:
+            self.unSupported('Can\'t Support limit = None')
+            return
+        if self.inputs_buf[2] is None:
+            self.unSupported('Can\'t Support delta = None')
+            return
+
         start = int(self.inputs_buf[0])
         limit = int(self.inputs_buf[1])
         delta = int(self.inputs_buf[2])
 
-        self.model.constant[self.outputs[0]] = np.arange(start=start, stop=limit, step=delta, dtype=self.op.outputs[0].dtype.as_numpy_dtype())
+        self.saveConstant(self.outputs[0], np.arange(start=start, stop=limit, step=delta, dtype=self.op.outputs[0].dtype.as_numpy_dtype()))
 
 
     def convert(self):

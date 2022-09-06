@@ -15,12 +15,10 @@ class Transpose(Operator):
         super().__parse__()
 
         if self.inputs_buf[0] is not None:
-            self.model.constant[self.outputs[0]] = self.inputs_buf[0].transpose(self.inputs_buf[1].tolist())
-
+            self.saveConstant(self.outputs[0], self.inputs_buf[0].transpose(self.inputs_buf[1].tolist()).numpy())
         else:
-            # Attributes 
             self.permute_param = dict()
-            self.permute_param['order'] = self.inputs_buf[1].tolist()
+            self.permute_param['order'] = self.inputs_buf[1].tolist() #TODO
             self.attrs = self.permute_param
 
             self.setParsed()

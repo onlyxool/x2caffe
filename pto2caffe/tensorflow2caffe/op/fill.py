@@ -1,3 +1,5 @@
+import tensorflow as tf
+
 from tensorflow2caffe.op.operator import Operator
 
 
@@ -14,12 +16,11 @@ class Fill(Operator):
         super().__parse__()
 
         if self.inputs_buf[0] is not None and self.inputs_buf[1] is not None:
-            import tensorflow as tf
             dims = tf.constant(self.inputs_buf[0], dtype=self.op.inputs[0].dtype)
             value = tf.constant(self.inputs_buf[1], dtype=self.op.inputs[1].dtype)
-            self.model.constant[self.outputs[0]] = tf.raw_ops.Fill(dims=dims, value=value, name=None).numpy()
+            self.saveConstant(self.outputs[0], tf.raw_ops.Fill(dims=dims, value=value, name=None).numpy())
         else:
-            self.model.unsupport.append(self.operator_code)
+            self.unSupported()
 
 
     def convert(self):

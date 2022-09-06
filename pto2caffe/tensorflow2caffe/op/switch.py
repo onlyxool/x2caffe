@@ -15,8 +15,8 @@ class Switch(Operator):
 
         if self.inputs_buf[0] is not None:
             # Constant Op
-            self.model.constant[self.outputs[1]] = self.inputs_buf[0]
-            self.model.constant[self.outputs[0]] = self.inputs_buf[0]
+            self.saveConstant(self.outputs[0], self.inputs_buf[0])
+            self.saveConstant(self.outputs[1], self.inputs_buf[1])
         else:
             # Skip Op
             self.model.indentity[self.outputs[1]] = self.model.indentity.get(self.inputs[0], self.inputs[0])

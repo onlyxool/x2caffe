@@ -17,9 +17,11 @@ class Size(Operator):
 
         if self.inputs_buf[0] is not None:
             input = tf.constant(self.inputs_buf[0], dtype=self.op.inputs[0].dtype)
-            self.model.constant[self.outputs[0]] = tf.raw_ops.Size(input=input, out_type=tf.dtypes.int32, name=None).numpy()
+            self.saveConstant(self.outputs[0], tf.raw_ops.Size(input=input, out_type=tf.dtypes.int32, name=None).numpy())
+        elif self.op.inputs[0].shape.is_fully_defined():
+            self.saveConstant(self.outputs[0], np.multiply.reduce(self.op.inputs[0].shape.as_list()))
         else:
-            self.model.unsupport.append(self.operator_code)
+            self.unSupported('Can\'t Parse Input Shape is ' + str(self.op.inputs[0].shape))
 
 
     def convert(self):

@@ -1,3 +1,5 @@
+import tensorflow as tf
+
 from tensorflow2caffe.op.operator import Operator
 
 
@@ -14,10 +16,9 @@ class Rsqrt(Operator):
         super().__parse__()
 
         if self.inputs_buf[0] is not None:
-            import tensorflow as tf
-            self.model.constant[self.outputs[0]] = tf.math.rsqrt(self.inputs_buf[0], name=None).numpy()
+            self.saveConstant(self.outputs[0], tf.math.rsqrt(self.inputs_buf[0], name=None).numpy())
         else:
-            self.model.unsupport.append(self.operator_code)
+            self.unSupported()
 
 
     def convert(self):

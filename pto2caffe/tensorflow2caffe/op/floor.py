@@ -1,3 +1,5 @@
+import tensorflow as tf
+
 from tensorflow2caffe.op.operator import Operator
 
 
@@ -14,10 +16,9 @@ class Floor(Operator):
         super().__parse__()
 
         if self.inputs_buf[0] is not None:
-            import tensorflow as tf
-            self.model.constant[self.outputs[0]] = tf.math.floor(self.inputs_buf[0], name=None).numpy()
+            self.saveConstant(self.outputs[0], tf.math.floor(self.inputs_buf[0], name=None).numpy())
         else:
-            raise NotImplementedError(self.op.name)
+            self.unSupported()
 
 
     def convert(self):

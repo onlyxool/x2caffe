@@ -18,7 +18,7 @@ class Sum(Operator):
             import tensorflow as tf
             x = tf.constant(self.inputs_buf[0], dtype=self.op.inputs[0].dtype)
             axis = tf.constant(self.inputs_buf[1], dtype=self.op.inputs[1].dtype)
-            self.model.constant[self.outputs[0]] = tf.raw_ops.Sum(x, axis=axis, keep_dims=self.attrs['keep_dims'], name=None)
+            self.saveConstant(self.outputs[0], tf.raw_ops.Sum(x, axis=axis, keep_dims=self.attrs['keep_dims'], name=None).numpy())
         elif self.inputs_buf[1] is not None:
             axis = self.inputs_buf[1]
 
@@ -32,9 +32,7 @@ class Sum(Operator):
             else:
                 raise NotImplementedError(self.op.name)
         else:
-            self.model.unsupport.append(self.operator_code)
-            errorMsg = 'Error: Op Max (' + self.op.name + '): can\'t support axis == None'
-            print(errorMsg)
+            unSupported('Can\'t support axis == None')
 
 
     def convert(self):

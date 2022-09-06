@@ -16,7 +16,7 @@ class Mean(Operator):
         super().__parse__()
 
         axis = self.inputs_buf[1]
-        if (axis.tolist() == [2, 3] and self.layout == 'NCHW') or axis.tolist() == [1, 2] and self.layout == 'NHWC':
+        if (axis.tolist() == [2, 3] and self.layout == 'NCHW') or (axis.tolist() == [1, 2] and self.layout == 'NHWC'):
             self.pooling_param = dict()
             self.pooling_param['pool'] = 1
             self.pooling_param['kernel_h'] = self.inputs_shape[0][2]

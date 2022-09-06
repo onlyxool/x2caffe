@@ -19,11 +19,11 @@ class Logical(Operator):
             x = tf.constant(self.inputs_buf[0], dtype=self.op.inputs[0].dtype)
             y = tf.constant(self.inputs_buf[1], dtype=self.op.inputs[1].dtype)
             if self.operator_code == 'LogicalOr':
-                self.model.constant[self.outputs[0]] = tf.raw_ops.LogicalOr(x=x, y=y, name=None).numpy()
+                self.saveConstant(self.outputs[0], tf.raw_ops.LogicalOr(x=x, y=y, name=None).numpy())
             elif self.operator_code == 'LogicalAnd':
-                self.model.constant[self.outputs[0]] = tf.raw_ops.LogicalAnd(x=y, y=y, name=None).numpy()
+                self.saveConstant(self.outputs[0], tf.raw_ops.LogicalAnd(x=y, y=y, name=None).numpy())
         else:
-            self.model.unsupport.append(self.operator_code)
+            self.unSupported()
 
 
     def convert(self):

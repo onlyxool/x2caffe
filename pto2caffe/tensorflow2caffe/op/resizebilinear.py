@@ -16,7 +16,6 @@ class ResizeBilinear(Operator):
         self.layer_type = 'Interp'
         super().__parse__()
 
-        # Attributes
         self.interp_param = dict()
         self.interp_param['align_corners'] = self.attrs['align_corners']
         # self.attrs['half_pixel_centers']
@@ -28,7 +27,8 @@ class ResizeBilinear(Operator):
             output_h = self.outputs_shape[0][-2]
             output_w = self.outputs_shape[0][-1]
         else:
-            raise ValueError(self.op.name)
+            self.unSupported('Can\'t Parse Unknow Output Shape')
+            return
 
         self.interp_param['height'] = output_h
         self.interp_param['width'] = output_w

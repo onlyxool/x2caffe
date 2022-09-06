@@ -15,12 +15,11 @@ class PlaceholderWithDefault(Operator):
         super().__parse__()
 
         if self.inputs_buf[0] is not None:
-            if self.operator_code == 'PlaceholderWithDefault':
-                input = tf.constant(self.inputs_buf[0], dtype=self.op.inputs[0].dtype)
-                shape = self.op.outputs[0].shape
-                self.model.constant[self.outputs[0]] = tf.raw_ops.PlaceholderWithDefault(input=input, shape=shape, name=None)
+            input = tf.constant(self.inputs_buf[0], dtype=self.op.inputs[0].dtype)
+            shape = self.op.outputs[0].shape
+            saveConstant(self.outputs[0], tf.raw_ops.PlaceholderWithDefault(input=input, shape=shape, name=None).numpy())
         else:
-            raise NotImplementedError(self.op.name)
+            self.unSupported()
 
 
     def convert(self):

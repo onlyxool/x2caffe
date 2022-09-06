@@ -20,7 +20,7 @@ class Minimum(Operator):
         if self.inputs_buf[0] is not None and self.inputs_buf[1] is not None:
             x = tf.constant(self.inputs_buf[0], dtype=self.op.inputs[0].dtype)
             y = tf.constant(self.inputs_buf[1], dtype=self.op.inputs[1].dtype)
-            self.model.constant[self.outputs[0]] = tf.raw_ops.Minimum(x=x, y=y, name=None).numpy()
+            self.saveConstant(self.outputs[0], tf.raw_ops.Minimum(x=x, y=y, name=None).numpy())
         elif self.inputs_buf[0] is None and self.inputs_buf[1] is None:
             self.layer_type = 'Eltwise'
 
@@ -35,8 +35,7 @@ class Minimum(Operator):
 
             # Check weather y == 0
             if np.count_nonzero(self.inputs_buf[1]) > 0:
-                self.model.unsupport.append(self.operator_code)
-                print('Error: Operator [ Minimum ] does not Support y != 0.\n')
+                self.unSupported('Does not Support y != 0.')
                 return
 
             # Attribute

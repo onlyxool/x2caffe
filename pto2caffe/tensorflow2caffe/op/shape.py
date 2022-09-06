@@ -15,12 +15,11 @@ class Shape(Operator):
         super().__parse__()
 
         if self.inputs_buf[0] is not None:
-            self.model.constant[self.outputs[0]] = np.array(self.inputs_buf[0].shape)
+            self.saveConstant(self.outputs[0], np.array(self.inputs_buf[0].shape))
+        elif self.op.inputs[0].shape.is_fully_defined():
+            self.saveConstant(self.outputs[0], np.array(self.op.inputs[0].shape.as_list()))
         else:
-            if self.op.inputs[0].shape.is_fully_defined():
-                self.model.constant[self.outputs[0]] = np.array(self.op.inputs[0].shape.as_list())
-            else:
-                raise NotImplementedError(self.op.name)
+            self.unSupported('Can\'t Parse Shape Op: Input Shape is ' + str(self.op.inputs[0].shape))
 
 
     def convert(self):

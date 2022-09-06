@@ -17,7 +17,7 @@ class ExpandDims(Operator):
         super().__parse__()
 
         if self.inputs_buf[0] is not None:
-            self.model.constant[self.outputs[0]] = np.expand_dims(self.inputs_buf[0], int(self.inputs_buf[1]))
+            self.saveConstant(self.outputs[0], np.expand_dims(self.inputs_buf[0], int(self.inputs_buf[1])))
         else:
             dim = int(self.inputs_buf[1])
 

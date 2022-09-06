@@ -29,7 +29,7 @@ class Concat(Operator):
 
         if constant:
             import numpy as np
-            self.model.constant[self.outputs[0]] = np.concatenate(self.inputs_buf[:-1], axis=int(self.inputs_buf[index]))
+            self.saveConstant(self.outputs[0], np.concatenate(self.inputs_buf[:-1], axis=int(self.inputs_buf[index])))
         else:
             self.layer_type = 'Concat'
 

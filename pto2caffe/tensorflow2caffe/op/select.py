@@ -17,9 +17,9 @@ class Select(Operator):
             condition = tf.constant(self.inputs_buf[0], dtype=self.op.inputs[0].dtype)
             t = tf.constant(self.inputs_buf[1], dtype=self.op.inputs[1].dtype)
             e = tf.constant(self.inputs_buf[2], dtype=self.op.inputs[2].dtype)
-            self.model.constant[self.outputs[0]] = tf.raw_ops.SelectV2(condition=condition, t=t, e=e, name=None)
+            self.saveConstant(self.outputs[0], tf.raw_ops.SelectV2(condition=condition, t=t, e=e, name=None).numpy())
         else:
-            self.model.unsupport.append(self.operator_code)
+            self.unSupported()
 
 
     def convert(self):

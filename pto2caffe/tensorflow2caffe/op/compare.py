@@ -19,15 +19,15 @@ class Compare(Operator):
             x = tf.constant(self.inputs_buf[0], dtype=self.op.inputs[0].dtype)
             y = tf.constant(self.inputs_buf[1], dtype=self.op.inputs[1].dtype)
             if self.operator_code == 'GreaterEqual':
-                self.model.constant[self.outputs[0]] = tf.math.greater_equal(x, y).numpy()
+                self.saveConstant(self.outputs[0], tf.math.greater_equal(x, y).numpy())
             elif self.operator_code == 'Greater':
-                self.model.constant[self.outputs[0]] = tf.math.greater(x, y).numpy()
+                self.saveConstant(self.outputs[0], tf.math.greater(x, y).numpy())
             elif self.operator_code == 'Less':
-                self.model.constant[self.outputs[0]] = tf.math.less(x, y).numpy()
+                self.saveConstant(self.outputs[0], tf.math.less(x, y).numpy())
             elif self.operator_code == 'Equal':
-                self.model.constant[self.outputs[0]] = tf.math.equal(x, y).numpy()
+                self.saveConstant(self.outputs[0], tf.math.equal(x, y).numpy())
         else:
-            self.model.unsupport.append(self.operator_code)
+            self.unSupported()
 
 
     def convert(self):

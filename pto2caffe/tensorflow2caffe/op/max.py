@@ -16,9 +16,7 @@ class Max(Operator):
         super().__parse__()
 
         if self.inputs_buf[1] is None:
-            self.model.unsupport.append(self.operator_code)
-            errorMsg = 'Error: Op Max (' + self.op.name + '): can\'t support axis == None'
-            print(errorMsg)
+            self.unSupported('Can\'t support axis == None')
             return
         else:
             axis = self.inputs_buf[1]
@@ -26,7 +24,7 @@ class Max(Operator):
         if self.inputs_buf[0] is not None:
             import tensorflow as tf
             x = tf.constant(self.inputs_buf[0], dtype=self.op.inputs[0].dtype)
-            self.model.constant[self.outputs[0]] = tf.raw_ops.Max(input=x, axis=axis, keep_dims=self.attrs['keep_dims'], name=None).numpy()
+            self.saveConstant(self.outputs[0], tf.raw_ops.Max(input=x, axis=axis, keep_dims=self.attrs['keep_dims'], name=None).numpy())
         else:
             if axis.size == 1:
                 self.layer_type = 'ArgMax'

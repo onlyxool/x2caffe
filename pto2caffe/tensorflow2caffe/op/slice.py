@@ -15,27 +15,10 @@ class Slice(Operator):
         super().__parse__()
 
         if self.inputs_buf[0] is not None:
-            if self.inputs_buf[1].size == 1:
-                begin = int(self.inputs_buf[1])
-                size = int(self.inputs_buf[2])
-                end = self.inputs_buf[0].shape[0] if size == -1 else (begin + size)
-                self.model.constant[self.outputs[0]] = self.inputs_buf[0][begin:end]
-            elif self.inputs_buf[1].size == 2:
-                begins = self.inputs_buf[1]
-                sizes = self.inputs_buf[2]
-                ends = list()
-                for i, size in enumerate(sizes):
-                    ends.append(self.inputs_buf[0].shape[i] if size == -1 else (begins[i] + sizes[i]))
-                self.model.constant[self.outputs[0]] = self.inputs_buf[0][begins[0]:ends[0], begins[1]:ends[1]]
-            elif self.inputs_buf[1].size == 3:
-                begins = self.inputs_buf[1]
-                sizes= self.inputs_buf[2]
-                ends = list()
-                for i, size in enumerate(sizes):
-                    ends.append(self.inputs_buf[0].shape[i] if size == -1 else (begins[i] + sizes[i]))
-                self.model.constant[self.outputs[0]] = self.inputs_buf[0][begins[0]:ends[0], begins[1]:ends[1], begins[2]:ends[2]]
-            else:
-                raise NotImplementedError(self.op.name)
+            input = tf.constant(self.inputs_buf[0], self.op.inputs[0].dtype)
+            begin = tf.constant(self.inputs_buf[1], self.op.inputs[1].dtype)
+            size = tf.constant(self.inputs_buf[2], self.op.inputs[2].dtype)
+            self.saveConstant(self.outputs[0], tf.raw_ops.Slice(input=input, begin=begin, size=size, name=None).numpy())
         else:
             raise NotImplementedError(self.op.name)
             self.slice_param = dict()
@@ -43,6 +26,7 @@ class Slice(Operator):
             self.slice_param['slice_point'] = [slice_point]
 
             self.attrs = self.slice_param
+
 
     def convert(self):
         layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, slice_param=self.slice_param)

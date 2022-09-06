@@ -18,7 +18,7 @@ class Reshape(Operator):
 
         if self.inputs_buf[0] is not None and self.inputs_buf[1] is not None:
             import numpy as np
-            self.model.constant[self.outputs[0]] = np.reshape(self.inputs_buf[0], self.inputs_buf[1])
+            self.saveConstant(self.outputs[0], np.reshape(self.inputs_buf[0], self.inputs_buf[1]))
         else:
             if None in self.outputs_shape[0]:
                 import sys

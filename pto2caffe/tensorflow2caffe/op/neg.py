@@ -15,7 +15,7 @@ class Neg(Operator):
         super().__parse__()
 
         if self.inputs_buf[0] is not None:
-            self.model.constant[self.outputs[0]] = self.inputs_buf[0] * -1
+            self.saveConstant(self.outputs[0], self.inputs_buf[0] * -1)
         else:
             self.layer_type = 'Scale'
 
