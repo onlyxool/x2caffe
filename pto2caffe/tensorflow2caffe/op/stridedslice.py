@@ -35,7 +35,7 @@ class StridedSlice(Operator):
         else:
             # Skip op if input shape == output shape
             if self.op.inputs[0].shape == self.op.outputs[0].shape: # Skip
-                self.model.indentity[self.outputs[0]] = self.model.indentity.get(self.inputs[0], self.inputs[0])
+                self.byPassOperator()
             else:
                 self.layer_type = 'Slice'
 
