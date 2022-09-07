@@ -6,6 +6,8 @@ import tensorflow as tf
 
 from tensorflow2caffe.op.abs import Abs
 from tensorflow2caffe.op.add import Add
+from tensorflow2caffe.op.elu import Elu
+from tensorflow2caffe.op.exp import Exp
 from tensorflow2caffe.op.log import Log
 from tensorflow2caffe.op.max import Max
 from tensorflow2caffe.op.mul import Mul
@@ -14,7 +16,6 @@ from tensorflow2caffe.op.pad import Pad
 from tensorflow2caffe.op.pow import Pow
 from tensorflow2caffe.op.sub import Sub
 from tensorflow2caffe.op.sum import Sum
-from tensorflow2caffe.op.exp import Exp
 from tensorflow2caffe.op.cast import Cast
 from tensorflow2caffe.op.fill import Fill
 from tensorflow2caffe.op.loop import Loop
@@ -84,6 +85,7 @@ logger = logging.getLogger('TensorFlow2Caffe')
 OpMap = {
     'Abs': Abs,
     'Add': Add,
+    'Elu': Elu,
     'Exp': Exp,
     'Log': Log,
     'Max': Max,
