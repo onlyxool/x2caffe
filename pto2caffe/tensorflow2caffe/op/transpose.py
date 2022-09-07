@@ -15,7 +15,7 @@ class Transpose(Operator):
         super().__parse__()
 
         if self.inputs_buf[0] is not None:
-            self.saveConstant(self.outputs[0], self.inputs_buf[0].transpose(self.inputs_buf[1].tolist()).numpy())
+            self.saveConstant(self.outputs[0], self.inputs_buf[0].transpose(self.inputs_buf[1].tolist()))
         else:
             self.permute_param = dict()
             self.permute_param['order'] = self.inputs_buf[1].tolist() #TODO
