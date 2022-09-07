@@ -17,7 +17,7 @@ class PlaceholderWithDefault(Operator):
         if self.inputs_buf[0] is not None:
             input = tf.constant(self.inputs_buf[0], dtype=self.op.inputs[0].dtype)
             shape = self.op.outputs[0].shape
-            saveConstant(self.outputs[0], tf.raw_ops.PlaceholderWithDefault(input=input, shape=shape, name=None).numpy())
+            self.saveConstant(self.outputs[0], tf.raw_ops.PlaceholderWithDefault(input=input, shape=shape, name=None).numpy())
         else:
             self.unSupported()
 
