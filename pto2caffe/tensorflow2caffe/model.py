@@ -67,6 +67,7 @@ from tensorflow2caffe.op.tensorlist import TensorList
 from tensorflow2caffe.op.tensorarray import TensorArray
 from tensorflow2caffe.op.spacetodepth import SpaceToDepth
 from tensorflow2caffe.op.stridedslice import StridedSlice
+from tensorflow2caffe.op.bypassoperator import ByPassOperator
 from tensorflow2caffe.op.resizebilinear import ResizeBilinear
 from tensorflow2caffe.op.depthwise import ConvolutionDepthwise
 from tensorflow2caffe.op.maxpoolwithargmax import MaxPoolWithArgmax
@@ -81,6 +82,7 @@ from util import shape_map_nhwc2nchw, shape_map_nchw2nhwc
 
 
 logger = logging.getLogger('TensorFlow2Caffe')
+
 
 OpMap = {
     'Abs': Abs,
@@ -149,6 +151,9 @@ OpMap = {
     'GreaterEqual': Compare,
     'RandomUniform': Random,
     'ExpandDims': ExpandDims,
+    'Complex': ByPassOperator,
+    'Identity': ByPassOperator,
+    'IdentityN': ByPassOperator,
     'FusedBatchNorm': BatchNorm,
     'SpaceToDepth': SpaceToDepth,
     'StridedSlice': StridedSlice,
@@ -162,6 +167,7 @@ OpMap = {
     'TensorArrayWriteV3': TensorArray,
     'TensorArrayScatterV3': TensorArray,
     'MaxPoolWithArgmax': MaxPoolWithArgmax,
+    'FakeQuantWithMinMaxVars': ByPassOperator,
     'Conv2DBackpropInput': Conv2DBackpropInput,
     'DepthwiseConv2dNative': ConvolutionDepthwise,
     'ResizeNearestNeighbor': ResizeNearestNeighbor,
@@ -275,11 +281,6 @@ class Model(Base):
         for index, op in enumerate(operations):
             if op.type == 'Const':
                 self.constant[op.outputs[0].name] = tf.get_static_value(op.outputs[0])
-            elif op.type in ('Identity', 'IdentityN', 'Complex', 'FakeQuantWithMinMaxVars'):
-                if tf.get_static_value(op.outputs[0]) is None:
-                    self.indentity[op.outputs[0].name] = self.indentity.get(op.inputs[0].name, op.inputs[0].name)
-                else:
-                    self.constant[op.outputs[0].name] = tf.get_static_value(op.outputs[0])
             elif op.type in ['NoOp', 'Assert', 'Placeholder']: #ignore_op
                 pass
             else:
@@ -316,8 +317,7 @@ class Model(Base):
 
         for op in self.operators:
             logger.debug(op)
-            for layer in op.convert():
-                self.layers.append(layer)
+            self.layers.extend(op.convert())
 
         self.setConverted()
 
