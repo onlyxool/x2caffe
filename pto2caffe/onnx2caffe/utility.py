@@ -10,8 +10,8 @@ def computePad(layer_type, operator_attrs, input_shape, output_shape, kernel_siz
             pad_h = output_shape[2] - ((input_shape[2] - kernel_size[0]) / strides[0] + 1) # output_shape - compute_output_shape
             pad_w = output_shape[3] - ((input_shape[3] - kernel_size[1]) / strides[1] + 1)
         elif layer_type == 'Deconvolution':
-            pad_h = output_shape[2] - (stride_h * (input_shape[2] - 1) + kernel_size[0])
-            pad_w = output_shape[3] - (stride_w * (input_shape[3] - 1) + kernel_size[1])
+            pad_h = output_shape[2] - (strides[0] * (input_shape[2] - 1) + kernel_size[0])
+            pad_w = output_shape[3] - (strides[1] * (input_shape[3] - 1) + kernel_size[1])
         elif layer_type == 'Pooling':
             pad_h = (output_shape[2] - 1) * strides[0] + ((kernel_size[0] - 1)+1) - input_shape[2]
             pad_w = (output_shape[3] - 1) * strides[1] + ((kernel_size[1] - 1)+1) - input_shape[3]
