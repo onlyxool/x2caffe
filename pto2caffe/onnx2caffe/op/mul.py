@@ -16,10 +16,23 @@ class Mul(Operator):
     def parse(self):
         super().__parse__()
 
-        if self.inputs_buf[0] is not None and self.inputs_buf[0] is not None:
+        if self.inputs_buf[0] is not None and self.inputs_buf[1] is not None:
             self.saveConstant(self.node.output[0], self.inputs_buf[0] * self.inputs_buf[1])
+
         elif (self.inputs_buf[0] is not None or self.inputs_buf[1] is not None) or (self.inputs_shape[0] != self.inputs_shape[1]):
             self.layer_type = 'Scale'
+
+            inputs_size0 = np.multiply.reduce(self.inputs_shape[0], axis=None)
+            inputs_size1 = np.multiply.reduce(self.inputs_shape[1], axis=None)
+
+            if self.inputs_buf[0] is not None and self.inputs_buf[1] is None:
+                self.inputs.reverse()
+                self.inputs_shape.reverse()
+                self.inputs_buf.reverse()
+            elif self.inputs_buf[0] is None and self.inputs_buf[1] is None and inputs_size0 < inputs_size1:
+                self.inputs.reverse()
+                self.inputs_shape.reverse()
+                self.inputs_buf.reverse()
 
             if not isShapeCompatible(self.inputs_shape[0], self.inputs_shape[1]):
                 weight_shape = list(np.squeeze(np.random.random(self.inputs_shape[1])).shape)
