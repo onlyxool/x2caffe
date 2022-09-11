@@ -14,6 +14,9 @@ class MatMul(Operator):
         super().__parse__()
 
         if self.inputs_buf[0] is None and self.inputs_buf[1] is None:
+            self.unSupported()
+            return
+
             self.layer_type = 'MatMul'
 
             self.matmul_param = dict()
@@ -26,8 +29,7 @@ class MatMul(Operator):
             self.setParsed()
         else:
             if len(self.inputs_shape[0]) != 2 or len(self.inputs_shape[1]) != 2:
-                self.model.unsupport.append(self.operator_code)
-                self.model.errorMsg.append('[' + self.node.name + ']: Operator [ MatMul ] only support input dimentions == 2')
+                self.unSupported('only support input dimentions == 2')
                 return
 
             self.layer_type = 'InnerProduct'
