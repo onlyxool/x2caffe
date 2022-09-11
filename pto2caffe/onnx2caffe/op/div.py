@@ -14,13 +14,7 @@ class Div(Operator):
         self.layer_type = 'Scale'
         super().__parse__()
 
-        # Attributes
-        if self.inputs_buf[0] is not None or self.inputs_buf[1] is not None:
-            if self.inputs_buf[0] is not None:
-                self.inputs.reverse()
-                self.inputs_shape.reverse()
-                self.inputs_buf.reverse()
-
+        if self.inputs_buf[0] is None and self.inputs_buf[1] is not None:
             # Weight
             self.weight = 1/self.inputs_buf[1]
 
@@ -43,8 +37,7 @@ class Div(Operator):
 
             self.setParsed()
         else:
-            self.model.errorMsg.append('[' + self.node.name + ']: Operator Div does not Support. Operand[1] is None.')
-            self.model.unsupport.append(self.operator_code)
+            self.unSupported('Can\'t Support Operand[1] == {}.'.format(self.inputs_buf[1]))
 
 
     def convert(self):
