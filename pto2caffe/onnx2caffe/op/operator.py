@@ -128,7 +128,9 @@ class Operator(Base):
         self.model.constant[name] = constant
 
 
-    def unSupported(self):
+    def unSupported(self, errorMsg=None):
+        if errorMsg is not None:
+            self.model.errorMsg.append('Error: Op ' + self.node.name + ' (' + self.operator_code + '): ' + errorMsg)
         self.model.unsupport.append(self.operator_code)
 
 
