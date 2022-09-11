@@ -27,6 +27,7 @@ from onnx2caffe.op.shape import Shape
 from onnx2caffe.op.slice import Slice
 from onnx2caffe.op.split import Split
 from onnx2caffe.op.concat import Concat
+from onnx2caffe.op.expand import Expand
 from onnx2caffe.op.gather import Gather
 from onnx2caffe.op.resize import Resize
 from onnx2caffe.op.matmul import MatMul
@@ -42,8 +43,9 @@ from onnx2caffe.op.upsample import Upsample
 from onnx2caffe.op.constant import Constant
 from onnx2caffe.op.softplus import Softplus
 from onnx2caffe.op.transpose import Permute
-from onnx2caffe.op.reducemean import Reduce
 from onnx2caffe.op.batchnorm import BatchNorm
+from onnx2caffe.op.reducemax import ReduceMax
+from onnx2caffe.op.reducemean import ReduceMean
 from onnx2caffe.op.convtranspose import Deconvolution
 from onnx2caffe.op.globalaveragepool import GlobalAveragePool
 from onnx2caffe.op.instancenormalization import InstanceNormalization
@@ -57,6 +59,7 @@ from caffe_transform import make_caffe_input_layer
 numpy_dtype = [None, np.float32, np.uint8, np.int8, np.uint16, np.int16, np.int32, np.int64, 'string', np.bool, np.float16, np.double, np.uint32, np.uint64, np.complex64, np.complex128, 'bfloat16']
 
 logger = logging.getLogger('ONNX2Caffe')
+
 
 OpMap = {
     'Add': Add,
@@ -81,6 +84,7 @@ OpMap = {
     'Slice': Slice,
     'Split': Split,
     'Concat': Concat,
+    'Expand': Expand,
     'Gather': Gather,
     'MatMul': MatMul,
     'Resize': Resize,
@@ -98,8 +102,9 @@ OpMap = {
     'Softplus': Softplus,
     'Transpose': Permute,
     'Unsqueeze': Reshape,
-    'ReduceMean': Reduce,
+    'ReduceMax': ReduceMax,
     'AveragePool': Pooling,
+    'ReduceMean': ReduceMean,
     'ConvTranspose': Deconvolution,
     'BatchNormalization': BatchNorm,
     'GlobalAveragePool': GlobalAveragePool,
