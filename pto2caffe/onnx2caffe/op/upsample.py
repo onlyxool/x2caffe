@@ -27,8 +27,8 @@ class Upsample(Operator):
             scale_factor_height = int(self.attrs['scales'][2])
             scale_factor_width = int(self.attrs['scales'][3])
         elif self.model.opset[0] >= 9:
-            scale_factor_height = int(self.inputs_buf[1][2])
-            scale_factor_width = int(self.inputs_buf[1][3])
+            scale_factor_height = round(self.inputs_buf[1][2])
+            scale_factor_width = round(self.inputs_buf[1][3])
 
         if scale_factor_height == scale_factor_width:
             scale_factor = scale_factor_width
@@ -59,7 +59,8 @@ class Upsample(Operator):
 
             # Padding
             legacy_pad = self.model.pad.get(self.node.input[0], {'left': 0, 'right': 0, 'top': 0, 'bottom': 0})
-            padding = computePad(self.type, self.attrs, self.inputs_shape[0], self.outputs_shape[0], [scale_factor, scale_factor], [scale_factor, scale_factor], legacy_pad)
+            pad_dict = dict(auto_pad='SAME_LOWER'.encode())
+            padding = computePad(self.type, pad_dict, self.inputs_shape[0], self.outputs_shape[0], [scale_factor, scale_factor], [scale_factor, scale_factor], legacy_pad)
             self.convolution_param.update(padding)
 
             self.attrs = self.convolution_param
