@@ -15,10 +15,10 @@ def check_dynamic_input(onnx_model, input_shape):
         if len(inputs_id) > 1:
             for index, input_id in enumerate(inputs_id):
                 for i, dim in enumerate(onnx_model.graph.input[input_id].type.tensor_type.shape.dim):
-                    input.type.tensor_type.shape.dim[i].dim_value = input_shape[index][i]
+                    dim.dim_value = input_shape[index][i]
         else:
              for i, dim in enumerate(onnx_model.graph.input[0].type.tensor_type.shape.dim):
-                onnx_model.graph.input[0].type.tensor_type.shape.dim[i].dim_value = input_shape[i]
+                dim.dim_value = input_shape[i]
     else:
         input_str = str()
         input_dict = dict()
