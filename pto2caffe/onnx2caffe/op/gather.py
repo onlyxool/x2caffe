@@ -1,4 +1,3 @@
-import torch
 from onnx2caffe.op.operator import Operator
 
 
@@ -11,15 +10,28 @@ class Gather(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Gather'
         super().__parse__()
 
         if self.inputs_buf[0] is not None and self.inputs_buf[0].size > 0:
-            output = torch.gather(torch.tensor(self.inputs_buf[0]), dim=self.attrs['axis'], index=torch.tensor(self.inputs_buf[1]), sparse_grad=False)
-            self.saveConstant(self.node.output[0], output.numpy())
+            import numpy as np
+            self.saveConstant(self.node.output[0], np.take(self.inputs_buf[0], indices=self.inputs_buf[1], axis=self.attrs['axis']))
+        elif self.inputs_buf[1] is not None and self.inputs_buf[1].size == 1:
+            self.layer_type = 'Slice'
+
+            self.slice_param = dict()
+            self.slice_param['axis'] = self.attrs['axis']
+            self.slice_param['slice_point'] = self.inputs_shape[0][self.attrs['axis']]
+            self.attrs = self.slice_param
+            self.setParsed()
         else:
+            print(self.node.name)
             self.unSupported()
 
 
     def convert(self):
-        pass
+        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, slice_param=self.slice_param)
+
+        self.setConverted()
+
+        return [layer]
+

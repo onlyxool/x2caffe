@@ -24,6 +24,7 @@ class Add(Operator):
             self.eltwise_param = dict()
             self.eltwise_param['operation'] = 1 # Caffe Eltwise SUM
             self.attrs = self.eltwise_param
+            self.setParsed()
         else:
             self.layer_type = 'Bias'
 
@@ -66,7 +67,7 @@ class Add(Operator):
 
             self.attrs = self.bias_param
 
-        self.setParsed()
+            self.setParsed()
 
 
     def convert(self):
