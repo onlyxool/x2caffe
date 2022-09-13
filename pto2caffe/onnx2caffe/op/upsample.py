@@ -35,7 +35,7 @@ class Upsample(Operator):
         else:
             raise NotImplementedError
 
-        if scale_factor % 1 == 0:
+        if scale_factor % 1 == 0 and self.outputs_shape[0] is not None:
             # Deconvolution Layer
             self.layer_type = 'Deconvolution'
 
