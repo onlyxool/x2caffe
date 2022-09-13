@@ -14,7 +14,6 @@ class Reshape(Operator):
         super().__parse__()
 
         if self.inputs_buf[0] is not None:
-            self.layer_type = 'Constant'
             self.saveConstant(self.outputs[0], self.inputs_buf[0].reshape(self.outputs_shape[0]))
         elif self.inputs_shape[0] == self.outputs_shape[0]:
             self.byPassOperator()

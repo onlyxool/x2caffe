@@ -16,53 +16,78 @@ class Sub(Operator):
     def parse(self):
         super().__parse__()
 
-        if self.inputs_buf[0] is None and self.inputs_buf[1] is None:
-            # Eltwise
+        if self.inputs_buf[0] is not None and self.inputs_buf[1] is not None:
+            self.saveConstant(self.outputs[0], self.inputs_buf[0] - self.inputs_buf[1])
+        elif self.inputs_buf[0] is None and self.inputs_buf[1] is None and self.inputs_shape[0] == self.inputs_shape[1]:
             self.layer_type = 'Eltwise'
-            # Attributes
             self.eltwise_param = dict()
             self.eltwise_param['operation'] = 3 # Caffe Eltwise SUB
             self.attrs = self.eltwise_param
-        else:
-            # Scale
-            self.layer_type = 'Scale'
-            if self.inputs_buf[0] is not None:
-                bias_index = 0
-                input_index = 1
-            else:
-                bias_index = 1
-                input_index = 0
+            self.setParsed()
+        elif self.inputs_buf[0] is None and self.inputs_buf[1] is not None:
+            self.layer_type = 'Bias'
 
-            # Weight
-            self.weight = np.ones([1], dtype=int, order='C')
+            self.bias = -self.inputs_buf[1]
 
-            # Bias
-            self.bias = -self.inputs_buf[bias_index]
+            self.bias_param = dict()
+            self.bias_param['axis'] = self.inputs_shape[0].index(self.inputs_shape[1][0]) if len(self.inputs_shape[1]) > 0 else 0
+            self.bias_param['num_axes'] = len(self.inputs_shape[1])
 
-            # Attributes
+            self.attrs = self.bias_param
+            self.setParsed()
+        elif self.inputs_buf[0] is None and self.inputs_buf[1] is None:
+            self.layer_type = 'Scale+Bias'
+
+            self.inter_blob = 'bias_split'+str(self.index)
+
             self.scale_param = dict()
-            self.scale_param['bias_term'] = True
+            self.weight = np.ones(self.inputs_shape[1]).astype(np.float32) * -1
 
-            # Axis
-            if self.bias.shape != () and self.bias.shape != []:
-                self.scale_param['axis'] = self.inputs_shape[input_index].index(self.bias.shape[0])
-                self.scale_param['num_axes'] = len(self.bias.shape)
-            else:
-                self.scale_param['num_axes'] = 0
+            self.scale_param['axis'] = 0
+            self.scale_param['num_axes'] = len(self.inputs_shape[1])
+            self.scale_param['bias_term'] = False
 
-            self.attrs = self.scale_param
+            self.bias_param = dict()
+            self.bias_param['axis'] = self.inputs_shape[0].index(self.inputs_shape[1][0]) if len(self.inputs_shape[1]) > 0 else 0
+            self.bias_param['num_axes'] = len(self.inputs_shape[1])
 
-        self.setParsed()
+            self.attrs = self.bias_param
+            self.setParsed()
+        elif self.inputs_buf[0] is not None and self.inputs_buf[1] is None:
+            self.layer_type = 'Bias+Scale'
+
+            self.inputs.reverse()
+            self.inputs_shape.reverse()
+            self.inputs_buf.reverse()
+
+            self.weight = np.ones(self.outputs_shape[0]).astype(np.float32) * -1
+            self.bias = self.inputs_buf[1] * -1
+
+            self.bias_param = dict()
+            self.bias_param['axis'] = self.inputs_shape[0].index(self.inputs_shape[1][0]) if len(self.inputs_shape[1]) > 0 else 0
+            self.bias_param['num_axes'] = len(self.inputs_shape[1])
+
+            self.scale_param['axis'] = 0
+            self.scale_param['num_axes'] = len(self.outputs_shape[0])
+            self.scale_param['bias_term'] = False
+
+            self.attrs = self.bias_param
+            self.setParsed()
 
 
     def convert(self):
+        layers = list()
         if self.type == 'Eltwise':
-            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param)
-        elif self.type == 'Scale':
-            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, scale_param=self.scale_param)
-        else:
-            raise NotImplementedError
+            layers.append(caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param))
+        elif self.type == 'Bias':
+            layers.append(caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.bias, bias_param=self.bias_param))
+        elif self.type == 'Scale+Bias':
+            layers.append(caffe_layer('Scale', 'Scale'+str(self.index), [self.inputs[1]], self.inputs_buf, [self.inter_blob], self.weight, scale_param=self.scale_param))
+            layers.append(caffe_layer('Bias', 'Bias'+str(self.index), [self.inputs[0], self.inter_blob], self.inputs_buf, self.outputs, self.bias, bias_param=self.bias_param))
+        elif self.type == 'Bias+Scale':
+            layers.append(caffe_layer('Bias', 'Scale'+str(self.index), [self.inputs[0], self.inter_blob], self.inputs_buf, self.outputs, self.bias, bias_param=self.bias_param))
+            layers.append(caffe_layer('Scale', 'Bias'+str(self.index), [self.inputs[1]], self.inputs_buf, [self.inter_blob], self.weight, scale_param=self.scale_param))
 
         self.setConverted()
 
-        return [layer]
+        return layers
