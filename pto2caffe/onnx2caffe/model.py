@@ -17,6 +17,7 @@ from onnx2caffe.op.sub import Sub
 from onnx2caffe.op.div import Div
 from onnx2caffe.op.cast import Cast
 from onnx2caffe.op.tanh import TanH
+from onnx2caffe.op.tile import Tile
 from onnx2caffe.op.power import Pow
 from onnx2caffe.op.sqrt import Sqrt
 from onnx2caffe.op.relu import ReLU
@@ -60,7 +61,6 @@ numpy_dtype = [None, np.float32, np.uint8, np.int8, np.uint16, np.int16, np.int3
 
 logger = logging.getLogger('ONNX2Caffe')
 
-
 OpMap = {
     'Add': Add,
     'Div': Div,
@@ -77,6 +77,7 @@ OpMap = {
     'Relu': ReLU,
     'Sqrt': Sqrt,
     'Tanh': TanH,
+    'Tile': Tile,
     'Clip': ReLUX,
     'Floor': Floor,
     'PRelu': PReLU,
