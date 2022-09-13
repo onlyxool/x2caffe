@@ -17,7 +17,9 @@ class Add(Operator):
     def parse(self):
         super().__parse__()
 
-        if self.inputs_buf[0] is None and self.inputs_buf[1] is None and self.inputs_shape[0] == self.inputs_shape[1]:
+        if self.inputs_buf[0] is not None and self.inputs_buf[1] is not None:
+            self.saveConstant(self.outputs[0], self.inputs_buf[0] + self.inputs_buf[1])
+        elif self.inputs_buf[0] is None and self.inputs_buf[1] is None and self.inputs_shape[0] == self.inputs_shape[1]:
             self.layer_type = 'Eltwise'
             self.eltwise_param = dict()
             self.eltwise_param['operation'] = 1 # Caffe Eltwise SUM

@@ -11,16 +11,18 @@ class Permute(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Permute'
         super().__parse__()
 
-        # Attributes 
-        self.permute_param = dict()
-        self.permute_param['order'] = list(self.attrs['perm'])
+        if self.inputs_buf[0] is not None:
+            self.saveConstant(self.outputs[0], self.inputs_buf[0].transpose(self.attrs['perm']))
+        else:
+            self.layer_type = 'Permute'
+            self.permute_param = dict()
+            self.permute_param['order'] = list(self.attrs['perm'])
 
-        self.attrs = self.permute_param
+            self.attrs = self.permute_param
 
-        self.setParsed()
+            self.setParsed()
 
 
     def convert(self):

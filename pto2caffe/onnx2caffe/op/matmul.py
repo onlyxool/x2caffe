@@ -13,7 +13,10 @@ class MatMul(Operator):
     def parse(self):
         super().__parse__()
 
-        if self.inputs_buf[0] is None and self.inputs_buf[1] is None:
+        if self.inputs_buf[0] is not None and self.inputs_buf[0] is not None:
+            import numpy as np
+            self.saveConstant(self.outputs[0], np.matmul(self.inputs_buf[0], self.inputs_buf[1]))
+        elif self.inputs_buf[0] is None and self.inputs_buf[1] is None:
             self.unSupported()
             return
 

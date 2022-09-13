@@ -14,12 +14,19 @@ class Softmax(Operator):
         self.layer_type = 'Softmax'
         super().__parse__()
 
-        # Attributes
-        self.softmax_param = dict()
-        self.softmax_param['axis'] = self.attrs.get('axis', 1)
-        self.attrs = self.softmax_param
+        if self.inputs_buf[0] is not None:
+            import numpy as np
+            max = np.max(self.inputs_buf[0], axis=1, keepdims=True) #returns max of each row and keeps same dims
+            e_x = np.exp(self.inputs_buf[0] - max) #subtracts each row with its max value
+            sum = np.sum(e_x, axis=1, keepdims=True) #returns sum of each row and keeps same dims
+            f_x = e_x / sum
+            self.saveConstant(self.outputs[0], f_x)
+        else:
+            self.softmax_param = dict()
+            self.softmax_param['axis'] = self.attrs.get('axis', 1)
+            self.attrs = self.softmax_param
 
-        self.setParsed()
+            self.setParsed()
 
 
     def convert(self):
