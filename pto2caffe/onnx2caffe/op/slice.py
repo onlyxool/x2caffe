@@ -48,8 +48,8 @@ class Slice(Operator):
             return
 
         if len(starts) > 1 or len(ends) > 1 or len(axes) > 1 or num_slices > 1:
-            self.model.unsupport.append(self.operator_code)
-            self.model.errorMsg.append('[' + self.node.name + ']: Operator Slice Do not support starts > 1. ' + self.node.name + '\'s starts is ' + str(starts))
+            self.unSupported('Can\'t Support start == ' + str(starts))
+            return
 
         for i, end in enumerate(ends):
             if end == 9223372036854775807: # int max
@@ -72,11 +72,10 @@ class Slice(Operator):
                 self.slice_param['slice_point'] = [starts[0], ends[0]]
                 self.outputs.insert(0, self.name + 'useless0')
                 self.outputs.append(self.name + 'useless1')
+            self.attrs = self.slice_param
+            self.setParsed()
         else:
-            self.model.unsupport.append(self.operator_code)
-            self.model.errorMsg.append('[' + self.node.name + ']: Operator Slice Do not support step > 1. ' + self.node.name + '\'s steps is ' + str(steps))
-
-        self.setParsed()
+            self.unSupported('Can\'t Support Step == ' + str(steps))
 
 
     def convert(self):
