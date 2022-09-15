@@ -5,6 +5,7 @@ class Constant(Operator):
 
     def __init__(self, model, node, index):
         super().__init__(model, node, index)
+        assert(self.operator_code in ('Constant', 'ConstantOfShape'))
         self.setInited()
 
 
@@ -12,7 +13,13 @@ class Constant(Operator):
         self.type = 'Constant'
         super().__parse__()
 
-        self.saveConstant(self.node.output[0], self.attrs['value'])
+        if self.operator_code == 'Constant':
+            self.saveConstant(self.outputs[0], self.attrs['value'])
+        elif self.operator_code == 'ConstantOfShape' and self.inputs_buf[0] is not None:
+            import numpy as np
+            self.saveConstant(self.outputs[0], np.ones(self.inputs_buf[0], dtype=self.attrs['value'].dtype) * self.attrs['value'])
+        else:
+            self.unSupported()
 
 
     def convert(self):
