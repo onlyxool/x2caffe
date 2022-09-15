@@ -20,7 +20,9 @@ class Expand(Operator):
 
         axes = np.nonzero(np.array(input_shape) - np.array(output_shape))[0].tolist()
 
-        if input_shape == output_shape:
+        if self.inputs_buf[0] is not None:
+            self.saveConstant(self.outputs[0], self.inputs_buf[0] * np.ones(output_shape))
+        elif input_shape == output_shape:
             self.byPassOperator()
         elif len(axes) == 1:
             self.type = 'Tile'
@@ -47,8 +49,27 @@ class Expand(Operator):
             self.attrs = self.tile_param0
 
             self.setParsed()
+        elif len(axes) == 3:
+            self.type = 'Tile+Tile+Tile'
+            self.inter_blob0 = 'tile_tile_split' + str(self.index) + '_0'
+            self.inter_blob1 = 'tile_tile_split' + str(self.index) + '_1'
+
+            self.tile_param0 = dict()
+            self.tile_param0['axis'] = axes[0]
+            self.tile_param0['tiles'] = int((np.array(output_shape)/np.array(input_shape))[axes[0]])
+
+            self.tile_param1 = dict()
+            self.tile_param1['axis'] = axes[1]
+            self.tile_param1['tiles'] = int((np.array(output_shape)/np.array(input_shape))[axes[1]])
+
+            self.tile_param2 = dict()
+            self.tile_param2['axis'] = axes[2]
+            self.tile_param2['tiles'] = int((np.array(output_shape)/np.array(input_shape))[axes[2]])
+
+            self.attrs = self.tile_param0
+
+            self.setParsed()
         else:
-            print(self.attrs, axes, self.inputs_shape, self.outputs_shape)
             raise NotImplementedError
 
 
@@ -59,6 +80,10 @@ class Expand(Operator):
         elif self.type == 'Tile+Tile':
             layers.append(caffe_layer(self.layer_type[0], self.name[0], self.inputs, self.inputs_buf, [self.inter_blob], tile_param=self.tile_param0))
             layers.append(caffe_layer(self.layer_type[1], self.name[1], [self.inter_blob], self.inputs_buf, self.outputs, tile_param=self.tile_param1))
+        elif self.type == 'Tile+Tile+Tile':
+            layers.append(caffe_layer(self.layer_type[0], self.name[0], self.inputs, self.inputs_buf, [self.inter_blob0], tile_param=self.tile_param0))
+            layers.append(caffe_layer(self.layer_type[1], self.name[1], [self.inter_blob0], self.inputs_buf, [self.inter_blob0], tile_param=self.tile_param1))
+            layers.append(caffe_layer(self.layer_type[2], self.name[2], [self.inter_blob1], self.inputs_buf, self.outputs, tile_param=self.tile_param2))
 
         self.setConverted()
 

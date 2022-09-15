@@ -24,7 +24,6 @@ class Gather(Operator):
             self.attrs = self.slice_param
             self.setParsed()
         else:
-            print(self.node.name)
             self.unSupported()
 
 
