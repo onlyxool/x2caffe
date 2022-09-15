@@ -24,14 +24,7 @@ class Div(Operator):
             # Scale Parameter
             self.scale_param = dict()
             self.scale_param['bias_term'] = False
-
-            for i in range(len(self.inputs_shape[0])):
-                if self.inputs_shape[1] == [] or self.inputs_shape[1] == ():
-                    self.scale_param['axis'] = 0
-                    break
-                if self.inputs_shape[0][i] == self.inputs_shape[1][0]:
-                    self.scale_param['axis'] = i
-                    break
+            self.scale_param['axis'] = self.inputs_shape[0].index(self.inputs_shape[1][0]) if len(self.inputs_shape[1]) > 0 else 0
 
             self.attrs = self.scale_param
 
