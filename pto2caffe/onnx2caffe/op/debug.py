@@ -10,7 +10,7 @@ class Debug(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Debug'
+        self.type = 'Debug'
         super().__parse__()
         print('====================')
         print('Op:', self.name, self.operator_code)
@@ -23,7 +23,7 @@ class Debug(Operator):
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, debug_param=self.debug_param)
+        layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, debug_param=self.debug_param)
 
         self.setConverted()
 

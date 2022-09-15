@@ -18,7 +18,7 @@ class Reshape(Operator):
         elif self.inputs_shape[0] == self.outputs_shape[0]:
             self.byPassOperator()
         else:
-            self.layer_type = 'Reshape'
+            self.type = 'Reshape'
 
             if 'shape' in self.attrs:
                 self.reshape_param = dict(shape=dict(dim=self.attrs['shape']))
@@ -35,7 +35,7 @@ class Reshape(Operator):
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, reshape_param=self.reshape_param)
+        layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, reshape_param=self.reshape_param)
 
         self.setConverted()
 

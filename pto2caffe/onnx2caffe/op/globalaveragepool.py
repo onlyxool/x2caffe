@@ -19,7 +19,7 @@ class GlobalAveragePool(Operator):
         kernel_size = self.inputs_shape[0][-2:]
 
         if kernel_size[0] > 15 or kernel_size[1] > 15:
-            self.layer_type = 'Reduction'
+            self.type = 'Reduction+Reshape+Scale'
             self.reduction_param = dict()
             self.reduction_param['operation'] = 1
             self.reduction_param['axis'] = 2
@@ -35,7 +35,7 @@ class GlobalAveragePool(Operator):
             self.weight = np.ones(shape=self.outputs_shape[0]) / (self.inputs_shape[0][-2] * self.inputs_shape[0][-1])
 
         else:
-            self.layer_type = 'Pooling'
+            self.type = 'Pooling'
 
             self.pooling_param = dict()
             self.pooling_param['pool'] = 1
@@ -46,7 +46,7 @@ class GlobalAveragePool(Operator):
 
             # Padding
             legacy_pad = self.model.pad.get(self.node.input[0], {'left': 0, 'right': 0, 'top': 0, 'bottom': 0})
-            padding = computePad(self.type, self.attrs, self.inputs_shape[0], self.outputs_shape[0], kernel_size, [1, 1], legacy_pad)
+            padding = computePad(self.layer_type, self.attrs, self.inputs_shape[0], self.outputs_shape[0], kernel_size, [1, 1], legacy_pad)
             self.pooling_param.update(padding)
 
             self.attrs = self.pooling_param
@@ -57,11 +57,11 @@ class GlobalAveragePool(Operator):
     def convert(self):
         layers = list()
         if self.type == 'Pooling':
-            layers.append(caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, pooling_param=self.pooling_param))
-        elif self.type == 'Reduction':
-            layers.append(caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, [self.inter_blob0], reduction_param=self.reduction_param))
-            layers.append(caffe_layer('Reshape', 'reshape'+str(self.index), [self.inter_blob0], [None], [self.inter_blob1], reshape_param=self.reshape_param))
-            layers.append(caffe_layer('Scale', 'scale'+str(self.index), [self.inter_blob1], [None, self.weight], self.outputs, self.weight, scale_param=self.scale_param))
+            layers.append(caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, pooling_param=self.pooling_param))
+        elif self.type == 'Reduction+Reshape+Scale':
+            layers.append(caffe_layer(self.layer_type[0], self.name[0], self.inputs, self.inputs_buf, [self.inter_blob0], reduction_param=self.reduction_param))
+            layers.append(caffe_layer(self.layer_type[1], self.name[1], [self.inter_blob0], [None], [self.inter_blob1], reshape_param=self.reshape_param))
+            layers.append(caffe_layer(self.layer_type[2], self.name[2], [self.inter_blob1], [None, self.weight], self.outputs, self.weight, scale_param=self.scale_param))
 
         self.setConverted()
 

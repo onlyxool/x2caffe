@@ -10,7 +10,7 @@ class Concat(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Concat'
+        self.type = 'Concat'
         super().__parse__()
 
         for input_buf in self.inputs_buf:
@@ -33,7 +33,7 @@ class Concat(Operator):
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, concat_param=self.concat_param)
+        layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, concat_param=self.concat_param)
 
         self.setConverted()
 

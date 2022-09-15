@@ -12,7 +12,7 @@ class Pad(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Pad'
+        self.type = 'Pad'
         super().__parse__()
 
         if self.attrs.get('value', 0.0) != 0.0 or self.attrs.get('mode', b'constant').decode() != 'constant':

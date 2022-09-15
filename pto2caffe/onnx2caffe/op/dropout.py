@@ -11,7 +11,7 @@ class Dropout(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Dropout'
+        self.type = 'Dropout'
         super().__parse__()
 
         if len(self.outputs) == 2: # Remove output mask
@@ -27,7 +27,7 @@ class Dropout(Operator):
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, dropout_param=self.dropout_param)
+        layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, dropout_param=self.dropout_param)
 
         self.setConverted()
 

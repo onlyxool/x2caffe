@@ -11,7 +11,7 @@ class Mish(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Mish'
+        self.type = 'Mish'
         super().__parse__()
 
         self.mish_param = dict()
@@ -22,7 +22,7 @@ class Mish(Operator):
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, mish_param=self.mish_param)
+        layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, mish_param=self.mish_param)
 
         self.setConverted()
 

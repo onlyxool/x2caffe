@@ -13,7 +13,7 @@ class Deconvolution(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Deconvolution'
+        self.type = 'Deconvolution'
         super().__parse__()
 
         # Weight
@@ -35,7 +35,7 @@ class Deconvolution(Operator):
 
         # Padding
         legacy_pad = self.model.pad.get(self.node.input[0], {'left': 0, 'right': 0, 'top': 0, 'bottom': 0})
-        padding = computePad(self.type, self.attrs, self.inputs_shape[0], self.outputs_shape[0], self.attrs['kernel_shape'], self.attrs.get('strides', [1, 1]), legacy_pad)
+        padding = computePad(self.layer_type, self.attrs, self.inputs_shape[0], self.outputs_shape[0], self.attrs['kernel_shape'], self.attrs.get('strides', [1, 1]), legacy_pad)
         self.convolution_param.update(padding)
 
         self.attrs = self.convolution_param
@@ -44,7 +44,7 @@ class Deconvolution(Operator):
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, convolution_param=self.convolution_param)
+        layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, convolution_param=self.convolution_param)
 
         self.setConverted()
 

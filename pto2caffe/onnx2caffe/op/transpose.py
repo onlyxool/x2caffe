@@ -16,7 +16,7 @@ class Permute(Operator):
         if self.inputs_buf[0] is not None:
             self.saveConstant(self.outputs[0], self.inputs_buf[0].transpose(self.attrs['perm']))
         else:
-            self.layer_type = 'Permute'
+            self.type = 'Permute'
             self.permute_param = dict()
             self.permute_param['order'] = list(self.attrs['perm'])
 
@@ -26,7 +26,7 @@ class Permute(Operator):
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, permute_param=self.permute_param)
+        layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, permute_param=self.permute_param)
 
         self.setConverted()
 

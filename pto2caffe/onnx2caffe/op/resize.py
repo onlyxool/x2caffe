@@ -39,7 +39,7 @@ class Resize(Operator):
         if self.mode == 'nearest':
             if scale_factor % 1 == 0:
                 # Deconvolution Layer
-                self.layer_type = 'Deconvolution'
+                self.type = 'Deconvolution'
 
                 # Attributes
                 self.convolution_param = dict()
@@ -63,7 +63,7 @@ class Resize(Operator):
                 self.inputs_shape[1] = self.inputs_buf[1].shape
             else:
                 # Upsample Layer
-                self.layer_type = 'Upsample'
+                self.type = 'Upsample'
 
                 # Attributes
                 self.upsample_param = dict()
@@ -71,7 +71,7 @@ class Resize(Operator):
                 self.attrs = self.upsample_param
         elif self.mode == 'bilinear' or self.mode == 'linear':
             # Interp Layer
-            self.layer_type = 'Interp'
+            self.type = 'Interp'
 
             # Attributes
             self.interp_param = dict()
@@ -85,11 +85,11 @@ class Resize(Operator):
 
     def convert(self):
         if self.type == 'Deconvolution':
-            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, None, convolution_param=self.convolution_param)
+            layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, None, convolution_param=self.convolution_param)
         elif self.type == 'Upsample':
-            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, upsample_param=self.upsample_param)
+            layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, upsample_param=self.upsample_param)
         elif self.type == 'Interp':
-            layer = caffe_layer(self.type, self.name, self.inputs[:1], self.inputs_buf, self.outputs, interp_param=self.interp_param)
+            layer = caffe_layer(self.layer_type, self.name, self.inputs[:1], self.inputs_buf, self.outputs, interp_param=self.interp_param)
 
         self.setConverted()
 

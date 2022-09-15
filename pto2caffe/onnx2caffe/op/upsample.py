@@ -37,7 +37,7 @@ class Upsample(Operator):
 
         if scale_factor % 1 == 0 and self.outputs_shape[0] is not None:
             # Deconvolution Layer
-            self.layer_type = 'Deconvolution'
+            self.type = 'Deconvolution'
 
             # Attributes
             self.convolution_param = dict()
@@ -60,13 +60,13 @@ class Upsample(Operator):
             # Padding
             legacy_pad = self.model.pad.get(self.node.input[0], {'left': 0, 'right': 0, 'top': 0, 'bottom': 0})
             pad_dict = dict(auto_pad='SAME_LOWER'.encode())
-            padding = computePad(self.type, pad_dict, self.inputs_shape[0], self.outputs_shape[0], [scale_factor, scale_factor], [scale_factor, scale_factor], legacy_pad)
+            padding = computePad(self.layer_type, pad_dict, self.inputs_shape[0], self.outputs_shape[0], [scale_factor, scale_factor], [scale_factor, scale_factor], legacy_pad)
             self.convolution_param.update(padding)
 
             self.attrs = self.convolution_param
         else:
             # Upsample Layer
-            self.layer_type = 'Upsample'
+            self.type = 'Upsample'
 
             # Attributes
             self.upsample_param = dict()
@@ -78,11 +78,9 @@ class Upsample(Operator):
 
     def convert(self):
         if self.type == 'Deconvolution':
-            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, None, convolution_param=self.convolution_param)
+            layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, None, convolution_param=self.convolution_param)
         elif self.type == 'Upsample':
-            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, upsample_param=self.upsample_param)
-        else:
-            raise NotImplementedError
+            layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, upsample_param=self.upsample_param)
 
         self.setConverted()
 

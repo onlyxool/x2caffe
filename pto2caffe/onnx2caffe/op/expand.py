@@ -23,7 +23,7 @@ class Expand(Operator):
         if input_shape == output_shape:
             self.byPassOperator()
         elif len(axes) == 1:
-            self.layer_type = 'Tile'
+            self.type = 'Tile'
 
             self.tile_param = dict()
             self.tile_param['axis'] = axes[0]
@@ -33,7 +33,7 @@ class Expand(Operator):
 
             self.setParsed()
         elif len(axes) == 2:
-            self.layer_type = 'Tile+Tile'
+            self.type = 'Tile+Tile'
             self.inter_blob = 'tile_tile_split' + str(self.index)
 
             self.tile_param0 = dict()
@@ -55,10 +55,10 @@ class Expand(Operator):
     def convert(self):
         layers = list()
         if self.type == 'Tile':
-            layers.append(caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, tile_param=self.tile_param))
+            layers.append(caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, tile_param=self.tile_param))
         elif self.type == 'Tile+Tile':
-            layers.append(caffe_layer('Tile', self.name+'_0', self.inputs, self.inputs_buf, [self.inter_blob], tile_param=self.tile_param0))
-            layers.append(caffe_layer('Tile', self.name+'_1', [self.inter_blob], self.inputs_buf, self.outputs, tile_param=self.tile_param1))
+            layers.append(caffe_layer(self.layer_type[0], self.name[0], self.inputs, self.inputs_buf, [self.inter_blob], tile_param=self.tile_param0))
+            layers.append(caffe_layer(self.layer_type[1], self.name[1], [self.inter_blob], self.inputs_buf, self.outputs, tile_param=self.tile_param1))
 
         self.setConverted()
 

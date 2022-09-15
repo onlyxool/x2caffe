@@ -10,7 +10,7 @@ class Cast(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Cast'
+        self.type = 'Cast'
         super().__parse__()
 
         if self.inputs_buf[0] is not None:

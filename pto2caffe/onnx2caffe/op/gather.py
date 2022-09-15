@@ -16,7 +16,7 @@ class Gather(Operator):
             import numpy as np
             self.saveConstant(self.node.output[0], np.take(self.inputs_buf[0], indices=self.inputs_buf[1], axis=self.attrs['axis']))
         elif self.inputs_buf[1] is not None and self.inputs_buf[1].size == 1:
-            self.layer_type = 'Slice'
+            self.type = 'Slice'
 
             self.slice_param = dict()
             self.slice_param['axis'] = self.attrs['axis']
@@ -29,7 +29,7 @@ class Gather(Operator):
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, slice_param=self.slice_param)
+        layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, slice_param=self.slice_param)
 
         self.setConverted()
 

@@ -20,7 +20,7 @@ class Mul(Operator):
             self.saveConstant(self.node.output[0], self.inputs_buf[0] * self.inputs_buf[1])
 
         elif (self.inputs_buf[0] is not None or self.inputs_buf[1] is not None) or (self.inputs_shape[0] != self.inputs_shape[1]):
-            self.layer_type = 'Scale'
+            self.type = 'Scale'
 
             inputs_size0 = np.multiply.reduce(self.inputs_shape[0], axis=None)
             inputs_size1 = np.multiply.reduce(self.inputs_shape[1], axis=None)
@@ -47,7 +47,7 @@ class Mul(Operator):
             if self.inputs_buf[1] is not None:
                 self.inputs_buf[1] = self.inputs_buf[1].reshape(weight_shape)
             else:
-                self.layer_type = 'Reshape+Scale'
+                self.type = 'Reshape+Scale'
 
             self.scale_param = dict()
             self.scale_param['bias_term'] = False
@@ -66,7 +66,7 @@ class Mul(Operator):
             # Bias
             self.bias = None
         else:
-            self.layer_type = 'Eltwise'
+            self.type = 'Eltwise'
             self.eltwise_param = dict()
             self.eltwise_param['operation'] = 0 # Caffe Eltwise PROD
             self.attrs = self.eltwise_param
@@ -77,13 +77,13 @@ class Mul(Operator):
     def convert(self):
         layers = list()
         if self.type == 'Eltwise':
-            layers.append(caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param))
+            layers.append(caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param))
         elif self.type == 'Scale':
-            layers.append(caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, scale_param=self.scale_param))
+            layers.append(caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, scale_param=self.scale_param))
         elif self.type == 'Reshape+Scale':
             reshape_out = 'reshape'+str(self.index)
-            layers.append(caffe_layer('Reshape', 'Reshape'+str(self.index), [self.inputs[1]], [None], [reshape_out], reshape_param=dict(shape=dict(dim=self.inputs_shape[1]))))
-            layers.append(caffe_layer('Scale', 'Scale'+str(self.index), [self.inputs[0], reshape_out], self.inputs_buf, self.outputs, self.weight, self.bias, scale_param=self.scale_param))
+            layers.append(caffe_layer(self.layer_type[0], self.name[0], [self.inputs[1]], [None], [reshape_out], reshape_param=dict(shape=dict(dim=self.inputs_shape[1]))))
+            layers.append(caffe_layer(self.layer_type[1], self.name[1], [self.inputs[0], reshape_out], self.inputs_buf, self.outputs, self.weight, self.bias, scale_param=self.scale_param))
 
         self.setConverted()
 

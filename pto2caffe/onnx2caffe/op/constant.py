@@ -9,7 +9,7 @@ class Constant(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Constant'
+        self.type = 'Constant'
         super().__parse__()
 
         self.saveConstant(self.node.output[0], self.attrs['value'])

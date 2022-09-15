@@ -11,7 +11,7 @@ class ReLU(Operator):
 
 
     def parse(self):
-        self.layer_type = 'ReLU'
+        self.type = 'ReLU'
         super().__parse__()
 
         # Attributes
@@ -23,7 +23,7 @@ class ReLU(Operator):
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, relu_param=self.relu_param)
+        layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, relu_param=self.relu_param)
 
         self.setConverted()
 

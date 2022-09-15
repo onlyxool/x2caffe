@@ -11,7 +11,7 @@ class Exp(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Exp'
+        self.type = 'Exp'
         super().__parse__()
 
         # Attributes
@@ -27,7 +27,7 @@ class Exp(Operator):
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, exp_param=self.exp_param)
+        layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, exp_param=self.exp_param)
 
         self.setConverted()
 

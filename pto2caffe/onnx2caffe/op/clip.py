@@ -11,7 +11,7 @@ class ReLUX(Operator):
 
 
     def parse(self):
-        self.layer_type = 'ReLUX'
+        self.type = 'ReLUX'
         super().__parse__()
 
         # Attributes
@@ -26,7 +26,7 @@ class ReLUX(Operator):
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, relux_param=self.relux_param)
+        layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, relux_param=self.relux_param)
 
         self.setConverted()
 

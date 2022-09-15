@@ -20,7 +20,7 @@ class MatMul(Operator):
             self.unSupported()
             return
 
-            self.layer_type = 'MatMul'
+            self.type = 'MatMul'
 
             self.matmul_param = dict()
             self.matmul_param['transpose_a'] = False
@@ -35,7 +35,7 @@ class MatMul(Operator):
                 self.unSupported('only support input dimentions == 2')
                 return
 
-            self.layer_type = 'InnerProduct'
+            self.type = 'InnerProduct'
             # Weight
             self.weight = self.inputs_buf[1].transpose(1,0)
 
@@ -58,9 +58,9 @@ class MatMul(Operator):
 
     def convert(self):
         if self.type == 'InnerProduct':
-            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, inner_product_param=self.inner_product_param)
+            layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, inner_product_param=self.inner_product_param)
         elif self.type == 'MatMul':
-            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, matmul_param=self.matmul_param)
+            layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, matmul_param=self.matmul_param)
 
         self.setConverted()
 

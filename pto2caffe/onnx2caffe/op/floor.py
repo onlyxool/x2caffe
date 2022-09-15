@@ -10,7 +10,7 @@ class Floor(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Floor'
+        self.type = 'Floor'
         super().__parse__()
 
         if self.inputs_buf[0] is not None:

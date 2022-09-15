@@ -1,6 +1,8 @@
 from base import Base
 from onnx import numpy_helper
 
+from caffe_transform import caffe_layer
+
 
 class Operator(Base):
 
@@ -8,31 +10,43 @@ class Operator(Base):
         super().__init__(model, model.graph, index)
         self.node = node
         self.operator_code = node.op_type
-        self.layer_type = None
         self.index = index
-        self.inputs = []
-        self.inputs_shape = []
-        self.inputs_buf = []
-        self.outputs = []
-        self.outputs_shape = []
-        self.pre = []  # ops that before this op which to enable ONNX op
-        self.post = []  # ops that after this op which to enable ONNX op
         self.attrs = dict()
+
+        self.inputs = list()
+        self.inputs_buf = list()
+        self.inputs_shape = list()
+        self.outputs = list()
+        self.outputs_shape = list()
+
+        self.type = None
+        self.weight = None
+        self.bias = None
+        self.param = list()
+        self.layers = list()
 
 
     @property
-    def type(self):
-        return self.layer_type if self.layer_type is not None else self.operator_code
+    def layer_type(self):
+        if self.type is not None and self.type.find('+') >= 0:
+            return self.type.split('+')
+        elif self.type is not None:
+            return self.type
+        else:
+            return self.operator_code
 
 
     @property
     def name(self):
-        return self.type + str(self.index)
+        if self.type is not None and self.type.find('+') >= 0:
+            return [layer_type+str(self.index)+'_'+str(index) for index, layer_type in enumerate(self.type.split('+'))]
+        elif self.layer_type is not None:
+            return self.type + str(self.index)
 
 
     @property
     def shorty(self):
-        return '[%s](%s)' % (self.name, self.type)
+        return '[%s](%s)' % (str(self.name), str(self.type))
 
 
     def inputBuf_byName(self, name):
@@ -48,7 +62,7 @@ class Operator(Base):
 
 
     def str(self):
-        return '[' + self.name + ']  (' + self.type + ')'
+        return '[' + str(self.name) + ']  (' + str(self.type) + ')'
 
 
     @property
@@ -75,6 +89,9 @@ class Operator(Base):
                 self.inputs_shape.append(list(self.model.constant[input].shape))
             else:
                 self.inputs_shape.append(None)
+
+#        if len(self.inputs_buf) > 0 and self.inputs_buf[0] is not None:
+#            print('Constant Op Need Handle:'+str(self.operator_code))
 
 
     def __parseOutput__(self):
@@ -111,6 +128,15 @@ class Operator(Base):
         self.__parseInput__()
         self.__parseOutput__()
         self.__parseAttributes__()
+
+
+    def convert(self):
+        param = {self.layer_type.lower() + '_param': getattr(self, self.layer_type.lower() + '_param')}
+        self.layers.append(caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, **param))
+
+        self.setConverted()
+
+        return self.layers
 
 
     def byPassOperator(self):

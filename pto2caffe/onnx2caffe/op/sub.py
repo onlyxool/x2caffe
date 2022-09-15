@@ -19,13 +19,13 @@ class Sub(Operator):
         if self.inputs_buf[0] is not None and self.inputs_buf[1] is not None:
             self.saveConstant(self.outputs[0], self.inputs_buf[0] - self.inputs_buf[1])
         elif self.inputs_buf[0] is None and self.inputs_buf[1] is None and self.inputs_shape[0] == self.inputs_shape[1]:
-            self.layer_type = 'Eltwise'
+            self.type = 'Eltwise'
             self.eltwise_param = dict()
             self.eltwise_param['operation'] = 3 # Caffe Eltwise SUB
             self.attrs = self.eltwise_param
             self.setParsed()
         elif self.inputs_buf[0] is None and self.inputs_buf[1] is not None:
-            self.layer_type = 'Bias'
+            self.type = 'Bias'
 
             self.bias = -self.inputs_buf[1]
 
@@ -36,7 +36,7 @@ class Sub(Operator):
             self.attrs = self.bias_param
             self.setParsed()
         elif self.inputs_buf[0] is None and self.inputs_buf[1] is None:
-            self.layer_type = 'Scale+Bias'
+            self.type = 'Scale+Bias'
 
             self.inter_blob = 'bias_split'+str(self.index)
 
@@ -54,7 +54,7 @@ class Sub(Operator):
             self.attrs = self.bias_param
             self.setParsed()
         elif self.inputs_buf[0] is not None and self.inputs_buf[1] is None:
-            self.layer_type = 'Bias+Scale'
+            self.type = 'Bias+Scale'
 
             self.inputs.reverse()
             self.inputs_shape.reverse()
@@ -78,15 +78,15 @@ class Sub(Operator):
     def convert(self):
         layers = list()
         if self.type == 'Eltwise':
-            layers.append(caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param))
+            layers.append(caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param))
         elif self.type == 'Bias':
-            layers.append(caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.bias, bias_param=self.bias_param))
+            layers.append(caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, self.bias, bias_param=self.bias_param))
         elif self.type == 'Scale+Bias':
-            layers.append(caffe_layer('Scale', 'Scale'+str(self.index), [self.inputs[1]], self.inputs_buf, [self.inter_blob], self.weight, scale_param=self.scale_param))
-            layers.append(caffe_layer('Bias', 'Bias'+str(self.index), [self.inputs[0], self.inter_blob], self.inputs_buf, self.outputs, self.bias, bias_param=self.bias_param))
+            layers.append(caffe_layer(self.layer_type[0], self.name[0], [self.inputs[1]], self.inputs_buf, [self.inter_blob], self.weight, scale_param=self.scale_param))
+            layers.append(caffe_layer(self.layer_type[1], self.name[1], [self.inputs[0], self.inter_blob], self.inputs_buf, self.outputs, self.bias, bias_param=self.bias_param))
         elif self.type == 'Bias+Scale':
-            layers.append(caffe_layer('Bias', 'Scale'+str(self.index), [self.inputs[0], self.inter_blob], self.inputs_buf, self.outputs, self.bias, bias_param=self.bias_param))
-            layers.append(caffe_layer('Scale', 'Bias'+str(self.index), [self.inputs[1]], self.inputs_buf, [self.inter_blob], self.weight, scale_param=self.scale_param))
+            layers.append(caffe_layer(self.layer_type[0], self.name[0], [self.inputs[0], self.inter_blob], self.inputs_buf, self.outputs, self.bias, bias_param=self.bias_param))
+            layers.append(caffe_layer(self.layer_type[1], self.name[1], [self.inputs[1]], self.inputs_buf, [self.inter_blob], self.weight, scale_param=self.scale_param))
 
         self.setConverted()
 

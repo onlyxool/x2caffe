@@ -11,7 +11,7 @@ class Elu(Operator):
 
 
     def parse(self):
-        self.layer_type = 'ELU'
+        self.type = 'ELU'
         super().__parse__()
 
         # Attributes
@@ -23,7 +23,7 @@ class Elu(Operator):
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, elu_param=self.elu_param)
+        layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, elu_param=self.elu_param)
 
         self.setConverted()
 

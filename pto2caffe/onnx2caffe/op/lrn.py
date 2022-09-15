@@ -11,7 +11,7 @@ class LRN(Operator):
 
 
     def parse(self):
-        self.layer_type = 'LRN'
+        self.type = 'LRN'
         super().__parse__()
 
         # Attributes
@@ -26,7 +26,7 @@ class LRN(Operator):
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, lrn_param=self.lrn_param)
+        layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, lrn_param=self.lrn_param)
 
         self.setConverted()
 

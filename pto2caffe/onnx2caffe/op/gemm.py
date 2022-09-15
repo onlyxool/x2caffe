@@ -11,7 +11,7 @@ class InnerProduct(Operator):
 
 
     def parse(self):
-        self.layer_type = 'InnerProduct'
+        self.type = 'InnerProduct'
         super().__parse__()
 
         if self.inputs_shape[0] is None or self.inputs_shape[1] is None:
@@ -41,7 +41,8 @@ class InnerProduct(Operator):
 
         transA = self.attrs.get('transA', 0)
         if transA != 0:
-           self.pre_permute_param = dict(order=[1,0])
+            self.type = 'Permute+InnerProduct'
+            self.permute_param = dict(order=[1,0])
 
         transB = self.attrs.get('transB', 0)
         if transB == 0:
@@ -67,14 +68,12 @@ class InnerProduct(Operator):
 
 
     def convert(self):
-        layers = []
-        if hasattr(self, 'pre_permute_param'):
-            pre_layer = caffe_layer('Premute', 'Permute'+str(self.index)+'pre', [self.inputs[0]], [None], [self.inputs[0]+'pre'], permute_param=self.pre_permute_param)
-            layers.append(pre_layer)
-            layer = caffe_layer(self.type, self.name, [self.inputs[0]+'pre'], self.inputs_buf, self.outputs, self.weight, self.bias, inner_product_param=self.inner_product_param)
-        else:
-            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, inner_product_param=self.inner_product_param)
-            layers.append(layer)
+        layers = list()
+        if self.type == 'InnerProduct':
+            layers.append(caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, inner_product_param=self.inner_product_param))
+        elif self.type == 'Permute+InnerProduct':
+            layers.append(caffe_layer(self.layer_type[0], self.name[0], [self.inputs[0]], [None], [self.inputs[0]+'pre'], permute_param=self.permute_param))
+            layers.append(caffe_layer(self.layer_type[1], self.name[1], [self.inputs[0]+'pre'], self.inputs_buf, self.outputs, self.weight, self.bias, inner_product_param=self.inner_product_param))
 
         self.setConverted()
 

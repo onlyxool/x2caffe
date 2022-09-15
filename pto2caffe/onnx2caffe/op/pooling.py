@@ -13,7 +13,7 @@ class Pooling(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Pooling'
+        self.type = 'Pooling'
         super().__parse__()
 
         if 'dilations' in self.attrs and self.attrs['dilations'] != [1, 1]:
@@ -32,7 +32,7 @@ class Pooling(Operator):
 
         # Padding
         legacy_pad = self.model.pad.get(self.node.input[0], {'left': 0, 'right': 0, 'top': 0, 'bottom': 0})
-        padding = computePad(self.type, self.attrs, self.inputs_shape[0], self.outputs_shape[0], self.attrs['kernel_shape'], self.attrs.get('strides', [1, 1]), legacy_pad)
+        padding = computePad(self.layer_type, self.attrs, self.inputs_shape[0], self.outputs_shape[0], self.attrs['kernel_shape'], self.attrs.get('strides', [1, 1]), legacy_pad)
         self.pooling_param.update(padding)
 
         self.attrs = self.pooling_param
@@ -41,7 +41,7 @@ class Pooling(Operator):
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, pooling_param=self.pooling_param)
+        layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, pooling_param=self.pooling_param)
 
         self.setConverted()
 

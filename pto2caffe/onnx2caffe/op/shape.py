@@ -11,13 +11,13 @@ class Shape(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Shape'
+        self.type = 'Shape'
         super().__parse__()
 
         if self.inputs_buf[0] is not None:
-            self.saveConstant(self.output[0], np.array(self.inputs_buf[0].shape))
+            self.saveConstant(self.outputs[0], np.array(self.inputs_buf[0].shape))
         elif len(self.inputs_shape[0]) > 0:
-            self.saveConstant(self.output[0], np.array(self.model.shape[self.inputs[0]]))
+            self.saveConstant(self.outputs[0], np.array(self.model.shape[self.inputs[0]]))
         else:
             self.unSupported()
 
