@@ -11,20 +11,22 @@ class Div(Operator):
 
 
     def parse(self):
-        self.type = 'Scale'
         super().__parse__()
 
-        if self.inputs_buf[0] is None and self.inputs_buf[1] is not None:
-            # Weight
-            self.weight = 1/self.inputs_buf[1]
-
-            # Bias
-            self.bias = None
+        if self.inputs_buf[0] is not None and self.inputs_buf[1] is not None:
+            self.saveConstant(self.node.output[0], self.inputs_buf[0] / self.inputs_buf[1])
+        elif self.inputs_buf[0] is None and self.inputs_buf[1] is not None:
+            self.type = 'Scale'
 
             # Scale Parameter
             self.scale_param = dict()
-            self.scale_param['bias_term'] = False
             self.scale_param['axis'] = self.inputs_shape[0].index(self.inputs_shape[1][0]) if len(self.inputs_shape[1]) > 0 else 0
+            self.scale_param['num_axes'] = len(self.inputs_shape[1])
+            self.scale_param['bias_term'] = False
+
+            # Weight & Bias
+            self.weight = 1/self.inputs_buf[1]
+            self.bias = None
 
             self.attrs = self.scale_param
 
