@@ -23,7 +23,7 @@ class Sum(Operator):
             axis = self.inputs_buf[1]
 
             if axis.size == 1 and int(axis) == len(self.inputs_shape) - 1:
-                self.layer_type = 'Reduction'
+                self.type = 'Reduction'
                 self.reduction_param = dict()
                 self.reduction_param['operation'] = 1
                 self.reduction_param['axis'] = int(axis)
@@ -36,7 +36,7 @@ class Sum(Operator):
 
 
     def convert(self):
-        layers.append(caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, reduction_param=self.reduction_param))
+        layers.append(caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, reduction_param=self.reduction_param))
 
         self.setConverted()
 

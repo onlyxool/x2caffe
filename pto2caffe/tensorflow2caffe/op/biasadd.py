@@ -13,7 +13,7 @@ class BiasAdd(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Bias'
+        self.type = 'Bias'
         super().__parse__()
 
         self.bias = self.inputs_buf[1]
@@ -33,7 +33,7 @@ class BiasAdd(Operator):
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.bias, bias_param=self.bias_param)
+        layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, self.bias, bias_param=self.bias_param)
 
         self.setConverted()
 

@@ -10,7 +10,7 @@ class Merge(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Merge'
+        self.type = 'Merge'
         super().__parse__()
 
         if self.inputs_buf[0] is None and self.inputs_buf[1] is None:

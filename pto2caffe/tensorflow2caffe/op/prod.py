@@ -12,7 +12,7 @@ class Prod(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Prod'
+        self.type = 'Prod'
         super().__parse__()
 
         if self.inputs_buf[0] is not None:

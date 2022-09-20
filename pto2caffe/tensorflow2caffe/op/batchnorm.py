@@ -11,7 +11,7 @@ class BatchNorm(Operator):
 
 
     def parse(self):
-        self.layer_type = 'BatchNorm'
+        self.type = 'BatchNorm+Scale'
         super().__parse__()
 
         # Weight Bias Mean Variance
@@ -44,9 +44,9 @@ class BatchNorm(Operator):
 
 
     def convert(self):
-        layer_batchnorm = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs[0:1], self.mean, self.var, batch_norm_param=self.batch_norm_param)
-        layer_scale = caffe_layer('Scale', 'Scale'+str(self.index), self.outputs[0:1], [None, self.weight, self.bias], self.outputs[0:1], self.weight, self.bias, scale_param=self.scale_param)
+        self.layers.append(caffe_layer(self.layer_type[0], self.name[0], self.inputs, self.inputs_buf, self.outputs[0:1], self.mean, self.var, batch_norm_param=self.batch_norm_param))
+        self.layers.append(caffe_layer(self.layer_type[1], self.name[1], self.outputs[0:1], [None, self.weight, self.bias], self.outputs[0:1], self.weight, self.bias, scale_param=self.scale_param))
 
         self.setConverted()
 
-        return [layer_batchnorm, layer_scale]
+        return self.layers

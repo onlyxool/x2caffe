@@ -11,7 +11,7 @@ class Tile(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Tile'
+        self.type = 'Tile'
         super().__parse__()
 
         if self.inputs_buf[0] is not None and self.inputs_buf[1] is not None:
@@ -33,7 +33,7 @@ class Tile(Operator):
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, tile_param=self.tile_param)
+        layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, tile_param=self.tile_param)
 
         self.setConverted()
 

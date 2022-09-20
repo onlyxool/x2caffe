@@ -13,7 +13,7 @@ class ExpandDims(Operator):
 
 
     def parse(self):
-        self.layer_type = 'ExpandDims'
+        self.type = 'ExpandDims'
         super().__parse__()
 
         if self.inputs_buf[0] is not None:
@@ -36,7 +36,7 @@ class ExpandDims(Operator):
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, reshape_param=self.reshape_param)
+        layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, reshape_param=self.reshape_param)
 
         self.setConverted()
 

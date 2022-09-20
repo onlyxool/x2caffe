@@ -12,7 +12,6 @@ class ByPassOperator(Operator):
 
 
     def parse(self):
-        self.layer_type = 'ByPassOperator'
         super().__parse__()
 
         if self.inputs_buf[0] is not None:

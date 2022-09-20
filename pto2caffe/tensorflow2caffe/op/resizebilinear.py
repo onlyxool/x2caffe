@@ -13,7 +13,7 @@ class ResizeBilinear(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Interp'
+        self.type = 'Interp'
         super().__parse__()
 
         self.interp_param = dict()
@@ -39,7 +39,7 @@ class ResizeBilinear(Operator):
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, interp_param=self.interp_param)
+        layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, interp_param=self.interp_param)
 
         self.setConverted()
 

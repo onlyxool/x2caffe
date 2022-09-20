@@ -20,7 +20,7 @@ class RealDiv(Operator):
         if self.inputs_buf[0] is not None and self.inputs_buf[1] is not None:
             self.saveConstant(self.outputs[0], self.inputs_buf[0] / self.inputs_buf[1])
         elif self.inputs_buf[0] is None and self.inputs_buf[1] is not None:
-            self.layer_type = 'Scale'
+            self.type = 'Scale'
 
             # Scale Parameter
             self.scale_param = dict()
@@ -47,7 +47,7 @@ class RealDiv(Operator):
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, scale_param=self.scale_param)
+        layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, scale_param=self.scale_param)
 
         self.setConverted()
 

@@ -22,12 +22,12 @@ class Unpack(Operator):
                 self.saveConstant(self.outputs[index], np.squeeze(outputs_buf[index], axis=self.attrs['axis']))
         else:
             if self.attrs['num'] == 1:
-                self.layer_type = 'Reshape'
+                self.type = 'Reshape'
                 self.reshape_param = dict(shape=dict(dim=self.outputs_shape[0]))
                 self.attrs = self.reshape_param
                 self.setParsed()
             else:
-                self.layer_type = 'Slice'
+                self.type = 'Slice'
 
                 # Attribute axis
                 self.slice_param = dict()
@@ -56,11 +56,11 @@ class Unpack(Operator):
     def convert(self):
         layers = list()
         if self.type == 'Slice':
-            layers.append(caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.reshapes, slice_param=self.slice_param))
+            layers.append(caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.reshapes, slice_param=self.slice_param))
             for index, reshape_name in enumerate(self.reshapes):
                 layers.append(caffe_layer('Reshape', reshape_name, [reshape_name], [None], [self.outputs[index]], reshape_param=self.reshape_param))
         elif self.type == 'Reshape':
-            layers.append(caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, reshape_param=self.reshape_param))
+            layers.append(caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, reshape_param=self.reshape_param))
 
         self.setConverted()
 

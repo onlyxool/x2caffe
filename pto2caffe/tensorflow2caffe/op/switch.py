@@ -10,7 +10,7 @@ class Switch(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Switch'
+        self.type = 'Switch'
         super().__parse__()
 
         if self.inputs_buf[0] is not None:

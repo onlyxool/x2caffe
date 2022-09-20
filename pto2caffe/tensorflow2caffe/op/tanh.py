@@ -11,7 +11,7 @@ class Tanh(Operator):
 
 
     def parse(self):
-        self.layer_type = 'TanH'
+        self.type = 'TanH'
         super().__parse__()
 
         # Attributes
@@ -22,7 +22,7 @@ class Tanh(Operator):
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, tanh_param=self.tanh_param)
+        layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, tanh_param=self.tanh_param)
 
         self.setConverted()
 

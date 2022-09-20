@@ -13,7 +13,7 @@ class Reshape(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Reshape'
+        self.type = 'Reshape'
         super().__parse__()
 
         if self.inputs_buf[0] is not None and self.inputs_buf[1] is not None:
@@ -47,7 +47,7 @@ class Reshape(Operator):
                 self.inputs_buf.pop()
 
             if self.layout == 'NHWC' and len(self.inputs_shape[0]) == 4 and len(self.inputs_shape[0]) > len(self.outputs_shape[0]):
-                self.pre = 'Permute'
+                self.type = 'Permute+Reshape'
                 self.permute = 'Reshape_' + self.op.name + '_split' + str(self.index)
                 self.permute_param = dict(order=[0,2,3,1])
 
@@ -59,11 +59,11 @@ class Reshape(Operator):
 
     def convert(self):
         layers = list()
-        if self.pre == 'Permute':
-            layers.append(caffe_layer('Permute', self.permute, [self.inputs[0]], [None], [self.permute], permute_param=self.permute_param))
-            layers.append(caffe_layer(self.type, self.name, [self.permute], self.inputs_buf, self.outputs, reshape_param=self.reshape_param))
-        else:
-            layers.append(caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, reshape_param=self.reshape_param))
+        if self.type == 'Permute+Reshape':
+            layers.append(caffe_layer(self.layer_type[0], self.name[0], [self.inputs[0]], [None], [self.permute], permute_param=self.permute_param))
+            layers.append(caffe_layer(self.layer_type[1], self.name[1], [self.permute], self.inputs_buf, self.outputs, reshape_param=self.reshape_param))
+        elif self.type == 'Reshape':
+            layers.append(caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, reshape_param=self.reshape_param))
 
         self.setConverted()
 

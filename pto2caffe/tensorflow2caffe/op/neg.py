@@ -17,7 +17,7 @@ class Neg(Operator):
         if self.inputs_buf[0] is not None:
             self.saveConstant(self.outputs[0], self.inputs_buf[0] * -1)
         else:
-            self.layer_type = 'Scale'
+            self.type = 'Scale'
 
             self.scale_param = dict()
             self.scale_param['bias_term'] = False
@@ -31,7 +31,7 @@ class Neg(Operator):
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, scale_param=self.scale_param)
+        layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, scale_param=self.scale_param)
 
         self.setConverted()
 

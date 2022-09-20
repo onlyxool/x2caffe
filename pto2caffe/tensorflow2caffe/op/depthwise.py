@@ -12,7 +12,7 @@ class ConvolutionDepthwise(Operator):
 
 
     def parse(self):
-        self.layer_type = 'ConvolutionDepthwise'
+        self.type = 'ConvolutionDepthwise'
         super().__parse__()
 
         # Weight & Bias
@@ -34,7 +34,7 @@ class ConvolutionDepthwise(Operator):
 
         # Padding
         legacy_pad = self.model.pad.get(self.op.inputs[0].name, {'left': 0, 'right': 0, 'top': 0, 'bottom': 0})
-        padding = handleLegacyPad(self.attrs['padding'], self.inputs_shape[0], self.outputs_shape[0], self.convolution_param, legacy_pad, self.type)
+        padding = handleLegacyPad(self.attrs['padding'], self.inputs_shape[0], self.outputs_shape[0], self.convolution_param, legacy_pad, self.layer_type)
         self.convolution_param.update(padding)
 
         self.attrs = self.convolution_param
@@ -43,7 +43,7 @@ class ConvolutionDepthwise(Operator):
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, convolution_param=self.convolution_param)
+        layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, convolution_param=self.convolution_param)
 
         self.setConverted()
 

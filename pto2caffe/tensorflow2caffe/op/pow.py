@@ -12,7 +12,7 @@ class Pow(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Pow'
+        self.type = 'Pow'
         super().__parse__()
 
         if self.inputs_buf[0] is not None and self.inputs_buf[1] is not None:
@@ -33,7 +33,7 @@ class Pow(Operator):
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, power_param=self.power_param)
+        layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, power_param=self.power_param)
 
         self.setConverted()
 

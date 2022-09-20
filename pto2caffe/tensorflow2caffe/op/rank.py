@@ -13,7 +13,7 @@ class Rank(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Rank'
+        self.type = 'Rank'
         super().__parse__()
 
         if self.inputs_buf[0] is not None:

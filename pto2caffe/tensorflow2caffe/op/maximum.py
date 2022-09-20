@@ -13,23 +13,23 @@ class Maximum(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Maximum'
         super().__parse__()
 
         if self.inputs_buf[0] is not None and self.inputs_buf[1] is not None:
+            self.type = 'Maximum'
             import tensorflow as tf
             x = tf.constant(self.inputs_buf[0], dtype=self.op.inputs[0].dtype)
             y = tf.constant(self.inputs_buf[1], dtype=self.op.inputs[1].dtype)
             self.saveConstant(self.outputs[0], tf.raw_ops.Maximum(x=x, y=y, name=None).numpy())
         elif self.inputs_buf[0] is None and self.inputs_buf[1] is None:
-            self.layer_type = 'Eltwise'
+            self.type = 'Eltwise'
             self.eltwise_param = dict()
             self.eltwise_param['operation'] = 2
             self.attrs = self.eltwise_param
             self.setParsed()
         elif self.inputs_buf[1] is not None:
             if np.count_nonzero(self.inputs_buf[1]) > 0:
-                self.layer_type = 'Dummy+Eltwise'
+                self.type = 'Dummy+Eltwise' # Need Test
                 self.dummy_data_param = dict()
                 self.dummy_data_param['data_filler'] = dict(type='constant', value=self.inputs_buf[1])
                 self.dummy_data_param['shape'] = dict(dim=self.inputs_shape[0])
@@ -42,7 +42,7 @@ class Maximum(Operator):
                 self.attrs = self.eltwise_param
                 self.setParsed()
             else:
-                self.layer_type = 'ReLU'
+                self.type = 'ReLU'
                 self.relu_param = dict()
                 self.relu_param['negative_slope'] = 0
 
@@ -51,14 +51,15 @@ class Maximum(Operator):
 
 
     def convert(self):
+        layers = list()
         if self.type == 'Eltwise':
-            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param)
+            layers.append(caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param))
         elif self.type == 'Dummy+Eltwise':
-            layers.append(caffe_layer('Dummy', 'Dummy'+str(self.index), self.inputs, self.inputs_buf, [self.inter_blob], dummy_data_param=self.dummy_data_param))
-            layers.append(caffe_layer('Eltwise', 'Eltwise'+str(self.index), [self.inter_blob], self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param))
+            layers.append(caffe_layer(self.layer_type[0], self.name[0], self.inputs, self.inputs_buf, [self.inter_blob], dummy_data_param=self.dummy_data_param))
+            layers.append(caffe_layer(self.layer_type[1], self.name[1], [self.inter_blob], self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param))
         elif self.type == 'ReLU':
-            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, relu_param=self.relu_param)
+            layers.append(caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, relu_param=self.relu_param))
 
         self.setConverted()
 
-        return [layer]
+        return layers

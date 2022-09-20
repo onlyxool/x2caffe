@@ -26,7 +26,7 @@ class Pack(Operator):
             import numpy as np
             self.saveConstant(self.outputs[0], np.stack(self.inputs_buf))
         else:
-            self.layer_type = 'Concat'
+            self.type = 'Concat'
 
             # Append Extra Reshape
             self.reshapes = list()
@@ -56,7 +56,7 @@ class Pack(Operator):
         for index, reshape_name in enumerate(self.reshapes):
             layers.append(caffe_layer('Reshape', reshape_name, [self.inputs[index]], [None], [reshape_name], reshape_param=self.reshape_param))
 
-        layers.append(caffe_layer(self.type, self.name, self.reshapes, self.inputs_buf, self.outputs, concat_param=self.concat_param))
+        layers.append(caffe_layer(self.layer_type, self.name, self.reshapes, self.inputs_buf, self.outputs, concat_param=self.concat_param))
 
         self.setConverted()
 

@@ -11,7 +11,7 @@ class Random(Operator):
 
 
     def parse(self):
-        self.layer_type = self.operator_code
+        self.type = self.operator_code
         super().__parse__()
 
         if self.operator_code == 'RandomStandardNormal':

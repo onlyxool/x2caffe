@@ -12,7 +12,7 @@ class Pool(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Pooling'
+        self.type = 'Pooling'
         super().__parse__()
 
         # Attribute
@@ -30,7 +30,7 @@ class Pool(Operator):
 
         # Padding
         legacy_pad = self.model.pad.get(self.op.inputs[0].name, {'left': 0, 'right': 0, 'top': 0, 'bottom': 0})
-        padding = handleLegacyPad(self.attrs['padding'], self.inputs_shape[0], self.outputs_shape[0], self.pooling_param, legacy_pad, self.type)
+        padding = handleLegacyPad(self.attrs['padding'], self.inputs_shape[0], self.outputs_shape[0], self.pooling_param, legacy_pad, self.layer_type)
         self.pooling_param.update(padding)
 
         self.attrs = self.pooling_param
@@ -39,7 +39,7 @@ class Pool(Operator):
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, pooling_param=self.pooling_param)
+        layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, pooling_param=self.pooling_param)
 
         self.setConverted()
 

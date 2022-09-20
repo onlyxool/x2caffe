@@ -11,7 +11,7 @@ class Log(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Log'
+        self.type = 'Log'
         super().__parse__()
 
         # Attributes
@@ -27,7 +27,7 @@ class Log(Operator):
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, log_param=self.log_param)
+        layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, log_param=self.log_param)
 
         self.setConverted()
 

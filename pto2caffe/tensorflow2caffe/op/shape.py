@@ -11,7 +11,7 @@ class Shape(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Shape'
+        self.type = 'Shape'
         super().__parse__()
 
         if self.inputs_buf[0] is not None:

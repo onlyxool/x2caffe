@@ -18,7 +18,7 @@ class Split(Operator):
         if self.attrs['num_split'] == 1:
             self.model.indentity[self.outputs[0]] = self.model.indentity.get(self.inputs[1], self.inputs[1])
         else:
-            self.layer_type = 'Slice'
+            self.type = 'Slice'
 
             self.slice_param = dict()
             self.slice_param['axis'] = dim_map_nhwc2nchw[int(self.inputs_buf[0])]
@@ -35,9 +35,9 @@ class Split(Operator):
 
     def convert(self):
         if self.type == 'Reshape':
-            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, reshape_param=self.reshape_param)
+            layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, reshape_param=self.reshape_param)
         elif self.type == 'Slice':
-            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, slice_param=self.slice_param)
+            layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, slice_param=self.slice_param)
 
         self.setConverted()
 

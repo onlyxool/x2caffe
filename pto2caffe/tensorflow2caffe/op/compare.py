@@ -12,7 +12,7 @@ class Compare(Operator):
 
 
     def parse(self):
-        self.layer_type = self.operator_code
+        self.type = self.operator_code
         super().__parse__()
 
         if self.inputs_buf[0] is not None and self.inputs_buf[1] is not None:

@@ -37,7 +37,7 @@ class StridedSlice(Operator):
             if self.op.inputs[0].shape == self.op.outputs[0].shape: # Skip
                 self.byPassOperator()
             else:
-                self.layer_type = 'Slice'
+                self.type = 'Slice'
 
                 # Check Stride != 1
                 if self.inputs_buf[3].size != list(self.inputs_buf[3]).count(1):
@@ -79,7 +79,7 @@ class StridedSlice(Operator):
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, slice_param=self.slice_param)
+        layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, slice_param=self.slice_param)
 
         self.setConverted()
 

@@ -34,7 +34,7 @@ class ResizeNearestNeighbor(Operator):
         scale_factor = output_h/input_h
 
         if scale_factor % 1 == 0:
-            self.layer_type = 'Deconvolution'
+            self.type = 'Deconvolution'
             self.convolution_param = dict()
             self.convolution_param['bias_term'] = False
             self.convolution_param['num_output'] = self.outputs_shape[0][1]
@@ -50,12 +50,12 @@ class ResizeNearestNeighbor(Operator):
 
             # Padding
             legacy_pad = self.model.pad.get(self.op.inputs[0].name, {'left': 0, 'right': 0, 'top': 0, 'bottom': 0})
-            padding = handleLegacyPad('VALID', self.inputs_shape[0], self.outputs_shape[0], self.convolution_param, legacy_pad, self.type)
+            padding = handleLegacyPad('VALID', self.inputs_shape[0], self.outputs_shape[0], self.convolution_param, legacy_pad, self.layer_type)
             self.convolution_param.update(padding)
 
             self.attrs = self.convolution_param
         else:
-            self.layer_type = 'Upsample'
+            self.type = 'Upsample'
             self.upsample_param = dict()
             self.upsample_param['scale'] = scale_factor
             self.attrs = self.upsample_param
@@ -65,9 +65,9 @@ class ResizeNearestNeighbor(Operator):
 
     def convert(self):
         if self.type == 'Deconvolution':
-            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, None, convolution_param=self.convolution_param)
+            layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, None, convolution_param=self.convolution_param)
         elif self.type == 'Upsample':
-            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, upsample_param=self.upsample_param)
+            layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, upsample_param=self.upsample_param)
 
         self.setConverted()
 

@@ -12,7 +12,7 @@ class Range(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Range'
+        self.type = 'Range'
         super().__parse__()
 
         if self.inputs_buf[0] is None:

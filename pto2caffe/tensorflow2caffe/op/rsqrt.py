@@ -12,7 +12,7 @@ class Rsqrt(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Rsqrt'
+        self.type = 'Rsqrt'
         super().__parse__()
 
         if self.inputs_buf[0] is not None:

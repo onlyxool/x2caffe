@@ -18,16 +18,14 @@ class Slice(Operator):
         super().__parse__()
 
         if self.inputs_buf[0] is not None:
-            self.layer_type = 'Constant'
             input = tf.constant(self.inputs_buf[0], self.op.inputs[0].dtype)
             begin = tf.constant(self.inputs_buf[1], self.op.inputs[1].dtype)
             size = tf.constant(self.inputs_buf[2], self.op.inputs[2].dtype)
             self.saveConstant(self.outputs[0], tf.raw_ops.Slice(input=input, begin=begin, size=size, name=None).numpy())
         elif self.inputs_shape[0] == self.outputs_shape[0]:
-            self.layer_type = 'ByPassOperator'
             self.byPassOperator()
         else:
-            self.layer_type = 'Slice'
+            self.type = 'Slice'
 
             if len(np.where(self.inputs_buf[2]>0)) > 1:
                 self.unSupported('Can\'t Slice more than one axis')
@@ -54,7 +52,7 @@ class Slice(Operator):
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, slice_param=self.slice_param)
+        layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, slice_param=self.slice_param)
 
         self.setConverted()
 

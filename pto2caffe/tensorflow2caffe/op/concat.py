@@ -31,7 +31,7 @@ class Concat(Operator):
             import numpy as np
             self.saveConstant(self.outputs[0], np.concatenate(self.inputs_buf[:-1], axis=int(self.inputs_buf[index])))
         else:
-            self.layer_type = 'Concat'
+            self.type = 'Concat'
 
             self.concat_param = dict()
             self.concat_param['axis'] = axis
@@ -42,7 +42,7 @@ class Concat(Operator):
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, concat_param=self.concat_param)
+        layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, concat_param=self.concat_param)
 
         self.setConverted()
 

@@ -11,7 +11,7 @@ class Squeeze(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Reshape'
+        self.type = 'Reshape'
         super().__parse__()
 
         if self.op.inputs[0].shape == self.op.outputs[0].shape and self.inputs_buf[0] is None:
@@ -32,7 +32,7 @@ class Squeeze(Operator):
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, reshape_param=self.reshape_param)
+        layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, reshape_param=self.reshape_param)
 
         self.setConverted()
 

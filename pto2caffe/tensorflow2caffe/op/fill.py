@@ -12,7 +12,7 @@ class Fill(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Fill'
+        self.type = 'Fill'
         super().__parse__()
 
         if self.inputs_buf[0] is not None and self.inputs_buf[1] is not None:

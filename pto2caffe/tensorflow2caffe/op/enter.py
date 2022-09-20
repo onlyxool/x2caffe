@@ -10,7 +10,7 @@ class Enter(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Enter'
+        self.type = 'Enter'
         super().__parse__()
 
         if self.attrs['is_constant'] or self.inputs_buf[0] is not None:

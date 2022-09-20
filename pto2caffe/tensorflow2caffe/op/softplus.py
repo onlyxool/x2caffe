@@ -11,7 +11,7 @@ class Softplus(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Softplus'
+        self.type = 'Softplus'
         super().__parse__()
 
         # Attributes
@@ -22,7 +22,7 @@ class Softplus(Operator):
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs)
+        layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs)
 
         self.setConverted()
 
