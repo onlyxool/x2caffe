@@ -14,44 +14,56 @@ class Minimum(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Minimum'
         super().__parse__()
 
         if self.inputs_buf[0] is not None and self.inputs_buf[1] is not None:
+            self.layer_type = 'Constant'
             x = tf.constant(self.inputs_buf[0], dtype=self.op.inputs[0].dtype)
             y = tf.constant(self.inputs_buf[1], dtype=self.op.inputs[1].dtype)
             self.saveConstant(self.outputs[0], tf.raw_ops.Minimum(x=x, y=y, name=None).numpy())
         elif self.inputs_buf[0] is None and self.inputs_buf[1] is None:
             self.layer_type = 'Eltwise'
 
-            # Attribute
             self.eltwise_param = dict()
             self.eltwise_param['operation'] = 4
 
             self.attrs = self.eltwise_param
             self.setParsed()
         elif self.inputs_buf[1] is not None:
-            self.layer_type = 'ReLU'
-
             # Check weather y == 0
-            if np.count_nonzero(self.inputs_buf[1]) > 0:
-                self.unSupported('Does not Support y != 0.')
-                return
+            if np.count_nonzero(self.inputs_buf[1]) > 0: # Need Test
+                self.layer_type = 'Dummy+Eltwise'
+                self.dummy_data_param = dict()
+                self.dummy_data_param['data_filler'] = dict(type='constant', value=self.inputs_buf[1])
+                self.dummy_data_param['shape'] = dict(dim=self.inputs_shape[0])
 
-            # Attribute
-            self.relu_param = dict()
-            self.relu_param['negative_slope'] = 1
+                self.inter_blob = 'preDummy_split' + str(self.index)
 
-            self.attrs = self.relu_param
-            self.setParsed()
+                self.eltwise_param = dict()
+                self.eltwise_param['operation'] = 4
+
+                self.attrs = self.eltwise_param
+                self.setParsed()
+            else:
+                self.layer_type = 'ReLU'
+                self.relu_param = dict()
+                self.relu_param['negative_slope'] = 1
+
+                self.attrs = self.relu_param
+                self.setParsed()
 
 
     def convert(self):
+        layers = list()
+
         if self.type == 'Eltwise':
-            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param)
+            layers.append(caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param))
+        elif self.type == 'Dummy+Eltwise':
+            layers.append(caffe_layer('Dummy', 'Dummy'+str(self.index), self.inputs, self.inputs_buf, [self.inter_blob], dummy_data_param=self.dummy_data_param))
+            layers.append(caffe_layer('Eltwise', 'Eltwise'+str(self.index), [self.inter_blob], self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param))
         elif self.type == 'ReLU':
-            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, relu_param=self.relu_param)
+            layers.append(caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, relu_param=self.relu_param))
 
         self.setConverted()
 
-        return [layer]
+        return layers
