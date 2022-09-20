@@ -16,7 +16,7 @@ class Mean(Operator):
 
         axis = self.inputs_buf[1]
 
-        if (axis.tolist() == [2, 3] and self.layout == 'NCHW') or (axis.tolist() == [1, 2] and self.layout == 'NHWC'):
+        if len(self.inputs_shape[0]) == 4 and ((axis.tolist() == [2, 3] and self.layout == 'NCHW') or (axis.tolist() == [1, 2] and self.layout == 'NHWC')):
             if self.attrs['keep_dims']:
                 self.layer_type = 'Pooling'
             else:
@@ -61,7 +61,7 @@ class Mean(Operator):
         if self.type == 'Pooling':
             layers.append(caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, pooling_param=self.pooling_param))
         elif self.type == 'Pooling+Reshape':
-            layers.append(caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, [self.reshape], pooling_param=self.pooling_param))
+            layers.append(caffe_layer('Pooling', self.name, self.inputs, self.inputs_buf, [self.reshape], pooling_param=self.pooling_param))
             layers.append(caffe_layer('Reshape', self.reshape, [self.reshape], [None], self.outputs, reshape_param=self.reshape_param))
         elif self.type == 'Permute+Reduction+Permute':
             layers.append(caffe_layer('Permute', 'prePermute'+str(sefl.index), self.inputs, self.inputs_buf, [self.inter_blob0], permute_param=dict(order=[0,2,3,1])))
