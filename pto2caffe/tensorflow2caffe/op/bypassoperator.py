@@ -19,12 +19,8 @@ class ByPassOperator(Operator):
             if self.operator_code == 'FakeQuantWithMinMaxVars':
                 self.saveConstant(self.outputs[0], tf.raw_ops.FakeQuantWithMinMaxVars(inputs=self.inputs_buf[0], min=self.inputs_buf[1], max=self.inputs_buf[2],
                         num_bits=self.attrs['num_bits'], narrow_range=self.attrs['narrow_range'], name=None).numpy())
-            elif self.operator_code == 'Identity':
-                self.saveConstant(self.outputs[0], tf.raw_ops.Identity(input=self.inputs_buf[0], name=None).numpy())
-            elif self.operator_code == 'IdentityN':
-                self.saveConstant(self.outputs[0], tf.raw_ops.IdentityN(input=self.inputs_buf[0], name=None).numpy())
-            elif self.operator_code == 'Complex':
-                self.saveConstant(self.outputs[0], tf.raw_ops.Complex(real=self.inputs_buf[0], imag=self.inputs_buf[1], Tout=tf.dtypes.complex64, name=None).numpy())
+            elif self.operator_code in ('Identity', 'IdentityN', 'Complex'):
+                self.saveConstant(self.outputs[0], self.inputs_buf[0])
             elif self.operator_code == 'ComplexAbs':
                 self.saveConstant(self.outputs[0], tf.raw_ops.ComplexAbs(x=self.inputs_buf[0], Tout=tf.dtypes.float32, name=None).numpy())
         else:
