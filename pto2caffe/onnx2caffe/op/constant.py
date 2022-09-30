@@ -10,7 +10,6 @@ class Constant(Operator):
 
 
     def parse(self):
-        self.type = 'Constant'
         super().__parse__()
 
         if self.operator_code == 'Constant':

@@ -13,7 +13,7 @@ class Debug(Operator):
         self.type = 'Debug'
         super().__parse__()
         print('====================')
-        print('Op:', self.name, self.operator_code)
+        print('Op:', self.name, self.operator_code, self.node.name)
         print('Input:', self.inputs, self.inputs_shape)
         print('Output:', self.outputs, self.outputs_shape)
         print('Attrs:', self.attrs)

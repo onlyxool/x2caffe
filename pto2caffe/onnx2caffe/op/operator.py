@@ -10,7 +10,6 @@ class Operator(Base):
         super().__init__(model, model.graph, index)
         self.node = node
         self.operator_code = node.op_type
-        self.index = index
         self.attrs = dict()
 
         self.inputs = list()
@@ -91,7 +90,7 @@ class Operator(Base):
                 self.inputs_shape.append(None)
 
 #        if len(self.inputs_buf) > 0 and self.inputs_buf[0] is not None:
-#            print('Constant Op Need Handle:'+str(self.operator_code))
+#            print('Constant Op Need Handle:'+str(self.operator_code)+ ' ' +self.node.name)
 
 
     def __parseOutput__(self):
@@ -140,6 +139,7 @@ class Operator(Base):
 
 
     def byPassOperator(self):
+        self.type = 'ByPassOperator'
         if len(self.outputs) == 0 or len(self.inputs) == 0:
             import sys
             sys.exit('Error: Use byPassOperator() after parseInputOutput().')
@@ -151,6 +151,7 @@ class Operator(Base):
 
 
     def saveConstant(self, name, constant):
+        self.type = 'Constant'
         self.model.constant[name] = constant
 
 
