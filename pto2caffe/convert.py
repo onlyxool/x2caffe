@@ -55,8 +55,8 @@ def CheckParam(param):
     errorMsg = '\nArgument Check Failed: '
 
     param['platform'] = param['platform'].lower()
-    if param['platform'] not in ['tensorflow', 'pytorch', 'tflite', 'onnx']:
-        errorMsg = errorMsg + 'argument -platform: invalid choice: ' + param['platform'] + ' (choose from TensorFlow, Pytorch, TFLite, ONNX)'
+    if param['platform'] not in ['tensorflow', 'pytorch', 'tflite', 'onnx', 'tvm']:
+        errorMsg = errorMsg + 'argument -platform: invalid choice: ' + param['platform'] + ' (choose from TensorFlow, Pytorch, TFLite, ONNX, Tvm)'
         sys.exit(errorMsg)
 
     # model
@@ -156,16 +156,17 @@ def Convert(param=None):
         from tflite2caffe.convert import convert as TensorLiteConvert
         TensorLiteConvert(model_path, caffe_model_path, param)
     elif framework == 'onnx':
-        from onnx2caffe.convert import convert as OnnxConvert
-        OnnxConvert(model_path, caffe_model_path, param)
-    else:
-        raise NotImplementedError
+        from onnx2caffe.convert import convert as ONNXConvert
+        ONNXConvert(model_path, caffe_model_path, param)
+    elif framework == 'tvm':
+        from tvm2caffe.convert import convert as TvmConvert
+        TvmConvert(model_path, caffe_model_path, param)
 
 
 def args_():
     args = argparse.ArgumentParser(description='Tensorflow/Tensorflow lite/ONNX/Pytorch to Caffe Conversion Usage', epilog='')
     args.add_argument('-platform',      type = str,     required = True,
-            help = 'Pytorch/Tensorflow/ONNX/TFLite')
+            help = 'Pytorch/Tensorflow/ONNX/TFLite/TVM')
     args.add_argument('-model',         type = str,     required = True,
             help = 'Orginal Model File')
     args.add_argument('-root_folder',   type = str,     required = False,
