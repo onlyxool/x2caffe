@@ -1,7 +1,6 @@
 import os
 import tensorflow as tf
 from tensorflow.python.util import compat
-from tensorflow.python.platform import gfile
 from tensorflow.core.protobuf import saved_model_pb2
 from tensorflow.core.framework import graph_pb2
 from tensorflow.python.framework.convert_to_constants import convert_variables_to_constants_v2

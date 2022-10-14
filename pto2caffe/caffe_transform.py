@@ -76,9 +76,9 @@ class caffe_layer(object):
 
         # Bottom
         bottom_names = []
-        for index, input_id in enumerate(self.inputs):
+        for index, input_name in enumerate(self.inputs):
             if self.inputs_buf[index] is None:
-                bottom_names.append(str(input_id))
+                bottom_names.append(str(input_name))
         layer.bottom.extend(bottom_names)
 
         # Top
@@ -93,8 +93,7 @@ class caffe_layer(object):
                 assign_proto(layer, key, value)
             else:
                 try:
-                    assign_proto(getattr(layer,
-                        _param_names[self.type] + '_param'), key, value)
+                    assign_proto(getattr(layer, _param_names[self.type] + '_param'), key, value)
                 except (AttributeError, KeyError):
                     assign_proto(layer, key, value)
 
