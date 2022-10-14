@@ -15,7 +15,10 @@ class Bias(Operator):
 
         self.type = 'Bias'
         self.bias_param = dict()
-        self.bias_param['axis'] = self.inputs_shape[0].index(self.inputs_shape[1][0]) if len(self.inputs_shape[1]) > 0 else 0
+        if 'axis' in self.attrs:
+            self.bias_param['axis'] = self.attrs['axis']
+        else:
+            self.bias_param['axis'] = self.inputs_shape[0].index(self.inputs_shape[1][0]) if len(self.inputs_shape[1]) > 0 else 0
         self.bias_param['num_axes'] = len(self.inputs_shape[1])
         self.attrs = self.bias_param
         self.bias = self.inputs_buf[1]
