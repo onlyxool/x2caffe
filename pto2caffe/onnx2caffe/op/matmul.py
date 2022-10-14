@@ -19,17 +19,6 @@ class MatMul(Operator):
         elif self.inputs_buf[0] is None and self.inputs_buf[1] is None:
             self.unSupported()
             return
-
-            self.type = 'MatMul'
-
-            self.matmul_param = dict()
-            self.matmul_param['transpose_a'] = False
-            self.matmul_param['transpose_b'] = False
-            self.matmul_param['blob_shape'] = self.outputs_shape[0]
-
-            self.attrs = self.matmul_param
-
-            self.setParsed()
         else:
             if len(self.inputs_shape[0]) != 2 or len(self.inputs_shape[1]) != 2:
                 self.unSupported('only support input dimentions == 2')
@@ -57,11 +46,12 @@ class MatMul(Operator):
 
 
     def convert(self):
+        layers = list()
         if self.type == 'InnerProduct':
-            layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, inner_product_param=self.inner_product_param)
+            layers.append(caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, inner_product_param=self.inner_product_param))
         elif self.type == 'MatMul':
-            layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, matmul_param=self.matmul_param)
+            layers.append(caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, matmul_param=self.matmul_param))
 
         self.setConverted()
 
-        return [layer]
+        return layers

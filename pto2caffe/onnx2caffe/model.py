@@ -27,11 +27,13 @@ from onnx2caffe.op.prelu import PReLU
 from onnx2caffe.op.shape import Shape
 from onnx2caffe.op.slice import Slice
 from onnx2caffe.op.split import Split
+from onnx2caffe.op.where import Where
 from onnx2caffe.op.concat import Concat
 from onnx2caffe.op.expand import Expand
 from onnx2caffe.op.gather import Gather
 from onnx2caffe.op.resize import Resize
 from onnx2caffe.op.matmul import MatMul
+from onnx2caffe.op.compare import Compare
 from onnx2caffe.op.sigmoid import Sigmoid
 from onnx2caffe.op.softmax import Softmax
 from onnx2caffe.op.reshape import Reshape
@@ -47,6 +49,7 @@ from onnx2caffe.op.transpose import Permute
 from onnx2caffe.op.batchnorm import BatchNorm
 from onnx2caffe.op.reducemax import ReduceMax
 from onnx2caffe.op.reducemean import ReduceMean
+from onnx2caffe.op.hardsigmoid import HardSigmoid
 from onnx2caffe.op.convtranspose import Deconvolution
 from onnx2caffe.op.globalaveragepool import GlobalAveragePool
 from onnx2caffe.op.instancenormalization import InstanceNormalization
@@ -61,6 +64,7 @@ numpy_dtype = [None, np.float32, np.uint8, np.int8, np.uint16, np.int16, np.int3
 
 logger = logging.getLogger('ONNX2Caffe')
 
+#from onnx2caffe.op.debug import Debug
 OpMap = {
     'Add': Add,
     'Div': Div,
@@ -84,6 +88,8 @@ OpMap = {
     'Shape': Shape,
     'Slice': Slice,
     'Split': Split,
+    'Where': Where,
+    'Equal': Compare,
     'Concat': Concat,
     'Expand': Expand,
     'Gather': Gather,
@@ -106,6 +112,8 @@ OpMap = {
     'ReduceMax': ReduceMax,
     'AveragePool': Pooling,
     'ReduceMean': ReduceMean,
+    'HardSigmoid': HardSigmoid,
+    'ConstantOfShape': Constant,
     'ConvTranspose': Deconvolution,
     'BatchNormalization': BatchNorm,
     'GlobalAveragePool': GlobalAveragePool,
@@ -126,7 +134,7 @@ class Model(Base):
         self.opset = []
         for i in range(len(onnx_model.opset_import)):
             opset_version = onnx_model.opset_import[i].version
-            if opset_version <= 13 and opset_version > 3:
+            if opset_version <= 17 and opset_version > 3:
                 self.opset.append(opset_version)
             else:
                 sys.exit('Error: Model opset > 13 or <= 3, it may cause incompatiblility issue. (opset:{})\n'.format(opset_version))
