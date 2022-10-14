@@ -1,7 +1,6 @@
+import numpy as np
 from caffe_transform import caffe_layer
 from tvm2caffe.op.operator import Operator
-
-#from tvm2caffe.utility import computePad
 
 
 class Convolution(Operator):
@@ -17,7 +16,13 @@ class Convolution(Operator):
         super().__parse__()
 
         # Weight
-        self.weight = self.inputs_buf[1]
+        if self.attrs.get('kernel_layout', 'OIHW') == 'OIHW':
+            self.weight = self.inputs_buf[1]
+        elif self.attrs.get('kernel_layout', 'OIHW') == 'HWIO':
+            self.weight = self.inputs_buf[1].transpose(3, 2, 0, 1)
+        else:
+            print(self.attrs)
+            raise NotImplementedError
 
         # Bias
         self.bias = self.inputs_buf[2] if len(self.inputs_buf) == 3 else None
@@ -25,18 +30,22 @@ class Convolution(Operator):
         # Attributes
         self.convolution_param = dict()
         self.convolution_param['group'] = self.attrs.get('group', 1)
-        self.convolution_param['kernel_h'] = self.attrs['kernel_shape'][0]
-        self.convolution_param['kernel_w'] = self.attrs['kernel_shape'][1]
+        self.convolution_param['kernel_h'] = self.attrs['kernel_size'][0]
+        self.convolution_param['kernel_w'] = self.attrs['kernel_size'][1]
         self.convolution_param['stride_h'] = self.attrs.get('strides', [1, 1])[0]
         self.convolution_param['stride_w'] = self.attrs.get('strides', [1, 1])[1]
         self.convolution_param['dilation'] = self.attrs.get('dilations', [1, 1])
+        self.convolution_param['num_output'] = self.attrs['channels']
         self.convolution_param['bias_term'] = True if self.bias is not None else False
-        self.convolution_param['num_output'] = self.weight.shape[0]
 
         # Padding
-        legacy_pad = self.model.pad.get(self.node.input[0], {'left': 0, 'right': 0, 'top': 0, 'bottom': 0})
-        padding = computePad(self.layer_type, self.attrs, self.inputs_shape[0], self.outputs_shape[0], self.attrs['kernel_shape'], self.attrs.get('strides', [1, 1]), legacy_pad)
-        self.convolution_param.update(padding)
+        legacy_pad = self.model.pad.get(self.inputs[0], [0, 0, 0, 0])
+        attr_pad = self.attrs.get('padding', [0, 0, 0, 0])
+        conv_pad = (np.array(legacy_pad) + np.array(attr_pad)).tolist()
+        self.convolution_param['pad_l'] = conv_pad[0]
+        self.convolution_param['pad_r'] = conv_pad[1]
+        self.convolution_param['pad_t'] = conv_pad[2]
+        self.convolution_param['pad_b'] = conv_pad[3]
 
         self.attrs = self.convolution_param
 
