@@ -2,15 +2,11 @@ import re
 
 
 def get_relay_type(relay):
-#    return re.compile(r'%[0-9]+ = ([0-9a-zA-Z\._]+?)\(').findall(relay)[0]
-
-    type_str = re.compile(r'%.+? = (.+?)\%').findall(relay)
-    if len(type_str) == 1 and type_str[0] == '(':
+    type_str = relay[:relay.find('(%')].split(' ')[-1]
+    if type_str == '':
         return 'array'
-    elif len(type_str) == 1:
-        return type_str[0][:-1]
-    elif len(type_str) == 0:
-        return 'bypass'
+    else:
+        return type_str
 
 
 def get_tensor_shape(tytensor):
@@ -23,4 +19,4 @@ def preprocess(relay):
     relay = re.sub(r'\df', remove, relay)
     relay = re.sub(r'\di64', remove, relay)
 
-    return relay
+    return relay.strip()
