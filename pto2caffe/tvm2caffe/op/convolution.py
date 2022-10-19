@@ -20,6 +20,8 @@ class Convolution(Operator):
             self.weight = self.inputs_buf[1]
         elif self.attrs.get('kernel_layout', 'OIHW') == 'HWIO':
             self.weight = self.inputs_buf[1].transpose(3, 2, 0, 1)
+        elif self.attrs.get('kernel_layout', 'OIHW') == 'HWOI':
+            self.weight = self.inputs_buf[1].transpose(2, 3, 0, 1)
         else:
             print(self.attrs)
             raise NotImplementedError
