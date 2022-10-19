@@ -1,8 +1,11 @@
 import sys
 import tvm
+import pathlib
+
 from compare import compare2
 from preprocess import get_input_tensor
 from tvm2caffe.model import Model
+from util import shape_map_nhwc2nchw
 
 
 def check_dynamic_input(onnx_model, input_shape_dict, param_input_shape):
@@ -48,7 +51,7 @@ def get_input_shape_dict(model, model_type):
                 shape_dict[input.name] = [dim.dim_value for dim in input.type.tensor_type.shape.dim]
     elif model_type == 'tflite':
         for index in range(model.Subgraphs(0).InputsLength()):
-            shape_dict[model.Subgraphs(0).Inputs(index)] = model.Subgraphs(0).Tensors(model.Subgraphs(0).Inputs(index)).ShapeAsNumpy().tolist()
+            shape_dict[model.Subgraphs(0).Tensors(model.Subgraphs(0).Inputs(index)).Name().decode()] = model.Subgraphs(0).Tensors(model.Subgraphs(0).Inputs(index)).ShapeAsNumpy().tolist()
     elif model_type == 'tensorflow':
         pass
     elif model_type == 'pytorch':
@@ -62,21 +65,19 @@ def get_input_dtype_dict(model, model_type):
     if model_type == 'tflite':
         numpy_dtype = ['float32', 'float16', 'int32', 'uint8', 'int64', 'string', 'bool', 'int16', 'complex64', 'int8', 'float64', 'complex128']
         for index in range(model.Subgraphs(0).InputsLength()):
-            dtype_dict[model.Subgraphs(0).Inputs(index)] = numpy_dtype[model.Subgraphs(0).Tensors(model.Subgraphs(0).Inputs(index)).Type()]
+            dtype_dict[model.Subgraphs(0).Tensors(model.Subgraphs(0).Inputs(index)).Name().decode()] = numpy_dtype[model.Subgraphs(0).Tensors(model.Subgraphs(0).Inputs(index)).Type()]
 
     return dtype_dict
 
-import pathlib
+
 def convert(model_file, caffe_model_path, param=None):
     if pathlib.Path(model_file).suffix.lower() == '.onnx':
         import onnx
-
         onnx_model = onnx.load(model_file)
         inputs_shape_dict = get_input_shape_dict(onnx_model, 'onnx')
         tvm_model, tvm_model_params = tvm.relay.frontend.from_onnx(onnx_model, shape=inputs_shape_dict, freeze_params=True)
     elif pathlib.Path(model_file).suffix.lower() == '.tflite':
         import tflite
-
         tflite_model_buf = open(model_file, "rb").read()
         tflite_model = tflite.Model.GetRootAsModel(tflite_model_buf, 0)
         inputs_shape_dict = get_input_shape_dict(tflite_model, 'tflite')
@@ -84,7 +85,6 @@ def convert(model_file, caffe_model_path, param=None):
         tvm_model, tvm_model_params = tvm.relay.frontend.from_tflite(tflite_model, shape_dict=inputs_shape_dict, dtype_dict=inputs_dtype_dict)
     elif pathlib.Path(model_file).suffix.lower() == '.pb':
         import tensorflow as tf
-
         with tf.compat.v1.gfile.GFile(model_file, "rb") as f:
             graph_def = tf.compat.v1.GraphDef()
             graph_def.ParseFromString(f.read())
@@ -96,14 +96,19 @@ def convert(model_file, caffe_model_path, param=None):
 #       inputs_shape_dict = {:}
         tvm_model, tvm_model_params = tvm.relay.frontend.from_pytorch(model_file, input_infos, custom_convert_map=None, use_parser_friendly_name=False, keep_quantized_weight=False)
 
-    model = Model(tvm_model, tvm_model_params, param)
+    required_pass=['RemoveUnusedFunctions', 'ConvertLayout', 'FoldConstant', 'CombineParallelConv2D', 'FoldScaleAxis', 'ForwardFoldScaleAxis']
+    disabled_pass=['FuseOps']
+    with tvm.transform.PassContext(opt_level=0, required_pass=required_pass, disabled_pass=disabled_pass):
+        tvm_model = tvm.relay.optimize(tvm_model,'llvm', params=tvm_model_params)
+
+    model = Model(tvm_model[0], tvm_model_params, param)
     model.parse()
     model.convert()
     caffe_net = model.save(caffe_model_path)
 
-#    inputs_tensor = list()
-#    for index, input_name in enumerate(model.inputs):
-#        inputs_tensor.append(get_input_tensor(param, model.inputs_shape[index], model.inputs_dtype[index], None))
-#
-#    if opset >= 7:
-#        compare2(model, caffe_net, inputs_tensor, param.get('compare', -1))
+    inputs_tensor = list()
+    for index, input_name in enumerate(model.inputs):
+        input_shape = shape_map_nhwc2nchw(model.inputs_shape[index]) if model.layout == 'NHWC' else model.inputs_shape[index]
+        inputs_tensor.append(get_input_tensor(param, input_shape, model.inputs_dtype[index], None))
+
+    compare2(model, caffe_net, inputs_tensor, param.get('compare', -1))
