@@ -11,6 +11,7 @@ class Operator(Base):
         super().__init__(model, None, index)
         self.relay = relay
         self.operator_code = get_relay_type(relay)
+        self.layout = model.layout
         self.attrs = dict()
 
         self.inputs = list()
@@ -82,25 +83,49 @@ class Operator(Base):
         return '\n%s\n%s    %s -> %s\n    %s -> %s\n    %s' % (self.shorty, self.attrs2str, inames, onames, ishape, oshape, inbuf)
 
 
+    def ndim(self, dim):
+        return self.layout.index(dim)
+
+
     def __parseInput__(self):
-        self.inputs = re.compile(r'%(.+?)[,|\)|\.]').findall(self.relay.split(' = ')[-1])
+        self.inputs = self.relay_inputs = re.compile(r'%(.+?)[,|\)|\.]').findall(self.relay.split(' = ')[-1])
+        for index, input_name in enumerate(self.relay_inputs):
+            if input_name in self.model.indentity.keys():
+                self.inputs = self.relay_inputs[:index] + self.model.indentity[input_name] + self.relay_inputs[index+1:]
 
-        constants = re.compile(r'meta(.+?) */').findall(self.relay.split(' = ')[-1].split(') /*')[0])
-        if len(constants) > 0:
-            index = self.relay.split(' = ')[-1].split(constants[0])[0].count('%')
-        for constant in constants:
-            self.inputs.insert(index, constant)
+        for index, input_name in enumerate(self.inputs):
+            self.inputs_buf.append(self.model.constant.get(input_name, None))
+            self.inputs_shape.append(self.model.tensor_shape.get(input_name, None))
 
-        for input_name in self.inputs:
-            self.inputs_buf.append(self.model.constant.get(input_name, self.model.constant.get(input_name[1:], None)))
-            self.inputs_shape.append(self.model.tensor_shape.get(input_name, self.model.tensor_shape.get(input_name[1:], None)))
+#        constants = re.compile(r'meta(.+?) */').findall(self.relay.split(' = ')[-1].split(') /*')[0])
+#        if len(constants) > 0:
+#            index = self.relay.split(' = ')[-1].split(constants[0])[0].count('%')
+#        for constant in constants:
+#            self.inputs.insert(index, constant)
 
-#        if len(self.inputs_buf) > 0 and self.inputs_buf[0] is not None:
-#            print('Constant Op Need Handle:'+str(self.operator_code)+ ' ' +self.node.name)
+        operands = re.compile(r' (.+?) \/\* ty=').findall(self.relay.split(self.operator_code)[-1].split(') /*')[0])
+        for operand in operands:
+            if 'meta' in operand:
+                self.inputs.append(operand[4:])
+                self.inputs_buf.append(self.model.constant.get(operand[4:], None))
+                self.inputs_shape.append(self.model.tensor_shape.get(operand[4:], None))
+            else:
+                self.inputs.append('operand'+str(len(self.inputs)+1))
+                self.inputs_buf.append(eval(operand))
+                self.inputs_shape.append([])
+
+#        for input_name in self.inputs:
+#            self.inputs_buf.append(self.model.constant.get(input_name, self.model.constant.get(input_name[1:], None)))
+#            self.inputs_shape.append(self.model.tensor_shape.get(input_name, self.model.tensor_shape.get(input_name[1:], None)))
+
+
+        if len(self.inputs_buf) > 0 and self.inputs_buf[0] is not None:
+            print('Constant Op Need Handle:'+str(self.operator_code)+ ' ' + self.outputs[0])
 
 
     def __parseOutput__(self):
-        self.outputs = re.compile(r'%(.+?) ').findall(self.relay.split('= ')[0])
+        self.outputs = ['None'] if self.relay.strip().startswith(self.operator_code) else re.compile(r'%(.+?) ').findall(self.relay.split('= ')[0])
+
         for index, output_name in enumerate(self.outputs):
             shape_str = get_tensor_shape(self.relay.split(') /*')[-1])
             self.outputs_shape.append(eval('['+shape_str[index]+']') if len(shape_str) > 0 else None)
@@ -110,10 +135,12 @@ class Operator(Base):
     def __parseAttributes__(self):
         keys = re.compile(r', ([a-zA-Z_]+)=').findall(self.relay.split(' = ')[-1].split(') /*')[0])
         for key in keys:
-            if self.relay.split(key+'=')[-1].startswith('['):
+            if self.relay.split(key+'=')[-1].startswith('[['):
+                self.attrs[key] = eval(re.compile(r'\[\[.+?\]\]').findall(self.relay.split(key+'=')[-1])[0])
+            elif self.relay.split(key+'=')[-1].startswith('['):
                 self.attrs[key] = eval(re.compile(r'[\[][0-9, -]*\]').findall(self.relay.split(key+'=')[-1])[0])
             elif re.compile(r'[\d-]').match(self.relay.split(key+'=')[-1]) is not None:
-                self.attrs[key] = eval(re.compile(r'[\d-]+').match(self.relay.split(key+'=')[-1]).group(0))
+                self.attrs[key] = eval(re.compile(r'[\.\d-]+').match(self.relay.split(key+'=')[-1]).group(0))
             elif self.relay.split(key+'=')[-1].startswith('"'):
                 self.attrs[key] = eval(re.compile(r'"(.+?)"').match(self.relay.split(key+'=')[-1]).group(0))
             elif re.compile(r'[A-Za-z]').match(self.relay.split(key+'=')[-1]) is not None:
@@ -123,10 +150,10 @@ class Operator(Base):
 
 
     def __parse__(self):
-        print(self.relay)
         self.__parseInput__()
         self.__parseOutput__()
         self.__parseAttributes__()
+        self.layout = self.attrs.get('layout', self.layout)
 
 
     def convert(self):
@@ -144,10 +171,13 @@ class Operator(Base):
             import sys
             sys.exit('Error: Use byPassOperator() after parseInputOutput().')
 
-        self.model.indentity[self.outputs[0]] = self.model.indentity.get(self.inputs[0], self.inputs[0])
+        self.model.indentity[self.outputs[0]] = list()
+        for index, input_name in enumerate(self.inputs):
+            if self.inputs_buf[index] is None:
+                self.model.indentity[self.outputs[0]].append(self.model.indentity.get(input_name, input_name))
         # Handle Legacy Pad for Ignore Op
-        if self.node.input[0] in self.model.pad.keys():
-            self.model.pad[self.node.output[0]] = self.model.pad[self.node.input[0]]
+        if self.inputs[0] in self.model.pad.keys():
+            self.model.pad[self.outputs[0]] = self.model.pad[self.inputs[0]]
 
 
     def saveConstant(self, name, constant):
@@ -157,5 +187,5 @@ class Operator(Base):
 
     def unSupported(self, errorMsg=None):
         if errorMsg is not None:
-            self.model.errorMsg.append('Error: Op ' + self.node.name + ' (' + self.operator_code + '): ' + errorMsg)
+            self.model.errorMsg.append('Error: Op (' + self.operator_code + '): ' + errorMsg)
         self.model.unsupport.append(self.operator_code)
