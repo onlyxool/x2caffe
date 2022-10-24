@@ -29,7 +29,7 @@ class ReduceMean(Operator):
             self.pooling_param['stride_w'] = 1
             self.pooling_param['ceil_mode'] = False
 
-            legacy_pad = self.model.pad.get(self.inputs[0], [0, 0, 0, 0]) 
+            legacy_pad = self.model.pad.get(self.relay_inputs[0], [0, 0, 0, 0])
             attr_pad = self.attrs.get('padding', [0, 0, 0, 0]) 
             pool_pad = (np.array(legacy_pad) + np.array(attr_pad)).tolist()
             self.pooling_param['pad_l'] = pool_pad[0]
@@ -40,18 +40,18 @@ class ReduceMean(Operator):
             self.attrs = self.pooling_param
 
             self.setParsed()
-#        elif input_axes[-len(axes):len(self.inputs_shape[0])] == axes:
-#            if self.attrs.get('keepdims', False):
-#                self.type = 'Reduction+Reshape'
-#                self.inter_blob = 'reducemax_split_reshape'
-#            else:
-#                self.type = 'Reduction'
-#
-#            self.reduction_param = dict()
-#            self.reduction_param['operation'] = 4
-#            self.reduction_param['axis'] = axes[0]
-#            self.attrs = self.reduction_param
-#            self.setParsed()
+        elif (self.attrs['axis'] == [-1] or self.attrs['axis'] == [len(self.inputs_shape[0])-1]) and self.layout == 'NCHW':
+            if self.attrs.get('keepdims', False):
+                self.type = 'Reduction+Reshape'
+                self.inter_blob = 'reducemax_split_reshape'
+            else:
+                self.type = 'Reduction'
+
+            self.reduction_param = dict()
+            self.reduction_param['operation'] = 4
+            self.reduction_param['axis'] = self.attrs['axis'][0]
+            self.attrs = self.reduction_param
+            self.setParsed()
         elif self.attrs['axis'] == 1 and input_axes.index(axes[0]) < input_axes[-1]:
             if self.attrs.get('keepdims', True):
                 self.type = 'Permute+Reduction+Permute'
@@ -79,7 +79,7 @@ class ReduceMean(Operator):
             self.attrs = self.reduction_param
             self.setParsed()
         else:
-            print(axes, self.inputs_shape, self.outputs_shape)
+            print(self.attrs['axis'], self.inputs_shape, self.outputs_shape)
             raise NotImplementedError
 
 
