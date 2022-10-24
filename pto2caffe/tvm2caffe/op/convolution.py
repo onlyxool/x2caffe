@@ -36,12 +36,12 @@ class Convolution(Operator):
         self.convolution_param['kernel_w'] = self.attrs['kernel_size'][1]
         self.convolution_param['stride_h'] = self.attrs.get('strides', [1, 1])[0]
         self.convolution_param['stride_w'] = self.attrs.get('strides', [1, 1])[1]
-        self.convolution_param['dilation'] = self.attrs.get('dilations', [1, 1])
+        self.convolution_param['dilation'] = self.attrs.get('dilation', [1, 1])
         self.convolution_param['num_output'] = self.attrs['channels']
         self.convolution_param['bias_term'] = True if self.bias is not None else False
 
         # Padding
-        legacy_pad = self.model.pad.get(self.inputs[0], [0, 0, 0, 0])
+        legacy_pad = self.model.pad.get(self.relay_inputs[0], [0, 0, 0, 0])
         attr_pad = self.attrs.get('padding', [0, 0, 0, 0])
         conv_pad = (np.array(legacy_pad) + np.array(attr_pad)).tolist()
         self.convolution_param['pad_l'] = conv_pad[0]
