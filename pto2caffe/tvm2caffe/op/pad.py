@@ -27,11 +27,8 @@ class Pad(Operator):
         if np.count_nonzero(np.array(self.attrs['pad_width'])) > 0:
             pad_dict = dict()
             if len(self.attrs['pad_width']) == 4:
-                pad_dict['left']    = self.attrs['pad_width'][self.ndim('W')][0]
-                pad_dict['right']   = self.attrs['pad_width'][self.ndim('W')][1]
-                pad_dict['top']     = self.attrs['pad_width'][self.ndim('H')][0]
-                pad_dict['bottom']  = self.attrs['pad_width'][self.ndim('H')][1]
-                self.model.pad[self.outputs[0]] = pad_dict
+                pad = [self.attrs['pad_width'][self.ndim('W')][0], self.attrs['pad_width'][self.ndim('W')][1], self.attrs['pad_width'][self.ndim('H')][0], self.attrs['pad_width'][self.ndim('H')][1]]
+                self.model.pad[self.outputs[0]] = pad
             else:
                 self.unSupported('Pad has' + str(len(self.attrs['pad_width'])) + 'dimentions')
 
