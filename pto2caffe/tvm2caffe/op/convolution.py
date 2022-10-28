@@ -12,8 +12,12 @@ class Convolution(Operator):
 
 
     def parse(self):
-        self.type = 'Convolution'
         super().__parse__()
+
+        if self.attrs.get('groups', 1) == self.attrs['channels']:
+            self.type = 'ConvolutionDepthwise'
+        else:
+            self.type = 'Convolution'
 
         # Weight
         if self.attrs.get('kernel_layout', 'OIHW') == 'OIHW':
@@ -31,7 +35,7 @@ class Convolution(Operator):
 
         # Attributes
         self.convolution_param = dict()
-        self.convolution_param['group'] = self.attrs.get('group', 1)
+        self.convolution_param['group'] = self.attrs.get('groups', 1)
         self.convolution_param['kernel_h'] = self.attrs['kernel_size'][0]
         self.convolution_param['kernel_w'] = self.attrs['kernel_size'][1]
         self.convolution_param['stride_h'] = self.attrs.get('strides', [1, 1])[0]
@@ -44,10 +48,14 @@ class Convolution(Operator):
         legacy_pad = self.model.pad.get(self.relay_inputs[0], [0, 0, 0, 0])
         attr_pad = self.attrs.get('padding', [0, 0, 0, 0])
         conv_pad = (np.array(legacy_pad) + np.array(attr_pad)).tolist()
-        self.convolution_param['pad_l'] = conv_pad[0]
-        self.convolution_param['pad_r'] = conv_pad[1]
-        self.convolution_param['pad_t'] = conv_pad[2]
-        self.convolution_param['pad_b'] = conv_pad[3]
+        if conv_pad[0] == conv_pad[1] and conv_pad[2] == conv_pad[3]:
+            self.convolution_param['pad_h'] = conv_pad[2]
+            self.convolution_param['pad_w'] = conv_pad[0]
+        else:
+            self.convolution_param['pad_l'] = conv_pad[0]
+            self.convolution_param['pad_r'] = conv_pad[1]
+            self.convolution_param['pad_t'] = conv_pad[2]
+            self.convolution_param['pad_b'] = conv_pad[3]
 
         self.attrs = self.convolution_param
 
