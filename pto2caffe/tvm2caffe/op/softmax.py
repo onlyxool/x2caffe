@@ -23,7 +23,7 @@ class Softmax(Operator):
             self.saveConstant(self.outputs[0], f_x)
         else:
             self.softmax_param = dict()
-            self.softmax_param['axis'] = self.attrs.get('axis', -1)
+            self.softmax_param['axis'] = self.attrs.get('axis', 1)
             self.attrs = self.softmax_param
 
             self.setParsed()
