@@ -124,7 +124,7 @@ class Operator(Base):
 
 
     def __parseOutput__(self):
-        self.outputs = ['None'] if self.relay.strip().startswith(self.operator_code) else re.compile(r'%(.+?) ').findall(self.relay.split('= ')[0])
+        self.outputs = [str(self.index)] if self.relay.strip().startswith(self.operator_code) else re.compile(r'%(.+?) ').findall(self.relay.split('= ')[0])
 
         for index, output_name in enumerate(self.outputs):
             shape_str = get_tensor_shape(self.relay.split(') /*')[-1])
