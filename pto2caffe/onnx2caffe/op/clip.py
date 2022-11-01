@@ -19,7 +19,7 @@ class ReLUX(Operator):
         if 'max' in self.attrs and 'min' in self.attrs:
             self.relux_param['x'] = self.attrs['max']
         else:
-            self.relux_param['x'] = self.inputs_buf[2]
+            self.relux_param['x'] = self.inputs_buf[2] if self.inputs_buf[2] is not None else 6
         self.attrs = self.relux_param
 
         self.setParsed()
