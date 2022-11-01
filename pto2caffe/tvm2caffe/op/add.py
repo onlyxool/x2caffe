@@ -25,7 +25,7 @@ class Add(Operator):
         elif (self.inputs_buf[0] is not None or self.inputs_buf[1] is not None) or (self.inputs_shape[0] != self.inputs_shape[1]):
             self.type = 'Bias'
 
-            if self.inputs_buf[1] is not None and np.all(self.inputs_buf[1] == 1):
+            if self.inputs_buf[1] is not None and np.all(self.inputs_buf[1] == 0):
                 self.byPassOperator()
                 return
 
