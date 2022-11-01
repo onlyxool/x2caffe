@@ -155,6 +155,7 @@ def compare2(model, caffe_net, inputs_tensor, level=-1):
         size_diff = calc_size(caffe_output_dict[blob_name], target_output)
         if size_diff is not None:
             print('  Size compare error:', caffe_output_dict[blob_name].shape, target_output.shape)
+            continue
 
         cosin_simi = calc_cosine_simi(caffe_output_dict[blob_name], target_output)
         max_err = calc_max_diff(caffe_output_dict[blob_name], target_output)
