@@ -155,6 +155,10 @@ class Operator(Base):
         self.__parseAttributes__()
         self.layout = self.attrs.get('layout', self.layout)
 
+        if self.model.debug_outputs[self.operator_code] is None:
+            self.model.debug_outputs[self.operator_code] = list()
+        self.model.debug_outputs[self.operator_code].extend(self.outputs)
+
 
     def convert(self):
         param = {self.layer_type.lower() + '_param': getattr(self, self.layer_type.lower() + '_param')}

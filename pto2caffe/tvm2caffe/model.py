@@ -6,18 +6,23 @@ from base import Base
 
 from tvm2caffe.relay import preprocess, get_relay_type, get_tensor_shape
 
-#from tvm2caffe.op.operator import Operator
 
 from tvm2caffe.op.add import Add
 from tvm2caffe.op.pad import Pad
 from tvm2caffe.op.bias import Bias
 from tvm2caffe.op.clip import Clip
 from tvm2caffe.op.relu import ReLU
+from tvm2caffe.op.sqrt import Sqrt
 from tvm2caffe.op.dense import Dense
+from tvm2caffe.op.power import Power
 from tvm2caffe.op.concat import Concat
+from tvm2caffe.op.divide import Divide
 from tvm2caffe.op.resize import Resize
+from tvm2caffe.op.pooling import Pooling
 from tvm2caffe.op.reshape import Reshape
+from tvm2caffe.op.sigmoid import Sigmoid
 from tvm2caffe.op.softmax import Softmax
+from tvm2caffe.op.subtract import Subtract
 from tvm2caffe.op.multiply import Multiply
 from tvm2caffe.op.transpose import Permute
 from tvm2caffe.op.batchnorm import BatchNorm
@@ -31,24 +36,31 @@ from util import shape_map_nhwc2nchw
 
 
 OpMap = {
-    'array': ByPassOperator,
-    'bypass': ByPassOperator,
-    'concatenate': Concat,
     'add': Add,
-    'transpose': Permute,
+    'clip': Clip,
+    'sqrt': Sqrt,
     'nn.pad': Pad,
+    'power': Power,
     'nn.relu': ReLU,
-    'nn.conv2d': Convolution,
-    'nn.bias_add': Bias,
-    'nn.softmax': Softmax,
-    'nn.leaky_relu': ReLU,
-    'image.resize2d': Resize,
-    'nn.batch_norm': BatchNorm,
+    'divide': Divide,
+    'nn.dense': Dense,
     'mean': ReduceMean,
     'reshape': Reshape,
-    'clip': Clip,
-    'nn.dense': Dense,
+    'sigmoid': Sigmoid,
+    'nn.bias_add': Bias,
     'multiply': Multiply,
+    'subtract': Subtract,
+    'transpose': Permute,
+    'nn.softmax': Softmax,
+    'nn.leaky_relu': ReLU,
+    'concatenate': Concat,
+    'array': ByPassOperator,
+    'nn.conv2d': Convolution,
+    'nn.avg_pool2d': Pooling,
+    'nn.max_pool2d': Pooling,
+    'image.resize2d': Resize,
+    'nn.batch_norm': BatchNorm,
+    'nn.global_avg_pool2d': Pooling,
 }
 
 
@@ -57,18 +69,30 @@ logger = logging.getLogger('Tvm2Caffe')
 
 class Model(Base):
 
-    def __init__(self, model, model_params, param):
-        model_txt = model.astext(show_meta_data=False)
-        super().__init__(model, model_txt[model_txt.find('main'):model_txt.rfind('}')].strip())
+    def __init__(self, tvm_model, tvm_model_params, param):
+        required_pass=['RemoveUnusedFunctions', 'ConvertLayout', 'FoldConstant', 'InferType', 'SimplifyInference', 'CombineParallelConv2D', 'FoldScaleAxis', 'ForwardFoldScaleAxis']
+        disabled_pass=['FuseOps']
+        with tvm.transform.PassContext(opt_level=0, required_pass=required_pass, disabled_pass=disabled_pass):
+            model = tvm.relay.optimize(tvm_model,'llvm', params=tvm_model_params)
 
-        with tvm.transform.PassContext(opt_level=0):
-            lib = tvm.relay.build(model, target='llvm', params=model_params)
-        self.device = tvm.device('llvm', 0)
-        self.module = tvm.contrib.graph_executor.GraphModule(lib["default"](self.device))
-#        self.module = tvm.contrib.debugger.debug_executor.GraphModuleDebug(lib['debug_create']('default', self.device), [self.device], lib.graph_json, None)
+        required_pass_tir='RemoveNoOp'
+        disabled_pass_tir=['UnrollLoop', 'VectorizeLoop', 'tir.SkipAssert', 'tir.ThreadSync', 'tir.Apply', 'tir.CoProcSync', 'tir.ConvertForLoopsToSerial']
+        with tvm.transform.PassContext(opt_level=0, required_pass=required_pass_tir, disabled_pass=disabled_pass_tir, config={"relay.FuseOps.max_depth": 1}):
+            lib = tvm.relay.build(model[0], target='llvm')
+
+        model_txt = model[0].astext(show_meta_data=False)
+        super().__init__(model[0], model_txt[model_txt.find('main'):model_txt.rfind('}')].strip())
+
+
+#        device = tvm.cpu(0)
+        device = tvm.device('llvm', 0)
+#        self.runtime = tvm.contrib.graph_executor.GraphModule(lib["default"](device))
+        self.runtime = tvm.contrib.debugger.debug_executor.GraphModuleDebug(lib["debug_create"](lib.libmod_name, device), [device], lib.graph_json, dump_root=None)
+
+#        self.nodes = [node for node in self.module.debug_datum.get_graph_nodes() if node['op'] != 'param']
+#        self.param_nodes = [node for node in self.module.debug_datum.get_graph_nodes() if node['op'] == 'param']
 
         self.param = param
-        self.model_params = model_params
         self.layout = param['layout']
 
         self.inputs = list()
@@ -82,6 +106,7 @@ class Model(Base):
         self.outputs_dtype = list()
         self.outputs_maxval = list()
         self.outputs_minval = list()
+        self.outputs_buf = list()
 
         self.pad = dict()
         self.layers = list()
@@ -91,6 +116,8 @@ class Model(Base):
         self.operators = list()
         self.unsupport = list()
         self.tensor_shape = dict()
+        self.debug_outputs = dict(zip(OpMap.keys(), [None]*len(OpMap.keys())))
+        self.outputs_buf = dict(zip(OpMap.keys(), [None]*len(OpMap.keys())))
 
         self.setInited()
 
@@ -120,15 +147,20 @@ class Model(Base):
             self.inputs_dtype.append(re.compile(r'\), (.+?)\]').findall(inputs.split(': ')[-1])[0])
 
         for index, inputs_name in enumerate(self.inputs):
-            print(inputs_name, end='')
-            print(':', self.inputs_shape[index], self.inputs_dtype[index])
+            print(inputs_name, end=':')
+            print(self.inputs_shape[index], self.inputs_dtype[index])
             self.tensor_shape[inputs_name] = self.inputs_shape[index]
 
         for index, relay in enumerate(relays[1:]):
             relay = preprocess(relay)
             relay_type = get_relay_type(relay)
-            if relay_type not in OpMap: # Unsupport OP
+
+            if self.param['log'] == 0:
                 print(relay)
+
+            if relay_type not in OpMap: # Unsupport OP
+                if self.param['log'] == 1:
+                    print(relay)
                 self.unsupport.append(relay_type)
                 continue
 
@@ -166,27 +198,40 @@ class Model(Base):
 
 
     def forward(self, output_name, inputs_tensor):
+        if not output_name[0].isdigit():
+            return None
+
         if self.param['log'] == 0:
-            print(self.module.benchmark(self.device))
+            print(self.runtime.benchmark(self.device))
 
-        for index, input_name in enumerate(self.inputs):
-            self.module.set_input(input_name, inputs_tensor[index].transpose(0, 2, 3, 1) if self.layout == 'NHWC' and len(self.inputs_shape[index]) == 4 else inputs_tensor[index])
+        keys = list()
+        if not self.status.forwarded:
+            for index, input_name in enumerate(self.inputs):
+                self.runtime.set_input(input_name[1:] if input_name.startswith('v') else input_name,
+                    inputs_tensor[index].transpose(0, 2, 3, 1) if self.layout == 'NHWC' and len(self.inputs_shape[index]) == 4 else inputs_tensor[index])
 
-        self.module.run()
+            self.runtime.run()
 
-        output = self.module.get_output(0).numpy()
-        return output.transpose(0, 3, 1, 2) if self.layout == 'NHWC' and len(output.shape) == 4 else self.module.get_output(0).numpy()
+            for (key, value) in self.runtime.debug_datum.get_output_tensors().items():
+                if not key.startswith('p'):
+                    key_type = key.split('tvmgen_default_fused_')[-1].split('____topo')[0].replace('_', '.', 1)
+                    for op_type in OpMap.keys():
+                        if key_type.startswith(op_type):
+                            if self.outputs_buf[op_type] is None:
+                                self.outputs_buf[op_type] = list()
+                            self.outputs_buf[op_type].append(value.numpy())
+                    keys.append(key)
+
+            self.setForwarded()
+
+        for (key, value) in self.debug_outputs.items():
+            if self.debug_outputs[key] is not None and output_name[0] in self.debug_outputs[key]:
+                output = self.outputs_buf[key][self.debug_outputs[key].index(output_name[0])]
+                break
+#        output = self.runtime.get_output(0).numpy()
 
 
-
-#        print(self.module.get_num_outputs(), 'get_num_outputs')
-#        print(self.module.get_num_inputs(), 'get_num_inputs')
-#        print(self.module.get_input_index('p35'), 'fuck')
-#        print(self.module.get_input_info(), 'get_input_info')
-
-#print(self.module.get_input(0), 'get_input0')
-#print(dir(self.module), type(self.module))
-#print(self.module.debug_get_output(520, tvm.nd.empty([1, 19, 128, 128])))
-        #print(self.module.load_params())
-        #print(self.module.share_params())
-
+        if output is None:
+            return None
+        else:
+            return output.transpose(0, 3, 1, 2) if self.layout == 'NHWC' and len(output.shape) == 4 else output

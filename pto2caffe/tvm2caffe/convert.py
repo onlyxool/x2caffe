@@ -96,12 +96,8 @@ def convert(model_file, caffe_model_path, param=None):
 #       inputs_shape_dict = {:}
         tvm_model, tvm_model_params = tvm.relay.frontend.from_pytorch(model_file, input_infos, custom_convert_map=None, use_parser_friendly_name=False, keep_quantized_weight=False)
 
-    required_pass=['RemoveUnusedFunctions', 'ConvertLayout', 'FoldConstant', 'CombineParallelConv2D', 'FoldScaleAxis', 'ForwardFoldScaleAxis']
-    disabled_pass=['FuseOps']
-    with tvm.transform.PassContext(opt_level=0, required_pass=required_pass, disabled_pass=disabled_pass):
-        tvm_model = tvm.relay.optimize(tvm_model,'llvm', params=tvm_model_params)
 
-    model = Model(tvm_model[0], tvm_model_params, param)
+    model = Model(tvm_model, tvm_model_params, param)
     model.parse()
     model.convert()
     caffe_net = model.save(caffe_model_path)
