@@ -8,42 +8,7 @@ from tvm2caffe.model import Model
 from util import shape_map_nhwc2nchw
 
 
-def check_dynamic_input(onnx_model, input_shape_dict, param_input_shape):
-    for index, input_shape in enumerate(inputs_shape_dict.value()):
-        if None in input_shape and param_input_shape is None:
-            sys.exit('Error: Dynamic Model input detected, Please Use -input_shape to overwrite input shape.' + input_str + '\n')
-        elif None in input_shape:
-            input_shape = param_input_shape[index]
-
-
-    inputs_id = list()
-    for index, input in enumerate(onnx_model.graph.input):
-        if input.name not in [tensor.name for tensor in onnx_model.graph.initializer] + [tensor.name for tensor in onnx_model.graph.sparse_initializer]:
-            inputs_id.append(index)
-
-    if input_shape is not None:
-        if len(inputs_id) > 1:
-            for index, input_id in enumerate(inputs_id):
-                for i, dim in enumerate(onnx_model.graph.input[input_id].type.tensor_type.shape.dim):
-                    dim.dim_value = input_shape[index][i]
-        else:
-             for i, dim in enumerate(onnx_model.graph.input[0].type.tensor_type.shape.dim):
-                dim.dim_value = input_shape[i]
-    else:
-        input_str = str()
-        input_dict = dict()
-        for input in onnx_model.graph.input:
-            input_shape = list()
-            for dim in input.type.tensor_type.shape.dim:
-                input_shape.append(dim.dim_value)
-            if input_shape.count(0) > 0:
-                input_str = input_str + ' ' + input.name + str(input_shape)
-
-        if len(input_str) > 0:
-            sys.exit('Error: Dynamic Model input detected, Please Use -input_shape to overwrite input shape.' + input_str + '\n')
-
-
-def get_input_shape_dict(model, model_type):
+def get_input_shape_dict(model, model_type, param):
     shape_dict = dict()
     if model_type == 'onnx':
         for index, input in enumerate(model.graph.input):
@@ -53,9 +18,27 @@ def get_input_shape_dict(model, model_type):
         for index in range(model.Subgraphs(0).InputsLength()):
             shape_dict[model.Subgraphs(0).Tensors(model.Subgraphs(0).Inputs(index)).Name().decode()] = model.Subgraphs(0).Tensors(model.Subgraphs(0).Inputs(index)).ShapeAsNumpy().tolist()
     elif model_type == 'tensorflow':
-        pass
+        import tensorflow as tf
+        graph = tf.Graph()
+        with graph.as_default():
+            tf.import_graph_def(model, name='')
+        for op in graph.get_operations():
+            if op.type == 'Placeholder' and 'unused_control_flow_input' not in op.outputs[0].name:
+                shape_dict[op.outputs[0].name.replace(':0', '')] = op.outputs[0].shape.as_list()
     elif model_type == 'pytorch':
         pass
+
+    if param['input_shape'] is not None:
+        for index, (input_name, input_shape) in enumerate(shape_dict.items()):
+            if len(shape_dict.keys()) > 1:
+                shape_dict[input_name] = param['input_shape'][index]
+            else:
+                shape_dict[input_name] = param['input_shape']
+
+    for (key, value) in shape_dict.items():
+        if None in value:
+            print(key, value)
+            sys.exit('Error: Dynamic Model input detected, Please Use -input_shape to overwrite input shape.\n')
 
     return shape_dict
 
@@ -74,13 +57,13 @@ def convert(model_file, caffe_model_path, param=None):
     if pathlib.Path(model_file).suffix.lower() == '.onnx':
         import onnx
         onnx_model = onnx.load(model_file)
-        inputs_shape_dict = get_input_shape_dict(onnx_model, 'onnx')
+        inputs_shape_dict = get_input_shape_dict(onnx_model, 'onnx', param)
         tvm_model, tvm_model_params = tvm.relay.frontend.from_onnx(onnx_model, shape=inputs_shape_dict, freeze_params=True)
     elif pathlib.Path(model_file).suffix.lower() == '.tflite':
         import tflite
         tflite_model_buf = open(model_file, "rb").read()
         tflite_model = tflite.Model.GetRootAsModel(tflite_model_buf, 0)
-        inputs_shape_dict = get_input_shape_dict(tflite_model, 'tflite')
+        inputs_shape_dict = get_input_shape_dict(tflite_model, 'tflite', param)
         inputs_dtype_dict = get_input_dtype_dict(tflite_model, 'tflite')
         tvm_model, tvm_model_params = tvm.relay.frontend.from_tflite(tflite_model, shape_dict=inputs_shape_dict, dtype_dict=inputs_dtype_dict)
     elif pathlib.Path(model_file).suffix.lower() == '.pb':
@@ -90,8 +73,8 @@ def convert(model_file, caffe_model_path, param=None):
             graph_def.ParseFromString(f.read())
             graph = tf.import_graph_def(graph_def, name="")
 
-#       inputs_shape_dict = get_input_shape_dict(graph_def, 'tensorflow')
-        tvm_model, tvm_model_params = tvm.relay.frontend.from_tensorflow(graph_def, layout=param['layout'], shape={'image_input': [1,416,416,3]})
+        inputs_shape_dict = get_input_shape_dict(graph_def, 'tensorflow', param)
+        tvm_model, tvm_model_params = tvm.relay.frontend.from_tensorflow(graph_def, layout=param['layout'], shape=inputs_shape_dict, convert_config={'use_dense':True})
     elif pathlib.Path(model_file).suffix.lower() == '.pt':
 #       inputs_shape_dict = {:}
         tvm_model, tvm_model_params = tvm.relay.frontend.from_pytorch(model_file, input_infos, custom_convert_map=None, use_parser_friendly_name=False, keep_quantized_weight=False)
