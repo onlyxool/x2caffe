@@ -48,8 +48,8 @@ class Resize(Operator):
                 self.convolution_param['group'] = self.inputs_shape[0][1]
 
                 # Padding
-                legacy_pad = self.model.pad.get(self.relay_inputs[0], [0, 0, 0, 0])
-                if legacy_pad[0] == legacy_pad[2] and legacy_pad[1] == legacy_pad[3]:
+                conv_pad = self.model.pad.get(self.relay_inputs[0], [0, 0, 0, 0])
+                if conv_pad[0] == conv_pad[2] and conv_pad[1] == conv_pad[3]:
                     self.convolution_param['pad_h'] = conv_pad[0]
                     self.convolution_param['pad_w'] = conv_pad[1]
                 else:

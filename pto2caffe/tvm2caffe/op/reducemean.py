@@ -30,8 +30,8 @@ class ReduceMean(Operator):
             self.pooling_param['stride_w'] = 1
             self.pooling_param['ceil_mode'] = False
 
-            legacy_pad = self.model.pad.get(self.relay_inputs[0], [0, 0, 0, 0])
-            if legacy_pad[0] == legacy_pad[2] and legacy_pad[1] == legacy_pad[3]:
+            pool_pad = self.model.pad.get(self.relay_inputs[0], [0, 0, 0, 0])
+            if pool_pad[0] == pool_pad[2] and pool_pad[1] == pool_pad[3]:
                 self.pooling_param['pad_h'] = pool_pad[0]
                 self.pooling_param['pad_w'] = pool_pad[1]
             else:
