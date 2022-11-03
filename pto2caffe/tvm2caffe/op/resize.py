@@ -40,12 +40,12 @@ class Resize(Operator):
 
                 self.convolution_param = dict()
                 self.convolution_param['bias_term'] = False
-                self.convolution_param['num_output'] = self.outputs_shape[0][1]
+                self.convolution_param['num_output'] = self.outputs_shape[0][1] if self.layout == 'NCHW' else self.outputs_shape[0][3]
                 self.convolution_param['kernel_h'] = scale_factor
                 self.convolution_param['kernel_w'] = scale_factor
                 self.convolution_param['stride_h'] = scale_factor
                 self.convolution_param['stride_w'] = scale_factor
-                self.convolution_param['group'] = self.inputs_shape[0][1]
+                self.convolution_param['group'] = self.inputs_shape[0][1] if self.layout == 'NCHW' else self.inputs_shape[0][3]
 
                 # Padding
                 conv_pad = self.model.pad.get(self.relay_inputs[0], [0, 0, 0, 0])
@@ -60,9 +60,11 @@ class Resize(Operator):
 
                 self.attrs = self.convolution_param
 
-                self.weight = np.ones((self.outputs_shape[0][1], 1, scale_factor, scale_factor), dtype=int)
-                self.inputs_buf[1] = self.weight
-                self.inputs_shape[1] = self.inputs_buf[1].shape
+                self.weight = np.ones((self.outputs_shape[0][1] if self.layout == 'NCHW' else self.outputs_shape[0][3], 1, scale_factor, scale_factor), dtype=int)
+
+                self.inputs.append('weight')
+                self.inputs_buf.append(self.weight)
+                self.inputs_shape.append(self.inputs_buf[1].shape)
             else:
                 self.type = 'Upsample'
                 self.upsample_param = dict()
