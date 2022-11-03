@@ -60,6 +60,7 @@ def convert(model_file, caffe_model_path, param=None):
         inputs_shape_dict = get_input_shape_dict(onnx_model, 'onnx', param)
         tvm_model, tvm_model_params = tvm.relay.frontend.from_onnx(onnx_model, shape=inputs_shape_dict, freeze_params=True)
     elif pathlib.Path(model_file).suffix.lower() == '.tflite':
+        param['layout'] = 'NHWC'
         import tflite
         tflite_model_buf = open(model_file, "rb").read()
         tflite_model = tflite.Model.GetRootAsModel(tflite_model_buf, 0)
@@ -67,6 +68,7 @@ def convert(model_file, caffe_model_path, param=None):
         inputs_dtype_dict = get_input_dtype_dict(tflite_model, 'tflite')
         tvm_model, tvm_model_params = tvm.relay.frontend.from_tflite(tflite_model, shape_dict=inputs_shape_dict, dtype_dict=inputs_dtype_dict)
     elif pathlib.Path(model_file).suffix.lower() == '.pb':
+        param['layout'] = 'NHWC'
         import tensorflow as tf
         with tf.compat.v1.gfile.GFile(model_file, "rb") as f:
             graph_def = tf.compat.v1.GraphDef()
