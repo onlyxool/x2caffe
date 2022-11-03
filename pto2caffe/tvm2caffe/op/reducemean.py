@@ -1,4 +1,5 @@
 import numpy as np
+
 from caffe_transform import caffe_layer
 from tvm2caffe.op.operator import Operator
 
@@ -30,12 +31,14 @@ class ReduceMean(Operator):
             self.pooling_param['ceil_mode'] = False
 
             legacy_pad = self.model.pad.get(self.relay_inputs[0], [0, 0, 0, 0])
-            attr_pad = self.attrs.get('padding', [0, 0, 0, 0]) 
-            pool_pad = (np.array(legacy_pad) + np.array(attr_pad)).tolist()
-            self.pooling_param['pad_l'] = pool_pad[0]
-            self.pooling_param['pad_r'] = pool_pad[1]
-            self.pooling_param['pad_t'] = pool_pad[2]
-            self.pooling_param['pad_b'] = pool_pad[3]
+            if legacy_pad[0] == legacy_pad[2] and legacy_pad[1] == legacy_pad[3]:
+                self.pooling_param['pad_h'] = pool_pad[0]
+                self.pooling_param['pad_w'] = pool_pad[1]
+            else:
+                self.pooling_param['pad_t'] = pool_pad[0]
+                self.pooling_param['pad_l'] = pool_pad[1]
+                self.pooling_param['pad_b'] = pool_pad[2]
+                self.pooling_param['pad_r'] = pool_pad[3]
 
             self.attrs = self.pooling_param
 
@@ -79,7 +82,7 @@ class ReduceMean(Operator):
             self.attrs = self.reduction_param
             self.setParsed()
         else:
-            print(self.attrs['axis'], self.inputs_shape, self.outputs_shape)
+            print(self.attrs['axis'], self.inputs_shape, self.outputs_shape, self.layout)
             raise NotImplementedError
 
 

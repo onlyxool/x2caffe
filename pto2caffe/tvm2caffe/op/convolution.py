@@ -46,16 +46,16 @@ class Convolution(Operator):
 
         # Padding
         legacy_pad = self.model.pad.get(self.relay_inputs[0], [0, 0, 0, 0])
-        attr_pad = self.attrs.get('padding', [0, 0, 0, 0])
+        attr_pad = self.attrs.get('padding', [0, 0, 0, 0]) # t, l, b, r
         conv_pad = (np.array(legacy_pad) + np.array(attr_pad)).tolist()
-        if conv_pad[0] == conv_pad[1] and conv_pad[2] == conv_pad[3]:
-            self.convolution_param['pad_h'] = conv_pad[2]
-            self.convolution_param['pad_w'] = conv_pad[0]
+        if conv_pad[0] == conv_pad[2] and conv_pad[1] == conv_pad[3]:
+            self.convolution_param['pad_h'] = conv_pad[0]
+            self.convolution_param['pad_w'] = conv_pad[1]
         else:
-            self.convolution_param['pad_l'] = conv_pad[0]
-            self.convolution_param['pad_r'] = conv_pad[1]
-            self.convolution_param['pad_t'] = conv_pad[2]
-            self.convolution_param['pad_b'] = conv_pad[3]
+            self.convolution_param['pad_t'] = conv_pad[0]
+            self.convolution_param['pad_l'] = conv_pad[1]
+            self.convolution_param['pad_b'] = conv_pad[2]
+            self.convolution_param['pad_r'] = conv_pad[3]
 
         self.attrs = self.convolution_param
 

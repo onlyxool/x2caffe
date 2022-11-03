@@ -48,10 +48,16 @@ class Resize(Operator):
                 self.convolution_param['group'] = self.inputs_shape[0][1]
 
                 # Padding
-                legacy_pad = self.model.pad.get(self.node.input[0], {'left': 0, 'right': 0, 'top': 0, 'bottom': 0})
-                pad_dict = dict(auto_pad='SAME_LOWER'.encode())
-                padding = computePad('Deconvolution', pad_dict, self.inputs_shape[0], self.outputs_shape[0], [scale_factor, scale_factor], [scale_factor, scale_factor], legacy_pad)
-                self.convolution_param.update(padding)
+                legacy_pad = self.model.pad.get(self.relay_inputs[0], [0, 0, 0, 0])
+                if legacy_pad[0] == legacy_pad[2] and legacy_pad[1] == legacy_pad[3]:
+                    self.convolution_param['pad_h'] = conv_pad[0]
+                    self.convolution_param['pad_w'] = conv_pad[1]
+                else:
+                    self.convolution_param['pad_t'] = conv_pad[0]
+                    self.convolution_param['pad_l'] = conv_pad[1]
+                    self.convolution_param['pad_b'] = conv_pad[2]
+                    self.convolution_param['pad_r'] = conv_pad[3]
+
                 self.attrs = self.convolution_param
 
                 self.weight = np.ones((self.outputs_shape[0][1], 1, scale_factor, scale_factor), dtype=int)
