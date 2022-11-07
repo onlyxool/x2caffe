@@ -36,7 +36,9 @@ class Add(Operator):
                 self.bias_param['axis'] = self.inputs_shape[0].index(self.inputs_shape[1][0]) if len(self.inputs_shape[1]) > 0 else 0
 
             self.bias_param['axis'] = dim_map_nhwc2nchw[self.bias_param['axis']] if self.layout == 'NHWC' and len(self.inputs_shape[0]) == 4 else self.bias_param['axis']
-            self.bias_param['num_axes'] = len(self.inputs_shape[1])
+
+            self.bias_param['num_axes'] = list(np.array(self.inputs_shape[0]) == np.array(self.inputs_shape[1])).count(True) if len(self.inputs_shape[1]) > 0 else 0
+
             self.attrs = self.bias_param
 
             self.bias = self.inputs_buf[1]
