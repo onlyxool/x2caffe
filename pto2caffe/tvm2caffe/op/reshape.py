@@ -19,7 +19,7 @@ class Reshape(Operator):
             self.byPassOperator()
         elif self.operator_code == 'reshape':
             self.type = 'Reshape'
-            self.reshape_param = dict(shape=dict(dim=self.attrs['newshape']))
+            self.reshape_param = dict(shape=dict(dim=self.outputs_shape[0]))
             self.attrs = self.reshape_param
             self.setParsed()
         elif self.operator_code == 'squeeze':
