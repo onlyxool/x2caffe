@@ -1,6 +1,7 @@
 import re
 from base import Base
-from tvm2caffe.relay import get_relay_type, get_tensor_shape
+from tvm2caffe.relay import get_relay_type
+from util import shape_map_nhwc2nchw
 
 from caffe_transform import caffe_layer
 
@@ -89,13 +90,14 @@ class Operator(Base):
 
     def __parseInput__(self):
         self.inputs = self.relay_inputs = re.compile(r'%(.+?)[,|\)|\.]').findall(self.relay.split(' = ')[-1])
+
         for index, input_name in enumerate(self.relay_inputs):
             if input_name in self.model.indentity.keys():
                 self.inputs = self.relay_inputs[:index] + self.model.indentity[input_name] + self.relay_inputs[index+1:]
 
         for index, input_name in enumerate(self.inputs):
             self.inputs_buf.append(self.model.constant.get(input_name, None))
-            self.inputs_shape.append(self.model.tensor_shape.get(input_name, None))
+            self.inputs_shape.append(shape_map_nhwc2nchw(self.model.tensor_shape.get(input_name, None)) if self.layout == 'NHWC' else self.model.tensor_shape.get(input_name, None))
 
 #        constants = re.compile(r'meta(.+?) */').findall(self.relay.split(' = ')[-1].split(') /*')[0])
 #        if len(constants) > 0:
@@ -103,8 +105,10 @@ class Operator(Base):
 #        for constant in constants:
 #            self.inputs.insert(index, constant)
 
+
         operands = re.compile(r' (.+?) \/\* ty=').findall(self.relay.split(self.operator_code)[-1].split(') /*')[0])
         for operand in operands:
+            operand = operand.strip()
             if 'meta' in operand:
                 self.inputs.append(operand[4:])
                 self.inputs_buf.append(self.model.constant.get(operand[4:], None))
@@ -119,32 +123,34 @@ class Operator(Base):
 #            self.inputs_shape.append(self.model.tensor_shape.get(input_name, self.model.tensor_shape.get(input_name[1:], None)))
 
 
-        if len(self.inputs_buf) > 0 and self.inputs_buf[0] is not None:
-            print('Constant Op Need Handle:'+str(self.operator_code)+ ' ' + self.outputs[0])
-
-
     def __parseOutput__(self):
         self.outputs = [str(self.index)] if self.relay.strip().startswith(self.operator_code) else re.compile(r'%(.+?) ').findall(self.relay.split('= ')[0])
 
+        outputs = self.outputs
         for index, output_name in enumerate(self.outputs):
-            shape_str = get_tensor_shape(self.relay.split(') /*')[-1])
-            self.outputs_shape.append(eval('['+shape_str[index]+']') if len(shape_str) > 0 else None)
-            self.model.tensor_shape[output_name] = eval('['+shape_str[index]+']') if len(shape_str) > 0 else None
+            if output_name in self.model.indentity.keys():
+                outputs = outputs[:outputs.index(output_name)] + self.model.indentity[output_name] + outputs[outputs.index(output_name)+1:]
+        self.outputs = outputs
+
+        for index, output_name in enumerate(self.outputs):
+            self.outputs_shape.append(shape_map_nhwc2nchw(self.model.tensor_shape[output_name]) if self.layout == 'NHWC' else self.model.tensor_shape[output_name])
 
 
     def __parseAttributes__(self):
         keys = re.compile(r', ([a-zA-Z_]+)=').findall(self.relay.split(' = ')[-1].split(') /*')[0])
         for key in keys:
-            if self.relay.split(key+'=')[-1].startswith('[['):
-                self.attrs[key] = eval(re.compile(r'\[\[.+?\]\]').findall(self.relay.split(key+'=')[-1])[0])
-            elif self.relay.split(key+'=')[-1].startswith('['):
-                self.attrs[key] = eval(re.compile(r'[\[][0-9, -]*\]').findall(self.relay.split(key+'=')[-1])[0])
-            elif re.compile(r'[\d-]').match(self.relay.split(key+'=')[-1]) is not None:
-                self.attrs[key] = eval(re.compile(r'[\.\d-]+').match(self.relay.split(key+'=')[-1]).group(0))
-            elif self.relay.split(key+'=')[-1].startswith('"'):
-                self.attrs[key] = eval(re.compile(r'"(.+?)"').match(self.relay.split(key+'=')[-1]).group(0))
-            elif re.compile(r'[A-Za-z]').match(self.relay.split(key+'=')[-1]) is not None:
-                self.attrs[key] = eval(re.compile(r'[A-Za-z]+').match(self.relay.split(key+'=')[-1]).group(0))
+            if self.relay.split(key+'=', 1)[1].startswith('[['):
+                self.attrs[key] = eval(re.compile(r'\[\[.+?\]\]').findall(self.relay.split(key+'=', 1)[1])[0])
+            elif self.relay.split(key+'=', 1)[1].startswith('['):
+                self.attrs[key] = eval(re.compile(r'[\[][0-9, -]*\]').findall(self.relay.split(key+'=', 1)[1])[0])
+            elif re.compile(r'[\d-]').match(self.relay.split(key+'=', 1)[1]) is not None:
+                self.attrs[key] = eval(re.compile(r'[\.\d-]+').match(self.relay.split(key+'=', 1)[1]).group(0))
+            elif self.relay.split(key+'=', 1)[1].startswith('""'):
+                self.attrs[key] = ''
+            elif self.relay.split(key+'=', 1)[1].startswith('"'):
+                self.attrs[key] = eval(re.compile(r'"(.+?)"').match(self.relay.split(key+'=', 1)[1]).group(0))
+            elif re.compile(r'[A-Za-z]').match(self.relay.split(key+'=', 1)[1]) is not None:
+                self.attrs[key] = eval(re.compile(r'[A-Za-z]+').match(self.relay.split(key+'=', 1)[1]).group(0))
             else:
                 raise NotImplementedError
 
@@ -154,6 +160,9 @@ class Operator(Base):
         self.__parseOutput__()
         self.__parseAttributes__()
         self.layout = self.attrs.get('layout', self.layout)
+
+        if len(self.inputs_buf) > 0 and self.inputs_buf[0] is not None:
+            print('Constant Op Need Handle:'+str(self.operator_code)+ ' ' + self.outputs[0])
 
         if self.model.debug_outputs[self.operator_code] is None:
             self.model.debug_outputs[self.operator_code] = list()
