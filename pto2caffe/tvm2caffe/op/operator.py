@@ -91,20 +91,14 @@ class Operator(Base):
     def __parseInput__(self):
         self.inputs = self.relay_inputs = re.compile(r'%(.+?)[,|\)|\.]').findall(self.relay.split(' = ')[-1])
 
-        for index, input_name in enumerate(self.relay_inputs):
-            if input_name in self.model.indentity.keys():
-                self.inputs = self.relay_inputs[:index] + self.model.indentity[input_name] + self.relay_inputs[index+1:]
+        inputs = list()
+        for index, input_name in enumerate(self.inputs):
+            inputs = inputs + self.model.indentity.get(input_name, [input_name])
+        self.inputs = inputs
 
         for index, input_name in enumerate(self.inputs):
             self.inputs_buf.append(self.model.constant.get(input_name, None))
             self.inputs_shape.append(shape_map_nhwc2nchw(self.model.tensor_shape.get(input_name, None)) if self.layout == 'NHWC' else self.model.tensor_shape.get(input_name, None))
-
-#        constants = re.compile(r'meta(.+?) */').findall(self.relay.split(' = ')[-1].split(') /*')[0])
-#        if len(constants) > 0:
-#            index = self.relay.split(' = ')[-1].split(constants[0])[0].count('%')
-#        for constant in constants:
-#            self.inputs.insert(index, constant)
-
 
         operands = re.compile(r' (.+?) \/\* ty=').findall(self.relay.split(self.operator_code)[-1].split(') /*')[0])
         for operand in operands:
@@ -117,10 +111,6 @@ class Operator(Base):
                 self.inputs.append('operand'+str(len(self.inputs)+1))
                 self.inputs_buf.append(eval(operand))
                 self.inputs_shape.append([])
-
-#        for input_name in self.inputs:
-#            self.inputs_buf.append(self.model.constant.get(input_name, self.model.constant.get(input_name[1:], None)))
-#            self.inputs_shape.append(self.model.tensor_shape.get(input_name, self.model.tensor_shape.get(input_name[1:], None)))
 
 
     def __parseOutput__(self):
