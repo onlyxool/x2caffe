@@ -7,6 +7,7 @@ from base import Base
 from tvm2caffe.relay import preprocess, get_relay_type, get_tensor_shape
 
 
+from tvm2caffe.op.abs import Abs
 from tvm2caffe.op.add import Add
 from tvm2caffe.op.pad import Pad
 from tvm2caffe.op.bias import Bias
@@ -15,6 +16,8 @@ from tvm2caffe.op.relu import ReLU
 from tvm2caffe.op.sqrt import Sqrt
 from tvm2caffe.op.dense import Dense
 from tvm2caffe.op.power import Power
+from tvm2caffe.op.prelu import PReLU
+from tvm2caffe.op.split import Split
 from tvm2caffe.op.concat import Concat
 from tvm2caffe.op.divide import Divide
 from tvm2caffe.op.resize import Resize
@@ -26,9 +29,12 @@ from tvm2caffe.op.subtract import Subtract
 from tvm2caffe.op.multiply import Multiply
 from tvm2caffe.op.transpose import Permute
 from tvm2caffe.op.batchnorm import BatchNorm
+from tvm2caffe.op.expanddims import ExpandDims
 from tvm2caffe.op.reducemean import ReduceMean
 from tvm2caffe.op.convolution import Convolution
+from tvm2caffe.op.stridedslice import StridedSlice
 from tvm2caffe.op.bypassoperator import ByPassOperator
+
 
 from caffe_transform import save_caffe_model
 from caffe_transform import make_caffe_input_layer
@@ -36,16 +42,20 @@ from util import shape_map_nhwc2nchw
 
 
 OpMap = {
+    'abs': Abs,
     'add': Add,
     'clip': Clip,
     'sqrt': Sqrt,
     'nn.pad': Pad,
     'power': Power,
+    'split': Split,
     'nn.relu': ReLU,
     'divide': Divide,
     'nn.dense': Dense,
+    'nn.prelu': PReLU,
     'mean': ReduceMean,
     'reshape': Reshape,
+    'squeeze': Reshape,
     'sigmoid': Sigmoid,
     'nn.bias_add': Bias,
     'multiply': Multiply,
@@ -54,12 +64,15 @@ OpMap = {
     'nn.softmax': Softmax,
     'nn.leaky_relu': ReLU,
     'concatenate': Concat,
+    'cast': ByPassOperator,
     'array': ByPassOperator,
     'nn.conv2d': Convolution,
     'nn.avg_pool2d': Pooling,
     'nn.max_pool2d': Pooling,
     'image.resize2d': Resize,
+    'expand_dims': ExpandDims,
     'nn.batch_norm': BatchNorm,
+    'strided_slice': StridedSlice,
     'nn.global_avg_pool2d': Pooling,
 }
 
@@ -84,13 +97,9 @@ class Model(Base):
         super().__init__(model[0], model_txt[model_txt.find('main'):model_txt.rfind('}')].strip())
 
 
-#        device = tvm.cpu(0)
-        device = tvm.device('llvm', 0)
-#        self.runtime = tvm.contrib.graph_executor.GraphModule(lib["default"](device))
-        self.runtime = tvm.contrib.debugger.debug_executor.GraphModuleDebug(lib["debug_create"](lib.libmod_name, device), [device], lib.graph_json, dump_root=None)
-
-#        self.nodes = [node for node in self.module.debug_datum.get_graph_nodes() if node['op'] != 'param']
-#        self.param_nodes = [node for node in self.module.debug_datum.get_graph_nodes() if node['op'] == 'param']
+        self.device = tvm.device('llvm', 0)
+#        self.runtime = tvm.contrib.graph_executor.GraphModule(lib["default"](self.device))
+        self.runtime = tvm.contrib.debugger.debug_executor.GraphModuleDebug(lib["debug_create"](lib.libmod_name, self.device), [self.device], lib.graph_json, dump_root=None)
 
         self.param = param
         self.layout = param['layout']
@@ -109,6 +118,7 @@ class Model(Base):
         self.outputs_buf = list()
 
         self.pad = dict()
+        self.relays = list()
         self.layers = list()
         self.constant = dict()
         self.errorMsg = list()
@@ -120,6 +130,34 @@ class Model(Base):
         self.outputs_buf = dict(zip(OpMap.keys(), [None]*len(OpMap.keys())))
 
         self.setInited()
+
+
+    def preprocess(self, relays):
+        for index, relay in enumerate(relays[1:]):
+            relay_type = get_relay_type(relay)
+            output = str(index) if relay.strip().startswith(relay_type) else re.compile(r'%(.+?) ').findall(relay.split('= ')[0])[0]
+            shape_str = get_tensor_shape(relay.split(') /*')[-1])
+            output_shape = eval('['+shape_str[0]+']') if len(shape_str) > 0 else None
+
+            if relay_type == '':
+                self.relays.append('ignore')
+                inputs = re.compile(r'%(.+?),').findall(relay.split(' = ')[-1].split(') /*')[0]+',')
+                inputs_shape = get_tensor_shape(relay.split(') /*')[-1])
+                self.indentity[output] = inputs
+                for index, input_name in enumerate(inputs):
+                    self.tensor_shape[input_name] = eval(inputs_shape[index])
+            elif relay_type.startswith('ty=Tensor'):
+                self.relays.append('ignore')
+                input = re.compile(r'%(.+?)\.').findall(relay.split(' = ')[-1])[0]
+                no = re.compile(r'\.(.+?) ').findall(relay.split(' = ')[-1])[0]
+                if input in self.indentity.keys():
+                    self.indentity[input].append(output)
+                else:
+                    self.indentity[input] = [output]
+            else:
+                self.relays.append(relay)
+
+            self.tensor_shape[output] = output_shape
 
 
     def parse(self):
@@ -135,10 +173,14 @@ class Model(Base):
             metadata = tvm.ir.load_json(self.model.astext(show_meta_data=True).split('[metadata]')[-1])
             for index, meta in enumerate(metadata['relay.Constant']):
                 self.constant['[relay.Constant]['+str(index)+']'] = meta.data.numpy()
-                self.tensor_shape['[relay.Constant]['+str(index)+']'] = list(meta.data.numpy().shape)
+                self.tensor_shape['[relay.Constant]['+str(index)+']'] = list(meta.data.numpy().shape) if self.layout == 'NCHW' else shape_map_nhwc2nchw(list(meta.data.numpy().shape))
 
         relays = self.graph.split('\n')
 
+        if self.param['log'] == 0:
+            print(self.graph)
+
+        self.preprocess(relays)
         print('Tvm Model Input size:')
         inputs_str = relays[0][relays[0].find('main')+4:relays[0].rfind('hash')].strip()
         for inputs in inputs_str.split('(%')[-1].split(', %'):
@@ -151,16 +193,16 @@ class Model(Base):
             print(self.inputs_shape[index], self.inputs_dtype[index])
             self.tensor_shape[inputs_name] = self.inputs_shape[index]
 
-        for index, relay in enumerate(relays[1:]):
+        for index, relay in enumerate(self.relays):
             relay = preprocess(relay)
             relay_type = get_relay_type(relay)
 
-            if self.param['log'] == 0:
-                print(relay)
+            if relay == 'ignore':
+                continue
 
             if relay_type not in OpMap: # Unsupport OP
                 if self.param['log'] == 1:
-                    print(relay)
+                    print(relay_type, relay)
                 self.unsupport.append(relay_type)
                 continue
 
@@ -207,8 +249,7 @@ class Model(Base):
         keys = list()
         if not self.status.forwarded:
             for index, input_name in enumerate(self.inputs):
-                self.runtime.set_input(input_name[1:] if input_name.startswith('v') else input_name,
-                    inputs_tensor[index].transpose(0, 2, 3, 1) if self.layout == 'NHWC' and len(self.inputs_shape[index]) == 4 else inputs_tensor[index])
+                self.runtime.set_input(input_name, inputs_tensor[index].transpose(0, 2, 3, 1) if self.layout == 'NHWC' and len(self.inputs_shape[index]) == 4 else inputs_tensor[index])
 
             self.runtime.run()
 
@@ -225,13 +266,13 @@ class Model(Base):
             self.setForwarded()
 
         for (key, value) in self.debug_outputs.items():
-            if self.debug_outputs[key] is not None and output_name[0] in self.debug_outputs[key]:
+            if self.outputs_buf[key] is not None and self.debug_outputs[key] is not None and output_name[0] in self.debug_outputs[key]:
                 output = self.outputs_buf[key][self.debug_outputs[key].index(output_name[0])]
                 break
 #        output = self.runtime.get_output(0).numpy()
 
 
-        if output is None:
+        if 'output' not in locals():
             return None
         else:
             return output.transpose(0, 3, 1, 2) if self.layout == 'NHWC' and len(output.shape) == 4 else output
