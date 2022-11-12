@@ -59,7 +59,6 @@ class Multiply(Operator):
             else:
                 self.scale_param['axis'] = self.inputs_shape[0].index(self.inputs_shape[1][0]) if len(self.inputs_shape[1]) > 0 else 0
 
-            self.scale_param['axis'] = dim_map_nhwc2nchw[self.scale_param['axis']] if self.layout == 'NHWC' and len(self.inputs_shape[0]) == 4 else self.scale_param['axis']
             self.scale_param['num_axes'] = len(self.inputs_shape[1])
             self.scale_param['bias_term'] = False
             self.attrs = self.scale_param
