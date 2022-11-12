@@ -1,3 +1,5 @@
+import numpy as np
+
 from caffe_transform import caffe_layer
 from tvm2caffe.op.operator import Operator
 
@@ -30,7 +32,10 @@ class StridedSlice(Operator):
             self.unSupported('Do not support dimitions > 4.')
             return
 
-        axis = self.attrs['axes']
+        if self.attrs['axes'] is not None:
+            axes = self.attrs['axes']
+        else:
+            axes = [list(np.array(self.inputs_shape[0]) == np.array(self.outputs_shape[0])).index(False)]
         if self.attrs.get('axes', None) is not None and len(self.attrs['axes']) > 1:
             self.unSupported('Can\'t slice more than one axis')
             return
@@ -41,7 +46,7 @@ class StridedSlice(Operator):
         if start == 0:
             slice_point = end
             self.outputs.append(self.name+'_useless')
-        elif end == self.inputs_shape[0][axis[0]]:
+        elif end == self.inputs_shape[0][axes[0]]:
             slice_point = start
             self.outputs.insert(0, self.name+'_useless')
         else:
@@ -50,7 +55,7 @@ class StridedSlice(Operator):
             return
 
         self.slice_param = dict()
-        self.slice_param['axis'] = int(axis[0]) if self.layout == 'NCHW' else dim_map_nhwc2nchw[int(axis[0])]
+        self.slice_param['axis'] = int(axes[0]) if self.layout == 'NCHW' else dim_map_nhwc2nchw[int(axes[0])]
         self.slice_param['slice_point'] = [slice_point]
 
         self.attrs = self.slice_param
