@@ -2,11 +2,7 @@ import re
 
 
 def get_relay_type(relay):
-    type_str = relay[:relay.find('(%')].split(' ')[-1]
-    if type_str == '':
-        return 'array'
-    else:
-        return type_str
+    return relay[:relay.find('(')].split(' ')[-1]
 
 
 def get_tensor_shape(tytensor):
@@ -18,5 +14,6 @@ def preprocess(relay):
         return match.group()[:match.start()-match.end()+1]
     relay = re.sub(r'\df', remove, relay)
     relay = re.sub(r'\di64', remove, relay)
+    relay = relay.replace('(meta', '( meta')
 
     return relay.strip()
