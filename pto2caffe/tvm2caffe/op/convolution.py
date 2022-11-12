@@ -16,11 +16,15 @@ class Convolution(Operator):
 
         if self.attrs.get('groups', 1) == self.attrs['channels']:
             self.type = 'ConvolutionDepthwise'
+        elif self.inputs_buf[1] is None:
+            self.type = 'Xcorr'
         else:
             self.type = 'Convolution'
 
         # Weight
-        if self.attrs.get('kernel_layout', 'OIHW') == 'OIHW':
+        if self.inputs_buf[1] is None:
+            pass
+        elif self.attrs.get('kernel_layout', 'OIHW') == 'OIHW':
             self.weight = self.inputs_buf[1]
         elif self.attrs.get('kernel_layout', 'OIHW') == 'HWIO':
             self.weight = self.inputs_buf[1].transpose(3, 2, 0, 1)
