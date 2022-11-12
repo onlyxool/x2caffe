@@ -17,8 +17,8 @@ class Resize(Operator):
 
         if self.inputs_shape[0] is not None:
             import math
-            input_h = self.inputs_shape[0][self.ndim('H')]
-            input_w = self.inputs_shape[0][self.ndim('W')]
+            input_h = self.inputs_shape[0][2]
+            input_w = self.inputs_shape[0][3]
             output_h = self.attrs['size'][0]
             output_w = self.attrs['size'][1]
             scale_factor_h = output_h / input_h
@@ -40,12 +40,12 @@ class Resize(Operator):
 
                 self.convolution_param = dict()
                 self.convolution_param['bias_term'] = False
-                self.convolution_param['num_output'] = self.outputs_shape[0][1] if self.layout == 'NCHW' else self.outputs_shape[0][3]
+                self.convolution_param['num_output'] = self.outputs_shape[0][1]
                 self.convolution_param['kernel_h'] = scale_factor
                 self.convolution_param['kernel_w'] = scale_factor
                 self.convolution_param['stride_h'] = scale_factor
                 self.convolution_param['stride_w'] = scale_factor
-                self.convolution_param['group'] = self.inputs_shape[0][1] if self.layout == 'NCHW' else self.inputs_shape[0][3]
+                self.convolution_param['group'] = self.inputs_shape[0][1]
 
                 # Padding
                 conv_pad = self.model.pad.get(self.relay_inputs[0], [0, 0, 0, 0])
@@ -60,7 +60,7 @@ class Resize(Operator):
 
                 self.attrs = self.convolution_param
 
-                self.weight = np.ones((self.outputs_shape[0][1] if self.layout == 'NCHW' else self.outputs_shape[0][3], 1, scale_factor, scale_factor), dtype=int)
+                self.weight = np.ones((self.outputs_shape[0][1], 1, scale_factor, scale_factor), dtype=int)
 
                 self.inputs.append('weight')
                 self.inputs_buf.append(self.weight)
