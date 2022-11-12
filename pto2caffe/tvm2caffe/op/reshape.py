@@ -28,10 +28,20 @@ class Reshape(Operator):
             self.attrs = self.reshape_param
             self.setParsed()
 
+        if self.layout == 'NHWC' and len(self.inputs_shape[0]) == 4 and len(self.inputs_shape[0]) > len(self.outputs_shape[0]):
+            self.type = 'Permute+Reshape'
+            self.permute = 'Reshape_' + self.name[0] + '_split' + str(self.index)
+            self.permute_param = dict(order=[0,2,3,1])
+
 
     def convert(self):
-        layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, reshape_param=self.reshape_param)
+        layers = list()
+        if self.type == 'Permute+Reshape':
+            layers.append(caffe_layer(self.layer_type[0], self.name[0], [self.inputs[0]], [None], [self.permute], permute_param=self.permute_param))
+            layers.append(caffe_layer(self.layer_type[1], self.name[1], [self.permute], self.inputs_buf, self.outputs, reshape_param=self.reshape_param))
+        elif self.type == 'Reshape':
+            layers.append(caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, reshape_param=self.reshape_param))
 
         self.setConverted()
 
-        return [layer]
+        return layers
