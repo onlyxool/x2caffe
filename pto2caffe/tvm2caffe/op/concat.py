@@ -3,6 +3,7 @@ from tvm2caffe.op.operator import Operator
 
 from util import dim_map_nhwc2nchw
 
+
 class Concat(Operator):
     def __init__(self, model, relay, index):
         super().__init__(model, relay, index)
@@ -15,7 +16,7 @@ class Concat(Operator):
         self.type = 'Concat'
 
         self.concat_param = dict()
-        self.concat_param['axis'] = dim_map_nhwc2nchw[self.attrs['axis']] if self.layout == 'NHWC' else self.attrs['axis']
+        self.concat_param['axis'] = dim_map_nhwc2nchw[self.attrs['axis']] if self.layout == 'NHWC' and len(self.outputs_shape[0]) == 4 else self.attrs['axis']
 
         self.attrs = self.concat_param
 
