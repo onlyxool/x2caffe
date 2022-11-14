@@ -16,11 +16,15 @@ class Split(Operator):
         self.type = 'Slice'
         super().__parse__()
 
+        indices_or_sections = self.attrs['indices_or_sections']
+        if indices_or_sections == 1:
+            self.byPassOperator()
+            return
+
         self.slice_param = dict()
         self.slice_param['axis'] = dim_map_nhwc2nchw[self.attrs['axis']] if self.layout == 'NHWC' else self.attrs['axis']
 
         # Slice Point
-        indices_or_sections = self.attrs['indices_or_sections']
         self.slice_param['slice_point'] = list()
         for i in range(indices_or_sections):
             self.slice_param['slice_point'].append(self.outputs_shape[i][self.slice_param['axis']]*i)
