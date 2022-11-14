@@ -9,6 +9,7 @@ from tvm2caffe.relay import preprocess, get_relay_type, get_tensor_shape
 
 from tvm2caffe.op.abs import Abs
 from tvm2caffe.op.add import Add
+from tvm2caffe.op.max import Max
 from tvm2caffe.op.pad import Pad
 from tvm2caffe.op.bias import Bias
 from tvm2caffe.op.clip import Clip
@@ -44,6 +45,7 @@ from util import shape_map_nhwc2nchw
 OpMap = {
     'abs': Abs,
     'add': Add,
+    'max': Max,
     'clip': Clip,
     'sqrt': Sqrt,
     'nn.pad': Pad,
