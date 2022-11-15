@@ -14,7 +14,7 @@ class ExpandDims(Operator):
 
 
     def parse(self):
-        self.type = 'ExpandDims'
+        self.type = 'Reshape'
         super().__parse__()
 
         if self.inputs_shape[0] == self.outputs_shape[0]:
