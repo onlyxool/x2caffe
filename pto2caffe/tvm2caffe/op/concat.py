@@ -1,3 +1,5 @@
+import numpy as np
+
 from caffe_transform import caffe_layer
 from tvm2caffe.op.operator import Operator
 
@@ -16,7 +18,10 @@ class Concat(Operator):
         self.type = 'Concat'
 
         self.concat_param = dict()
-        self.concat_param['axis'] = dim_map_nhwc2nchw[self.attrs['axis']] if self.layout == 'NHWC' and len(self.outputs_shape[0]) == 4 else self.attrs['axis']
+        if 'axis' in self.attrs:
+            self.concat_param['axis'] = dim_map_nhwc2nchw[self.attrs['axis']] if self.layout == 'NHWC' and len(self.outputs_shape[0]) == 4 else self.attrs['axis']
+        else:
+            self.concat_param['axis'] = list(np.array(self.inputs_shape[0]) == np.array(self.outputs_shape[0])).index(False)
 
         self.attrs = self.concat_param
 
