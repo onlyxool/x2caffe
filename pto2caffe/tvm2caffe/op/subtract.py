@@ -24,11 +24,12 @@ class Subtract(Operator):
         elif self.inputs_buf[0] is None and self.inputs_buf[1] is not None:
             self.type = 'Bias'
 
-            self.bias = self.inputs_buf[1] * -1
+            self.bias = (self.inputs_buf[1] * -1).squeeze()
+            self.inputs_shape[1] = self.bias.shape
 
             self.bias_param = dict()
             self.bias_param['axis'] = self.inputs_shape[0].index(self.inputs_shape[1][0]) if len(self.inputs_shape[1]) > 0 else 0
-            self.bias_param['num_axes'] = list(np.array(self.inputs_shape[0]) == np.array(self.inputs_shape[1])).count(True) if len(self.inputs_shape[1]) > 0 else 0
+            self.bias_param['num_axes'] = len(self.bias.shape)
 
             self.attrs = self.bias_param
             self.setParsed()
