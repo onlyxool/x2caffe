@@ -119,6 +119,8 @@ def CheckParam(param):
     if 'layout' not in param or param['layout'] is None:
         if param['platform'] == 'tensorflow' or param['platform'] == 'tflite':
             param['layout'] = 'NHWC'
+        elif param['platform'] == 'tvm' and (param['model'].endswith('pb') or param['model'].endswith('tflite')):
+            param['layout'] = 'NHWC'
         else:
             param['layout'] = 'NCHW'
 
