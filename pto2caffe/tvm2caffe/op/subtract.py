@@ -24,8 +24,11 @@ class Subtract(Operator):
         elif self.inputs_buf[0] is None and self.inputs_buf[1] is not None:
             self.type = 'Bias'
 
-            self.bias = (self.inputs_buf[1] * -1).squeeze()
-            self.inputs_shape[1] = self.bias.shape
+            if type(self.inputs_buf[1]) is np.ndarray:
+                self.inputs_buf[1] = self.inputs_buf[1].squeeze()
+                self.inputs_shape[1] = self.inputs_buf[1].shape
+
+            self.bias = self.inputs_buf[1] * -1
 
             self.bias_param = dict()
             self.bias_param['axis'] = self.inputs_shape[0].index(self.inputs_shape[1][0]) if len(self.inputs_shape[1]) > 0 else 0

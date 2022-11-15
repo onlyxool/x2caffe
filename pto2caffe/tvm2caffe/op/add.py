@@ -34,8 +34,11 @@ class Add(Operator):
                 self.byPassOperator()
                 return
 
-            self.bias = self.inputs_buf[1].squeeze()
-            self.inputs_shape[1] = list(self.bias.shape)
+            if type(self.inputs_buf[1]) is np.ndarray:
+                self.inputs_buf[1] = self.inputs_buf[1].squeeze()
+                self.inputs_shape[1] = self.inputs_buf[1].shape
+
+            self.bias = self.inputs_buf[1]
 
             self.bias_param = dict()
             if 'axis' in self.attrs:
