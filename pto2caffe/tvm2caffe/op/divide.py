@@ -18,15 +18,16 @@ class Divide(Operator):
         if self.inputs_buf[0] is None and self.inputs_buf[1] is not None:
             self.type = 'Scale'
 
+            # Weight & Bias
+            self.weight = 1/self.inputs_buf[1].squeeze()
+            self.inputs_shape[1] = self.weight.shape
+            self.bias = None
+
             # Scale Parameter
             self.scale_param = dict()
             self.scale_param['axis'] = self.inputs_shape[0].index(self.inputs_shape[1][0]) if np.ones(self.inputs_shape[1]).size > 1 else 0
-            self.scale_param['num_axes'] = len(self.inputs_shape[1])
+            self.scale_param['num_axes'] = len(self.weight.shape)
             self.scale_param['bias_term'] = False
-
-            # Weight & Bias
-            self.weight = 1/self.inputs_buf[1]
-            self.bias = None
 
             self.attrs = self.scale_param
 
