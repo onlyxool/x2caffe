@@ -22,6 +22,7 @@ from tvm2caffe.op.split import Split
 from tvm2caffe.op.concat import Concat
 from tvm2caffe.op.divide import Divide
 from tvm2caffe.op.resize import Resize
+from tvm2caffe.op.maximum import Maximum
 from tvm2caffe.op.pooling import Pooling
 from tvm2caffe.op.reshape import Reshape
 from tvm2caffe.op.sigmoid import Sigmoid
@@ -56,6 +57,7 @@ OpMap = {
     'nn.dense': Dense,
     'nn.prelu': PReLU,
     'mean': ReduceMean,
+    'maximum': Maximum,
     'reshape': Reshape,
     'squeeze': Reshape,
     'sigmoid': Sigmoid,
@@ -147,7 +149,7 @@ class Model(Base):
                 inputs_shape = get_tensor_shape(relay.split(') /*')[-1])
                 self.indentity[output] = inputs
                 for index, input_name in enumerate(inputs):
-                    self.tensor_shape[input_name] = eval(inputs_shape[index])
+                    self.tensor_shape[input_name] = list(eval(inputs_shape[index]))
             elif relay_type.startswith('ty=Tensor'):
                 self.relays.append('ignore')
                 input = re.compile(r'%(.+?)\.').findall(relay.split(' = ')[-1])[0]
