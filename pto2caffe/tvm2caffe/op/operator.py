@@ -100,7 +100,7 @@ class Operator(Base):
             self.inputs_buf.append(self.model.constant.get(input_name, None))
             self.inputs_shape.append(shape_map_nhwc2nchw(self.model.tensor_shape.get(input_name, None)) if self.layout == 'NHWC' else self.model.tensor_shape.get(input_name, None))
 
-        operands = re.compile(r' (.+?) \/\* ty=').findall(self.relay.split(self.operator_code)[-1].split(') /*')[0])
+        operands = re.compile(r' (.+?) \/\* ty=').findall(self.relay.split(self.operator_code)[1].split(') /*')[0])
         for operand in operands:
             operand = operand.strip()
             if 'meta' in operand:
