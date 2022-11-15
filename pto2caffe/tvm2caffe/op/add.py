@@ -25,9 +25,17 @@ class Add(Operator):
         elif (self.inputs_buf[0] is not None or self.inputs_buf[1] is not None) or (self.inputs_shape[0] != self.inputs_shape[1]):
             self.type = 'Bias'
 
-            if self.inputs_buf[1] is not None and np.all(self.inputs_buf[1] == 0):
+            if self.inputs_buf[0] is not None:
+                self.inputs.reverse()
+                self.inputs_shape.reverse()
+                self.inputs_buf.reverse()
+
+            if np.all(self.inputs_buf[1] == 0):
                 self.byPassOperator()
                 return
+
+            self.bias = self.inputs_buf[1].squeeze()
+            self.inputs_shape[1] = list(self.bias.shape)
 
             self.bias_param = dict()
             if 'axis' in self.attrs:
@@ -35,11 +43,10 @@ class Add(Operator):
             else:
                 self.bias_param['axis'] = self.inputs_shape[0].index(self.inputs_shape[1][0]) if len(self.inputs_shape[1]) > 0 else 0
 
-            self.bias_param['num_axes'] = list(np.array(self.inputs_shape[0]) == np.array(self.inputs_shape[1])).count(True) if len(self.inputs_shape[1]) > 0 else 0
+            self.bias_param['num_axes'] = len(self.inputs_shape[1])
 
             self.attrs = self.bias_param
 
-            self.bias = self.inputs_buf[1]
 
             self.setParsed()
 
