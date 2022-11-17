@@ -13,7 +13,7 @@ class ExpandDims(Operator):
 
 
     def parse(self):
-        self.type = 'ExpandDims'
+        self.type = 'Reshape'
         super().__parse__()
 
         if self.inputs_buf[0] is not None:
