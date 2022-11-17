@@ -61,7 +61,9 @@ class Operator(Base):
     def __str__(self):
         inames = str([t for t in self.inputs])
         onames = str([t for t in self.outputs])
-        return '\n%s\n%s    %s -> %s' % (self.shorty, self.attrs2str, inames, onames)
+        ishape = str(self.inputs_shape)
+        oshape = str(self.outputs_shape)
+        return '\n%s\n%s    %s -> %s\n    %s -> %s' % (self.shorty, self.attrs2str, inames, onames, ishape, oshape)
 
 
     def debug(self):
