@@ -22,8 +22,9 @@ class Neg(Operator):
             self.scale_param = dict()
             self.scale_param['bias_term'] = False
             self.scale_param['axis'] = 0
+            self.scale_param['num_axes'] = 0
 
-            self.weight = np.ones(self.inputs_shape[0]) * -1
+            self.weight = -1
             self.bias = None
 
             self.attrs = self.scale_param
