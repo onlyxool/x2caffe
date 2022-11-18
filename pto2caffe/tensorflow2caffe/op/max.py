@@ -27,7 +27,7 @@ class Max(Operator):
             self.saveConstant(self.outputs[0], tf.raw_ops.Max(input=x, axis=axis, keep_dims=self.attrs['keep_dims'], name=None).numpy())
         else:
             if axis.size == 1:
-                self.type = 'ArgMax' # Remove
+                self.type = 'ArgMax'
 
                 self.argmax_param = dict()
                 self.argmax_param['out_max_val'] = True
