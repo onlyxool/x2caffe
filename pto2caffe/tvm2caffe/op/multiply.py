@@ -3,8 +3,6 @@ import numpy as np
 from caffe_transform import caffe_layer
 from tvm2caffe.op.operator import Operator
 
-from util import isShapeCompatible, dim_map_nhwc2nchw
-
 
 class Multiply(Operator):
 
@@ -17,9 +15,7 @@ class Multiply(Operator):
     def parse(self):
         super().__parse__()
 
-        if self.inputs_buf[0] is not None and self.inputs_buf[1] is not None:
-            self.saveConstant(self.outputs[0], self.inputs_buf[0] * self.inputs_buf[1])
-        elif self.inputs_buf[0] is None and self.inputs_buf[1] is None and self.inputs_shape[0] == self.inputs_shape[1]:
+        if self.inputs_buf[0] is None and self.inputs_buf[1] is None and self.inputs_shape[0] == self.inputs_shape[1]:
             self.type = 'Eltwise'
             self.eltwise_param = dict()
             self.eltwise_param['operation'] = 0 # Caffe Eltwise PROD
@@ -31,11 +27,7 @@ class Multiply(Operator):
             inputs_size0 = np.multiply.reduce(self.inputs_shape[0], axis=None)
             inputs_size1 = np.multiply.reduce(self.inputs_shape[1], axis=None)
 
-            if self.inputs_buf[0] is not None and self.inputs_buf[1] is None:
-                self.inputs.reverse()
-                self.inputs_shape.reverse()
-                self.inputs_buf.reverse()
-            elif self.inputs_buf[0] is None and self.inputs_buf[1] is None and inputs_size0 < inputs_size1:
+            if (self.inputs_buf[0] is not None) or (self.inputs_buf[0] is None and self.inputs_buf[1] is None and inputs_size0 < inputs_size1):
                 self.inputs.reverse()
                 self.inputs_shape.reverse()
                 self.inputs_buf.reverse()
@@ -44,14 +36,17 @@ class Multiply(Operator):
                 self.byPassOperator()
                 return
 
-            if not isShapeCompatible(self.inputs_shape[0], self.inputs_shape[1]) and self.inputs_buf[1] is None:
-                weight_shape = list(np.squeeze(np.random.random(self.inputs_shape[1])).shape)
-                if not isShapeCompatible(self.inputs_shape[0], weight_shape):
-                    self.unSupported('Inputs shape uncompatible for Caffe. ' + str(self.inputs_shape[0]) + ' x ' + str(self.inputs_shape[1]))
-                    return
+            if type(self.inputs_buf[1]) is np.ndarray:
+                self.inputs_buf[1] = self.inputs_buf[1].squeeze()
+                self.inputs_shape[1] = self.inputs_buf[1].shape
+            elif self.inputs_buf[1] is None:
                 self.type = 'Reshape+Scale'
-                self.inputs_shape[1] = weight_shape
                 self.inter_blob = 'reshape_scale'+str(self.index)
+                target_shape = list(np.squeeze(np.random.random(self.inputs_shape[1])).shape)
+                self.inputs_shape[1] = target_shape if target_shape != [] else [1]
+
+            self.weight = self.inputs_buf[1]
+            self.bias = None
 
             self.scale_param = dict()
             if 'axis' in self.attrs:            
@@ -63,8 +58,6 @@ class Multiply(Operator):
             self.scale_param['bias_term'] = False
             self.attrs = self.scale_param
 
-            self.weight = self.inputs_buf[1]
-            self.bias = None
 
             self.setParsed()
 
