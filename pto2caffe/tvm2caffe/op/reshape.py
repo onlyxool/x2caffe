@@ -6,7 +6,7 @@ class Reshape(Operator):
 
     def __init__(self, model, relay, index):
         super().__init__(model, relay, index)
-        assert(self.operator_code in ('reshape', 'squeeze'))
+        assert(self.operator_code in ('reshape', 'squeeze', 'expand_dims'))
         self.setInited()
 
 
@@ -17,18 +17,13 @@ class Reshape(Operator):
             self.saveConstant(self.outputs[0], self.inputs_buf[0].reshape(self.attrs['newshape']))
         elif self.inputs_shape[0] is not None and self.outputs_shape[0] is not None and self.inputs_shape[0] == self.outputs_shape[0]:
             self.byPassOperator()
-        elif self.operator_code == 'reshape':
-            self.type = 'Reshape'
-            self.reshape_param = dict(shape=dict(dim=self.outputs_shape[0]))
-            self.attrs = self.reshape_param
-            self.setParsed()
-        elif self.operator_code == 'squeeze':
+        else:
             self.type = 'Reshape'
             self.reshape_param = dict(shape=dict(dim=self.outputs_shape[0]))
             self.attrs = self.reshape_param
             self.setParsed()
 
-        if self.layout == 'NHWC' and len(self.inputs_shape[0]) == 4 and len(self.inputs_shape[0]) > len(self.outputs_shape[0]):
+        if self.layout == 'NHWC' and len(self.inputs_shape[0]) == 4 and len(self.inputs_shape[0]) != len(self.outputs_shape[0]):
             self.type = 'Permute+Reshape'
             self.permute = 'Reshape_' + self.name[0] + '_split' + str(self.index)
             self.permute_param = dict(order=[0,2,3,1])
