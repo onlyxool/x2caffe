@@ -23,12 +23,11 @@ class Max(Operator):
 
             self.pooling_param = dict()
             self.pooling_param['pool'] = 0
-            self.pooling_param['kernel_h'] = self.inputs_shape[2]
-            self.pooling_param['kernel_w'] = self.inputs_shape[3]
             self.pooling_param['stride'] = 1
             self.pooling_param['ceil_mode'] = False
+            self.pooling_param['global_pooling'] = True
 
-            if not self.attrs['keepdims']:
+            if 'keepdims' not in self.attrs.keys() or not self.attrs['keepdims']:
                 self.type = 'Pooling+Reshape'
                 self.reshape = 'Max_reshape_split' + str(self.index)
                 self.reshape_param = dict(shape=dict(dim=self.outputs_shape[0]))
