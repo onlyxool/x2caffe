@@ -30,7 +30,7 @@ class Add(Operator):
                 self.inputs_shape.reverse()
                 self.inputs_buf.reverse()
 
-            if np.all(self.inputs_buf[1] == 0):
+            if self.inputs_buf[1] is not None and np.all(self.inputs_buf[1] == 0):
                 self.byPassOperator()
                 return
 
@@ -49,7 +49,6 @@ class Add(Operator):
             self.bias_param['num_axes'] = len(self.inputs_shape[1])
 
             self.attrs = self.bias_param
-
 
             self.setParsed()
 
