@@ -24,6 +24,15 @@ class Subtract(Operator):
         elif self.inputs_buf[0] is None and self.inputs_buf[1] is not None:
             self.type = 'Bias'
 
+            if self.inputs_buf[0] is not None:
+                self.inputs.reverse()
+                self.inputs_shape.reverse()
+                self.inputs_buf.reverse()
+
+            if self.inputs_buf[1] is not None and np.all(self.inputs_buf[1] == 0):
+                self.byPassOperator()
+                return
+
             if type(self.inputs_buf[1]) is np.ndarray:
                 self.inputs_buf[1] = self.inputs_buf[1].squeeze()
                 self.inputs_shape[1] = self.inputs_buf[1].shape
@@ -31,10 +40,15 @@ class Subtract(Operator):
             self.bias = self.inputs_buf[1] * -1
 
             self.bias_param = dict()
-            self.bias_param['axis'] = self.inputs_shape[0].index(self.inputs_shape[1][0]) if len(self.inputs_shape[1]) > 0 else 0
-            self.bias_param['num_axes'] = len(self.bias.shape)
+            if 'axis' in self.attrs:
+                self.bias_param['axis'] = self.attrs['axis']
+            else:
+                self.bias_param['axis'] = self.inputs_shape[0].index(self.inputs_shape[1][0]) if len(self.inputs_shape[1]) > 0 else 0
+
+            self.bias_param['num_axes'] = len(self.inputs_shape[1])
 
             self.attrs = self.bias_param
+
             self.setParsed()
         elif self.inputs_buf[0] is None and self.inputs_buf[1] is None:
             self.type = 'Scale+Bias'
