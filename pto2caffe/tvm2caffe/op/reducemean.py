@@ -15,6 +15,10 @@ class ReduceMean(Operator):
     def parse(self):
         super().__parse__()
 
+        if 'exclude' in self.attrs.keys() and self.attrs['exclude']:
+            self.unSupported('Do not support attribute exclude.')
+            return
+
         if (self.layout == 'NCHW' and self.attrs['axis'] == [2, 3]) or (self.layout == 'NHWC' and self.attrs['axis'] == [1, 2]):
             if self.attrs.get('keepdims', False):
                 self.type = 'Pooling'
@@ -82,7 +86,7 @@ class ReduceMean(Operator):
             self.attrs = self.reduction_param
             self.setParsed()
         else:
-            print(self.attrs['axis'], self.inputs_shape, self.outputs_shape, self.layout)
+            print(self)
             raise NotImplementedError
 
 
