@@ -26,18 +26,18 @@ class Sum(Operator):
                     axes[index] = dim_map_nhwc2nchw[axis]
 
             if len(axes) == 1 and int(axis[0]) == len(self.inputs_shape) - 1:
-            if not self.attrs['keepdims']:
-                self.type = 'Reduction'
-            else:
-                self.type = 'Reduction+Reshape'
-                self.inter_blob = 'reduction_reshape_split'+str(self.index)
+                if not self.attrs['keepdims']:
+                    self.type = 'Reduction'
+                else:
+                    self.type = 'Reduction+Reshape'
+                    self.inter_blob = 'reduction_reshape_split'+str(self.index)
 
-                self.type = 'Reduction'
-                self.reduction_param = dict()
-                self.reduction_param['operation'] = 1
-                self.reduction_param['axis'] = int(axis)
-                self.attrs = self.reduction_param
-                self.setParsed()
+                    self.type = 'Reduction'
+                    self.reduction_param = dict()
+                    self.reduction_param['operation'] = 1
+                    self.reduction_param['axis'] = int(axis)
+                    self.attrs = self.reduction_param
+                    self.setParsed()
             else:
                 raise NotImplementedError(self.op.name)
         else:
