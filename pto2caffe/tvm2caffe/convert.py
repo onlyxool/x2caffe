@@ -1,3 +1,4 @@
+import os
 import sys
 import tvm
 import pathlib
@@ -24,7 +25,10 @@ def get_input_shape_dict(model, model_type, param):
             tf.import_graph_def(model, name='')
         for op in graph.get_operations():
             if op.type == 'Placeholder' and 'unused_control_flow_input' not in op.outputs[0].name:
-                shape_dict[op.outputs[0].name.replace(':0', '')] = op.outputs[0].shape.as_list()
+                if op.outputs[0].shape.is_fully_defined():
+                    shape_dict[op.outputs[0].name.replace(':0', '')] = op.outputs[0].shape.as_list()
+                else:
+                    shape_dict[op.outputs[0].name.replace(':0', '')] = None
     elif model_type == 'pytorch':
         pass
 
@@ -68,10 +72,40 @@ def convert(model_file, caffe_model_path, param=None):
         tvm_model, tvm_model_params = tvm.relay.frontend.from_tflite(tflite_model, shape_dict=inputs_shape_dict, dtype_dict=inputs_dtype_dict)
     elif pathlib.Path(model_file).suffix.lower() == '.pb':
         import tensorflow as tf
-        with tf.compat.v1.gfile.GFile(model_file, "rb") as f:
-            graph_def = tf.compat.v1.GraphDef()
-            graph_def.ParseFromString(f.read())
-            graph = tf.import_graph_def(graph_def, name="")
+        if os.path.basename(model_file) == 'saved_model.pb':
+            from tensorflow.core.protobuf import saved_model_pb2
+            from tensorflow2caffe.convert import _remove_non_variable_resources_from_captures, convert_variables_to_constants_v2
+            modelpath = model_file.split(os.path.basename(model_file))[0]
+
+            with tf.io.gfile.GFile(model_file, 'rb') as f:
+                saved_model = saved_model_pb2.SavedModel()
+                saved_model.ParseFromString(tf.compat.as_bytes(f.read()))
+                meta_graphs = saved_model.meta_graphs
+
+            if len(meta_graphs) > 1:
+                tags = meta_graphs[0].meta_info_def.tags[0]
+            else:
+                tags = None
+
+            imported = tf.saved_model.load(modelpath, tags=tags)
+
+            all_sigs = imported.signatures.keys()
+            valid_sigs = [s for s in all_sigs if not s.startswith("_")]
+            concrete_func = imported.signatures[valid_sigs[0]]
+
+            removed_resource_to_placeholder, placeholder_to_resource, graph_captures_copy, func_captures_copy = \
+                _remove_non_variable_resources_from_captures(concrete_func)
+
+            inputs = [tensor.name for tensor in concrete_func.inputs if tensor.dtype != tf.dtypes.resource]
+            outputs = [tensor.name for tensor in concrete_func.outputs if tensor.dtype != tf.dtypes.resource]
+
+            frozen_func = convert_variables_to_constants_v2(concrete_func, lower_control_flow=True, aggressive_inlining=True)
+            graph_def = frozen_func.graph.as_graph_def(add_shapes=True)
+        else:
+            with tf.compat.v1.gfile.GFile(model_file, "rb") as f:
+                graph_def = tf.compat.v1.GraphDef()
+                graph_def.ParseFromString(f.read())
+                graph = tf.import_graph_def(graph_def, name="")
 
         inputs_shape_dict = get_input_shape_dict(graph_def, 'tensorflow', param)
         tvm_model, tvm_model_params = tvm.relay.frontend.from_tensorflow(graph_def, layout=param['layout'], shape=inputs_shape_dict, convert_config={'use_dense':True})
