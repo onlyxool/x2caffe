@@ -81,7 +81,7 @@ class Operator(Base):
         ishape = str(self.inputs_shape)
         oshape = str(self.outputs_shape)
         inbuf = str([None if t is None else 'np.array' for t in self.inputs_buf])
-        return '\n%s\n%s    %s -> %s\n    %s -> %s\n    %s' % (self.shorty, self.attrs2str, inames, onames, ishape, oshape, inbuf)
+        return '\n%s\n%s    %s -> %s\n    %s -> %s\n    %s\n    %s' % (self.shorty, self.attrs2str, inames, onames, ishape, oshape, inbuf, self.relay)
 
 
     def ndim(self, dim):
@@ -100,10 +100,14 @@ class Operator(Base):
             self.inputs_buf.append(self.model.constant.get(input_name, None))
             self.inputs_shape.append(shape_map_nhwc2nchw(self.model.tensor_shape.get(input_name, None)) if self.layout == 'NHWC' else self.model.tensor_shape.get(input_name, None))
 
-        operands = re.compile(r' (.+?) \/\* ty=').findall(self.relay.split(self.operator_code)[1].split(') /*')[0])
+        operands = re.compile(r'[\$| ](.+?) \/\* ty=').findall(self.relay.split(self.operator_code)[1].split(') /*')[0])
         for operand in operands:
             operand = operand.strip()
-            if 'meta' in operand:
+            if '$meta' in operand:
+                self.inputs.append(operand[5:])
+                self.inputs_buf.append(self.model.constant.get(operand[5:], None))
+                self.inputs_shape.append(self.model.tensor_shape.get(operand[5:], None))
+            elif 'meta' in operand:
                 self.inputs.append(operand[4:])
                 self.inputs_buf.append(self.model.constant.get(operand[4:], None))
                 self.inputs_shape.append(self.model.tensor_shape.get(operand[4:], None))
