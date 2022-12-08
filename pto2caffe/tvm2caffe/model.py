@@ -4,13 +4,16 @@ import tvm
 import logging
 from base import Base
 
-from tvm2caffe.relay import preprocess, get_relay_type, get_tensor_shape
+from tvm2caffe.relay import preprocess, get_relay_type, get_tensor_shape, remove_numTypeExt
 
 
 from tvm2caffe.op.abs import Abs
 from tvm2caffe.op.add import Add
+from tvm2caffe.op.exp import Exp
+from tvm2caffe.op.log import Log
 from tvm2caffe.op.max import Max
 from tvm2caffe.op.pad import Pad
+from tvm2caffe.op.sum import Sum
 from tvm2caffe.op.bias import Bias
 from tvm2caffe.op.clip import Clip
 from tvm2caffe.op.relu import ReLU
@@ -19,23 +22,29 @@ from tvm2caffe.op.dense import Dense
 from tvm2caffe.op.power import Power
 from tvm2caffe.op.prelu import PReLU
 from tvm2caffe.op.split import Split
+from tvm2caffe.op.argmax import Argmax
 from tvm2caffe.op.concat import Concat
 from tvm2caffe.op.divide import Divide
 from tvm2caffe.op.resize import Resize
 from tvm2caffe.op.maximum import Maximum
+from tvm2caffe.op.minimum import Minimum
 from tvm2caffe.op.pooling import Pooling
 from tvm2caffe.op.reshape import Reshape
 from tvm2caffe.op.sigmoid import Sigmoid
 from tvm2caffe.op.softmax import Softmax
+from tvm2caffe.op.negative import Negative
 from tvm2caffe.op.subtract import Subtract
 from tvm2caffe.op.multiply import Multiply
 from tvm2caffe.op.transpose import Permute
 from tvm2caffe.op.batchnorm import BatchNorm
-from tvm2caffe.op.expanddims import ExpandDims
 from tvm2caffe.op.reducemean import ReduceMean
 from tvm2caffe.op.convolution import Convolution
+from tvm2caffe.op.spacetodepth import SpaceToDepth
 from tvm2caffe.op.stridedslice import StridedSlice
+from tvm2caffe.op.convtranspose import ConvTranspose
 from tvm2caffe.op.bypassoperator import ByPassOperator
+
+#from tvm2caffe.op.debug import Debug
 
 
 from caffe_transform import save_caffe_model
@@ -46,38 +55,46 @@ from util import shape_map_nhwc2nchw
 OpMap = {
     'abs': Abs,
     'add': Add,
+    'exp': Exp,
+    'log': Log,
     'max': Max,
+    'sum': Sum,
     'clip': Clip,
     'sqrt': Sqrt,
     'nn.pad': Pad,
     'power': Power,
     'split': Split,
     'nn.relu': ReLU,
+    'argmax': Argmax,
     'divide': Divide,
     'nn.dense': Dense,
     'nn.prelu': PReLU,
     'mean': ReduceMean,
     'maximum': Maximum,
+    'minimum': Minimum,
     'reshape': Reshape,
     'squeeze': Reshape,
     'sigmoid': Sigmoid,
     'nn.bias_add': Bias,
     'multiply': Multiply,
+    'negative': Negative,
     'subtract': Subtract,
     'transpose': Permute,
     'nn.softmax': Softmax,
     'nn.leaky_relu': ReLU,
     'concatenate': Concat,
     'cast': ByPassOperator,
+    'expand_dims': Reshape,
     'array': ByPassOperator,
     'nn.conv2d': Convolution,
     'nn.avg_pool2d': Pooling,
     'nn.max_pool2d': Pooling,
     'image.resize2d': Resize,
-    'expand_dims': ExpandDims,
     'nn.batch_norm': BatchNorm,
     'strided_slice': StridedSlice,
     'nn.global_avg_pool2d': Pooling,
+    'nn.space_to_depth': SpaceToDepth,
+    'nn.conv2d_transpose': ConvTranspose,
 }
 
 
@@ -141,7 +158,8 @@ class Model(Base):
             relay_type = get_relay_type(relay)
             output = str(index) if relay.strip().startswith(relay_type) else re.compile(r'%(.+?) ').findall(relay.split('= ')[0])[0]
             shape_str = get_tensor_shape(relay.split(') /*')[-1])
-            output_shape = eval('['+shape_str[0]+']') if len(shape_str) > 0 else None
+            shape_str = remove_numTypeExt(shape_str[0] if len(shape_str) > 0 else None)
+            output_shape = eval('['+shape_str+']')# if len(shape_str) > 0 else None
 
             if relay_type == '':
                 self.relays.append('ignore')
@@ -149,7 +167,7 @@ class Model(Base):
                 inputs_shape = get_tensor_shape(relay.split(') /*')[-1])
                 self.indentity[output] = inputs
                 for index, input_name in enumerate(inputs):
-                    self.tensor_shape[input_name] = list(eval(inputs_shape[index]))
+                    self.tensor_shape[input_name] = list(eval(remove_numTypeExt(inputs_shape[index])))
             elif relay_type.startswith('ty=Tensor'):
                 self.relays.append('ignore')
                 input = re.compile(r'%(.+?)\.').findall(relay.split(' = ')[-1])[0]
