@@ -5,6 +5,7 @@ from tvm2caffe.op.operator import Operator
 
 from util import dim_map_nhwc2nchw, shape_map_nhwc2nchw
 
+
 class StridedSlice(Operator):
 
     def __init__(self, model, tf_op, index):
@@ -24,18 +25,14 @@ class StridedSlice(Operator):
 
         # Check Stride != 1
         if self.attrs['strides'].count(1) != len(self.attrs['strides']):
-            errorMsg = 'Do not support stride > 1. OP ' + self.op.name + '\'s strides is ' + str(self.inputs_buf[3]) + '\n'
+            errorMsg = 'Do not support stride > 1. OP ' + self.name + '\'s strides is ' + str(self.attrs['strides']) + '\n'
             self.unSupported(errorMsg)
-            return
-
-        if self.inputs_shape[0] is not None and len(self.inputs_shape[0]) > 4:
-            self.unSupported('Do not support dimitions > 4.')
             return
 
         if self.attrs['axes'] is not None:
             axes = self.attrs['axes']
             for index, axis in enumerate(axes):
-                axes[index] = dim_map_nhwc2nchw[axis]
+                axes[index] = dim_map_nhwc2nchw[axis] if self.layout == 'NHWC' and len(self.inputs_shape[0]) == 4 else axis
         else:
             axes = [list(np.array(self.inputs_shape[0]) == np.array(self.outputs_shape[0])).index(False)]
 
@@ -46,20 +43,22 @@ class StridedSlice(Operator):
         start = (shape_map_nhwc2nchw(self.attrs['begin']) if self.layout == 'NHWC' else self.attrs['begin'])[axes[0]]
         end = (shape_map_nhwc2nchw(self.attrs['end']) if self.layout == 'NHWC' else self.attrs['end'])[axes[0]]
 
+        self.slice_param = dict()
         if start == 0:
-            slice_point = end
+            self.slice_param['slice_point'] = [end]
             self.outputs.append(self.name+'_useless')
         elif end == self.inputs_shape[0][axes[0]]:
-            slice_point = start
+            self.slice_param['slice_point'] = [start]
             self.outputs.insert(0, self.name+'_useless')
         else:
-            errorMsg = 'Can\'t support begin: ' + str(self.inputs_buf[1]) + ' end: ' + str(self.inputs_buf[2])
-            self.unSupported(errorMsg)
-            return
+            self.slice_param['slice_point'] = [start, end]
+            self.outputs.insert(0, self.name+'_useless_pre')
+            self.outputs.append(self.name+'_useless_post')
 
-        self.slice_param = dict()
         self.slice_param['axis'] = axes[0]
-        self.slice_param['slice_point'] = [slice_point]
+        for index, point in enumerate(self.slice_param['slice_point']):
+            if point == 9223372036854775807:
+                self.slice_param['slice_point'][index] = self.inputs_shape[0][self.slice_param['axis']]
 
         self.attrs = self.slice_param
 
