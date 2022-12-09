@@ -16,16 +16,8 @@ class ConvTranspose(Operator):
         self.type = 'Deconvolution'
         super().__parse__()
 
-        if self.inputs_buf[1] is None:
-            pass
-        elif self.attrs.get('kernel_layout', 'OIHW') == 'OIHW':
+        if self.attrs.get('kernel_layout', 'IOHW') == 'IOHW':
             self.weight = self.inputs_buf[1]
-        elif self.attrs.get('kernel_layout', 'OIHW') == 'HWIO':
-            self.weight = self.inputs_buf[1].transpose(3, 2, 0, 1)
-        elif self.attrs.get('kernel_layout', 'OIHW') == 'HWOI':
-            self.weight = self.inputs_buf[1].transpose(2, 3, 0, 1)
-        elif self.attrs.get('kernel_layout', 'OIHW') == 'IOHW':
-            self.weight = self.inputs_buf[1].transpose(1, 0, 2, 3)
         else:
             print(self.attrs)
             raise NotImplementedError
