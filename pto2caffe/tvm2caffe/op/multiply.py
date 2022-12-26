@@ -27,7 +27,7 @@ class Multiply(Operator):
             inputs_size0 = np.multiply.reduce(self.inputs_shape[0], axis=None)
             inputs_size1 = np.multiply.reduce(self.inputs_shape[1], axis=None)
 
-            if (self.inputs_buf[0] is not None) or (self.inputs_buf[0] is None and self.inputs_buf[1] is None and inputs_size0 < inputs_size1):
+            if inputs_size0 < inputs_size1:
                 self.inputs.reverse()
                 self.inputs_shape.reverse()
                 self.inputs_buf.reverse()
@@ -45,7 +45,7 @@ class Multiply(Operator):
                 target_shape = list(np.squeeze(np.random.random(self.inputs_shape[1])).shape)
                 self.inputs_shape[1] = target_shape if target_shape != [] else [1]
 
-            self.weight = self.inputs_buf[1]
+            self.weight = self.inputs_buf[1] if self.inputs_buf[0] is None else self.inputs_buf[0]
             self.bias = None
 
             self.scale_param = dict()
@@ -57,7 +57,6 @@ class Multiply(Operator):
             self.scale_param['num_axes'] = len(self.inputs_shape[1])
             self.scale_param['bias_term'] = False
             self.attrs = self.scale_param
-
 
             self.setParsed()
 
