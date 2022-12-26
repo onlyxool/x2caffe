@@ -40,8 +40,15 @@ class StridedSlice(Operator):
             self.unSupported('Can\'t slice more than one axis')
             return
 
-        start = (shape_map_nhwc2nchw(self.attrs['begin']) if self.layout == 'NHWC' else self.attrs['begin'])[axes[0]]
-        end = (shape_map_nhwc2nchw(self.attrs['end']) if self.layout == 'NHWC' else self.attrs['end'])[axes[0]]
+        if len(self.attrs['begin']) == len(self.inputs_shape[0]):
+            start = (shape_map_nhwc2nchw(self.attrs['begin']) if self.layout == 'NHWC' else self.attrs['begin'])[axes[0]]
+        else:
+            start = self.attrs['begin'][axes[0]]
+        if len(self.attrs['end']) == len(self.inputs_shape[0]):
+            end = (shape_map_nhwc2nchw(self.attrs['end']) if self.layout == 'NHWC' else self.attrs['end'])[axes[0]]
+        else:
+            end = self.attrs['end'][axes[0]]
+
 
         self.slice_param = dict()
         if start == 0:
