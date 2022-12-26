@@ -18,11 +18,13 @@ from tvm2caffe.op.bias import Bias
 from tvm2caffe.op.clip import Clip
 from tvm2caffe.op.relu import ReLU
 from tvm2caffe.op.sqrt import Sqrt
+from tvm2caffe.op.tanh import Tanh
 from tvm2caffe.op.dense import Dense
 from tvm2caffe.op.power import Power
 from tvm2caffe.op.prelu import PReLU
 from tvm2caffe.op.split import Split
 from tvm2caffe.op.argmax import Argmax
+from tvm2caffe.op.bypass import Bypass
 from tvm2caffe.op.concat import Concat
 from tvm2caffe.op.divide import Divide
 from tvm2caffe.op.resize import Resize
@@ -35,8 +37,10 @@ from tvm2caffe.op.softmax import Softmax
 from tvm2caffe.op.negative import Negative
 from tvm2caffe.op.subtract import Subtract
 from tvm2caffe.op.multiply import Multiply
+from tvm2caffe.op.upsample import Upsample
 from tvm2caffe.op.transpose import Permute
 from tvm2caffe.op.batchnorm import BatchNorm
+from tvm2caffe.op.mirrorpad import MirrorPad
 from tvm2caffe.op.reducemean import ReduceMean
 from tvm2caffe.op.convolution import Convolution
 from tvm2caffe.op.spacetodepth import SpaceToDepth
@@ -61,7 +65,9 @@ OpMap = {
     'sum': Sum,
     'clip': Clip,
     'sqrt': Sqrt,
+    'tanh': Tanh,
     'nn.pad': Pad,
+    'copy': Bypass,
     'power': Power,
     'split': Split,
     'nn.relu': ReLU,
@@ -90,7 +96,9 @@ OpMap = {
     'nn.avg_pool2d': Pooling,
     'nn.max_pool2d': Pooling,
     'image.resize2d': Resize,
+    'nn.upsampling': Upsample,
     'nn.batch_norm': BatchNorm,
+    'nn.mirror_pad': MirrorPad,
     'strided_slice': StridedSlice,
     'nn.global_avg_pool2d': Pooling,
     'nn.space_to_depth': SpaceToDepth,
