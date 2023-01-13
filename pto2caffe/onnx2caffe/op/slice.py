@@ -64,14 +64,18 @@ class Slice(Operator):
 
             if starts[0] == 0:
                 self.slice_param['slice_point'] = [ends[0]]
-                self.outputs.append(self.name + 'useless')
-            elif ends[0] == axis_length:
+                self.outputs.append(self.name + '_useless')
+            elif ends[0] >= axis_length:
                 self.slice_param['slice_point'] = [starts[0]]
-                self.outputs.insert(0, self.name + 'useless')
+                self.outputs.insert(0, self.name + '_useless')
             else:
                 self.slice_param['slice_point'] = [starts[0], ends[0]]
-                self.outputs.insert(0, self.name + 'useless0')
-                self.outputs.append(self.name + 'useless1')
+                self.outputs.insert(0, self.name + '_useless0')
+                self.outputs.append(self.name + '_useless1')
+
+            for index, point in enumerate(self.slice_param['slice_point']):
+                self.slice_param['slice_point'][index] = int(point)
+
             self.attrs = self.slice_param
             self.setParsed()
         else:
