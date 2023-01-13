@@ -40,7 +40,7 @@ class Operator(Base):
         if self.type is not None and self.type.find('+') >= 0:
             return [layer_type+str(self.index)+'_'+str(index) for index, layer_type in enumerate(self.type.split('+'))]
         elif self.layer_type is not None:
-            return self.type + str(self.index)
+            return self.layer_type + str(self.index)
 
 
     @property
