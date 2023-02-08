@@ -15,8 +15,11 @@ def load_file2tensor(path, param):
         tensor = np.reshape(tensor , param['bin_shape'])
         param['source_shape'] = [1] + list(tensor.shape)
     elif ext in ['jpg', 'bmp', 'png', 'jpeg']:
-        tensor = cv2.imread(path).transpose(2, 0, 1).astype(np.float32) # HWC->CHW
+        tensor = cv2.imread(path)
         assert(tensor is not None), 'Error: Input file is None  ' + path
+        if param['color_format'] == 'RGB':
+            tensor = cv2.cvtColor(tensor, cv2.COLOR_BGR2RGB)
+        tensor = tensor.transpose(2, 0, 1).astype(np.float32) # HWC->CHW
     else:
         errorMsg = 'Do not support input file format: ' + ext
         sys.exit(errorMsg)
