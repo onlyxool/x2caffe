@@ -38,6 +38,8 @@ def shape_map_nhwc2nchw(shape):
         return [shape[0], shape[3], shape[1], shape[2]]
     elif len(shape) == 3:
         return [shape[2], shape[0], shape[1]] if get_layout(shape) == 'HWX' else shape
+#    elif len(shape) == 2:
+#        return [shape[1], shape[0]]
     else:
         return shape
 
