@@ -36,7 +36,7 @@ def run_convert(model_path, ext, op):
     if platform == 'pytorch':
         appex = ' -compare=1 -crop_h=600 -crop_w=600 '
     else:
-        appex = ' -compare=1 -auto_crop=1 '
+        appex = ' -compare=1 '
 
     if platform == 'onnx':
         simplifier = '-simplifier=1'
