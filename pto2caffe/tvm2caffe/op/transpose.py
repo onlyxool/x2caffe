@@ -15,6 +15,8 @@ class Permute(Operator):
 
         if self.inputs_buf[0] is not None:
             self.saveConstant(self.outputs[0], self.inputs_buf[0].transpose(self.attrs['axes'])) 
+        elif self.layout == 'NHWC' and self.attrs['axes'] in ([0, 3, 1, 2], [0, 2, 3, 1]):
+            self.byPassOperator()
         else:
             self.type = 'Permute'
             self.permute_param = dict()
