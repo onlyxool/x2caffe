@@ -5,22 +5,22 @@ import numpy as np
 from base import Base
 
 
+from onnx2caffe.op.add import Add
+from onnx2caffe.op.div import Div
 from onnx2caffe.op.elu import Elu
 from onnx2caffe.op.exp import Exp
 from onnx2caffe.op.log import Log
-from onnx2caffe.op.pad import Pad
 from onnx2caffe.op.lrn import LRN
 from onnx2caffe.op.mul import Mul
-from onnx2caffe.op.add import Add
-from onnx2caffe.op.sum import Sum
+from onnx2caffe.op.pad import Pad
 from onnx2caffe.op.sub import Sub
-from onnx2caffe.op.div import Div
+from onnx2caffe.op.sum import Sum
 from onnx2caffe.op.cast import Cast
+from onnx2caffe.op.relu import ReLU
+from onnx2caffe.op.sqrt import Sqrt
 from onnx2caffe.op.tanh import TanH
 from onnx2caffe.op.tile import Tile
 from onnx2caffe.op.power import Pow
-from onnx2caffe.op.sqrt import Sqrt
-from onnx2caffe.op.relu import ReLU
 from onnx2caffe.op.clip import ReLUX
 from onnx2caffe.op.floor import Floor
 from onnx2caffe.op.prelu import PReLU
@@ -31,20 +31,20 @@ from onnx2caffe.op.where import Where
 from onnx2caffe.op.concat import Concat
 from onnx2caffe.op.expand import Expand
 from onnx2caffe.op.gather import Gather
-from onnx2caffe.op.resize import Resize
 from onnx2caffe.op.matmul import MatMul
+from onnx2caffe.op.resize import Resize
 from onnx2caffe.op.compare import Compare
-from onnx2caffe.op.sigmoid import Sigmoid
-from onnx2caffe.op.softmax import Softmax
-from onnx2caffe.op.reshape import Reshape
-from onnx2caffe.op.pooling import Pooling
 from onnx2caffe.op.dropout import Dropout
 from onnx2caffe.op.flatten import Flatten
+from onnx2caffe.op.pooling import Pooling
+from onnx2caffe.op.reshape import Reshape
+from onnx2caffe.op.sigmoid import Sigmoid
+from onnx2caffe.op.softmax import Softmax
 from onnx2caffe.op.conv import Convolution
 from onnx2caffe.op.gemm import InnerProduct
-from onnx2caffe.op.upsample import Upsample
 from onnx2caffe.op.constant import Constant
 from onnx2caffe.op.softplus import Softplus
+from onnx2caffe.op.upsample import Upsample
 from onnx2caffe.op.transpose import Permute
 from onnx2caffe.op.batchnorm import BatchNorm
 from onnx2caffe.op.reducemax import ReduceMax
@@ -138,19 +138,6 @@ class Model(Base):
                 self.opset.append(opset_version)
             else:
                 sys.exit('Error: Model opset > 13 or <= 3, it may cause incompatiblility issue. (opset:{})\n'.format(opset_version))
-
-
-        self.inputs = list()
-        self.inputs_shape = list()
-        self.inputs_dtype = list()
-        self.inputs_maxval = list()
-        self.inputs_minval = list()
-
-        self.outputs = list()
-        self.outputs_shape = list()
-        self.outputs_dtype = list()
-        self.outputs_maxval = list()
-        self.outputs_minval = list()
 
         self.pad = dict()
         self.shape = dict()

@@ -12,12 +12,6 @@ class Operator(Base):
         self.operator_code = node.op_type
         self.attrs = dict()
 
-        self.inputs = list()
-        self.inputs_buf = list()
-        self.inputs_shape = list()
-        self.outputs = list()
-        self.outputs_shape = list()
-
         self.type = None
         self.weight = None
         self.bias = None

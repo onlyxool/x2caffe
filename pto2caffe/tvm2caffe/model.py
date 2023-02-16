@@ -34,9 +34,9 @@ from tvm2caffe.op.pooling import Pooling
 from tvm2caffe.op.reshape import Reshape
 from tvm2caffe.op.sigmoid import Sigmoid
 from tvm2caffe.op.softmax import Softmax
+from tvm2caffe.op.multiply import Multiply
 from tvm2caffe.op.negative import Negative
 from tvm2caffe.op.subtract import Subtract
-from tvm2caffe.op.multiply import Multiply
 from tvm2caffe.op.upsample import Upsample
 from tvm2caffe.op.transpose import Permute
 from tvm2caffe.op.batchnorm import BatchNorm
@@ -132,19 +132,6 @@ class Model(Base):
 
         self.param = param
         self.layout = param['layout']
-
-        self.inputs = list()
-        self.inputs_shape = list()
-        self.inputs_dtype = list()
-        self.inputs_maxval = list()
-        self.inputs_minval = list()
-
-        self.outputs = list()
-        self.outputs_shape = list()
-        self.outputs_dtype = list()
-        self.outputs_maxval = list()
-        self.outputs_minval = list()
-        self.outputs_buf = list()
 
         self.pad = dict()
         self.relays = list()

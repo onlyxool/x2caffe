@@ -5,34 +5,34 @@ import tensorflow as tf
 
 from base import Base
 
-from tflite2caffe.op.pad import Pad
 from tflite2caffe.op.add import Add
 from tflite2caffe.op.mul import Mul
+from tflite2caffe.op.pad import Pad
 from tflite2caffe.op.sub import Sub
 from tflite2caffe.op.pack import Pack
 from tflite2caffe.op.relu import ReLU
-from tflite2caffe.op.relux import ReLUX
 from tflite2caffe.op.prelu import PReLU
-from tflite2caffe.op.swish import Swish
+from tflite2caffe.op.relux import ReLUX
 from tflite2caffe.op.shape import Shape
 from tflite2caffe.op.slice import Slice
 from tflite2caffe.op.split import Split
-from tflite2caffe.op.concat import Concat
+from tflite2caffe.op.swish import Swish
 from tflite2caffe.op.bypass import ByPass
-from tflite2caffe.op.reshape import Reshape
+from tflite2caffe.op.concat import Concat
 from tflite2caffe.op.pooling import Pooling
+from tflite2caffe.op.reshape import Reshape
 from tflite2caffe.op.sigmoid import Sigmoid
 from tflite2caffe.op.softmax import Softmax
-from tflite2caffe.op.leakyrelu import LeakyReLU
 from tflite2caffe.op.conv import Convolution
 from tflite2caffe.op.transpose import Permute
+from tflite2caffe.op.leakyrelu import LeakyReLU
 from tflite2caffe.op.reducemax import ReduceMax
 from tflite2caffe.op.deconv import Deconvolution
 from tflite2caffe.op.reducemean import ReduceMean
 from tflite2caffe.op.depthtospace import DepthToSpace
 from tflite2caffe.op.stridedslice import StridedSlice
-from tflite2caffe.op.fullyconnected import InnerProduct
 from tflite2caffe.op.resizenearest import ResizeNearest
+from tflite2caffe.op.fullyconnected import InnerProduct
 from tflite2caffe.op.resizebilinear import ResizeBilinear
 
 
@@ -48,9 +48,9 @@ tf_dtype_map = [tf.float32, tf.float16, tf.qint32, tf.quint8, tf.int64, 'string'
 logger = logging.getLogger('TFLite2Caffe')
 
 OpMap = {
-    'PAD': Pad,
     'ADD': Add,
     'MUL': Mul,
+    'PAD': Pad,
     'SUB': Sub,
     'PACK': Pack,
     'RELU': ReLU,
@@ -71,8 +71,8 @@ OpMap = {
     'DEQUANTIZE': ByPass,
     'CONV_2D': Convolution,
     'MAX_POOL_2D': Pooling,
-    'REDUCE_MAX': ReduceMax,
     'LEAKY_RELU': LeakyReLU,
+    'REDUCE_MAX': ReduceMax,
     'CONCATENATION': Concat,
     'AVERAGE_POOL_2D': Pooling,
     'STRIDED_SLICE': StridedSlice,
@@ -118,9 +118,6 @@ class Model(Base):
         self.param = param
         self.layout = param['layout']
 
-        self.inputs = list()
-        self.inputs_shape = list()
-        self.inputs_dtype = list()
         self.inputs_quantization_parameter = list()
 
         self.constant = dict()

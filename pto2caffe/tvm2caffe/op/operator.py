@@ -15,12 +15,6 @@ class Operator(Base):
         self.layout = model.layout
         self.attrs = dict()
 
-        self.inputs = list()
-        self.inputs_buf = list()
-        self.inputs_shape = list()
-        self.outputs = list()
-        self.outputs_shape = list()
-
         self.type = self.operator_code
         self.weight = None
         self.bias = None

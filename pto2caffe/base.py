@@ -51,6 +51,19 @@ class Base(ABC):
         self.graph = graph
         self.index = index  # index of tensor or op
 
+        self.inputs = list()
+        self.inputs_buf = list()
+        self.inputs_shape = list()
+        self.inputs_dtype = list()
+        self.inputs_maxval = list()
+        self.inputs_minval = list()
+
+        self.outputs = list()
+        self.outputs_shape = list()
+        self.outputs_dtype = list()
+        self.outputs_maxval = list()
+        self.outputs_minval = list()
+
         # Caffe object
         self.caffe = None
 

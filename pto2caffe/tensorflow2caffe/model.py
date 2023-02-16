@@ -21,8 +21,8 @@ from tensorflow2caffe.op.fill import Fill
 from tensorflow2caffe.op.loop import Loop
 from tensorflow2caffe.op.mean import Mean
 from tensorflow2caffe.op.pack import Pack
-from tensorflow2caffe.op.prod import Prod
 from tensorflow2caffe.op.pool import Pool
+from tensorflow2caffe.op.prod import Prod
 from tensorflow2caffe.op.rank import Rank
 from tensorflow2caffe.op.relu import ReLU
 from tensorflow2caffe.op.size import Size
@@ -39,13 +39,13 @@ from tensorflow2caffe.op.shape import Shape
 from tensorflow2caffe.op.slice import Slice
 from tensorflow2caffe.op.split import Split
 from tensorflow2caffe.op.concat import Concat
+from tensorflow2caffe.op.matmul import MatMul
+from tensorflow2caffe.op.random import Random
 from tensorflow2caffe.op.select import Select
 from tensorflow2caffe.op.splitv import SplitV
 from tensorflow2caffe.op.square import Square
 from tensorflow2caffe.op.switch import Switch
-from tensorflow2caffe.op.matmul import MatMul
 from tensorflow2caffe.op.unpack import Unpack
-from tensorflow2caffe.op.random import Random
 from tensorflow2caffe.op.gather import GatherV2
 from tensorflow2caffe.op.biasadd import BiasAdd
 from tensorflow2caffe.op.compare import Compare
@@ -123,10 +123,10 @@ OpMap = {
     'AvgPool': Pool,
     'MaxPool': Pool,
     'Equal': Compare,
+    'MatMul': MatMul,
     'SplitV': SplitV,
     'Square': Square,
     'Switch': Switch,
-    'MatMul': MatMul,
     'Unpack': Unpack,
     'LoopCond': Loop,
     'BiasAdd': BiasAdd,
@@ -141,8 +141,8 @@ OpMap = {
     'ConcatV2': Concat,
     'SelectV2': Select,
     'GatherV2': GatherV2,
-    'LogicalOr': Logical,
     'Softplus': Softplus,
+    'LogicalOr': Logical,
     'LogicalAnd': Logical,
     'NextIteration': Loop,
     'Conv2D': Convolution,
@@ -181,11 +181,7 @@ class Model(Base):
         super().__init__(model, graph)
         self.param = param
         self.layout = param['layout']
-        self.inputs = list()
-        self.inputs_shape = list()
-        self.inputs_dtype = list()
-        self.inputs_maxval = list()
-        self.inputs_minval = list()
+
         self.constant = dict()
         self.indentity = dict()
         self.pad = dict()
@@ -289,7 +285,7 @@ class Model(Base):
         if len(self.operations) == 0:
             sys.exit('Error: Model file is not Tensorflow Model.\n')
 
-        # Parse all operations
+        # Parse all operations -> operators
         for index, tf_op in enumerate(self.operations):
 
             if tf_op.type not in OpMap:

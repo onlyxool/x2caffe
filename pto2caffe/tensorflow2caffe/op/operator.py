@@ -10,12 +10,6 @@ class Operator(Base):
         self.operator_code = tf_op.type
         self.attrs = dict()
 
-        self.inputs = list()
-        self.inputs_shape = list()
-        self.inputs_buf = list()
-        self.outputs = list()
-        self.outputs_shape = list()
-
         self.type = None
         self.weight = None
         self.bias = None
@@ -38,7 +32,7 @@ class Operator(Base):
         if self.type is not None and self.type.find('+') >= 0:
             return [layer_type+str(self.index)+'_'+str(index) for index, layer_type in enumerate(self.type.split('+'))]
         elif self.layer_type is not None:
-            return self.type + str(self.index)
+            return self.layer_type + str(self.index)
 
 
     @property

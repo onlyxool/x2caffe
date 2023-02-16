@@ -1,10 +1,7 @@
 import tflite
-import logging
 import numpy as np
 from base import Base
 from util import shape_map_nhwc2nchw
-
-logger = logging.getLogger('tflite2caffe')
 
 
 class Operator(Base):
@@ -14,14 +11,8 @@ class Operator(Base):
         self.op = tf_op
         self.operator_code = tf_op_name
         self.layer_type = str()
-        self.inputs = list()
-        self.inputs_shape = list()
-        self.inputs_buf = list()
         self.layout = model.layout
-        self.outputs = list()
-        self.outputs_shape = list()
-        self.pre = list()  # ops that before this op which to enable TFLite op
-        self.post = list()  # ops that after this op which to enable TFLite op
+
         self.attrs = dict()
 
 
