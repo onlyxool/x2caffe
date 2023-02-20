@@ -30,7 +30,7 @@ class ReduceMax(Operator):
             axis = [dim_map_nhwc2nchw[dim] for dim in self.inputs_buf[1]]
 
         if opt.KeepDims() and axis == [2,3] and len(self.inputs_shape[0]) == 4:
-            self.layer_type = 'Pooling'
+            self.type = 'Pooling'
 
             self.pooling_param = dict()
             self.pooling_param['pool'] = 0
@@ -41,12 +41,12 @@ class ReduceMax(Operator):
 
             # Padding
             legacy_pad = self.model.pad.get(self.op.Inputs(0), {'left': 0, 'right': 0, 'top': 0, 'bottom': 0})
-            padding = handleLegacyPad('VALID', self.inputs_shape[0], self.outputs_shape[0], self.pooling_param, legacy_pad, self.type)
+            padding = handleLegacyPad('VALID', self.inputs_shape[0], self.outputs_shape[0], self.pooling_param, legacy_pad, self.layer_type)
             self.pooling_param.update(padding)
 
             self.attrs = self.pooling_param
         else:
-            self.layer_type = 'Reduction'
+            self.type = 'Reduction'
 
             if axis != [i for i in range(len(self.inputs_shape[0]))][-len(axis):]:
                 self.model.unsupport.append(self.operator_code)
@@ -65,9 +65,9 @@ class ReduceMax(Operator):
 
     def convert(self):
         if self.type == 'Pooling':
-            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, pooling_param=self.pooling_param)
+            layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, pooling_param=self.pooling_param)
         elif self.type == 'Reduction':
-            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, reduction_param=self.reduction_param)
+            layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, reduction_param=self.reduction_param)
 
         self.setConverted()
 

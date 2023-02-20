@@ -10,7 +10,7 @@ class Shape(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Shape'
+        self.type = 'Shape'
 
         self.parseInputOutput()
 

@@ -18,7 +18,7 @@ class Concat(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Concat'
+        self.type = 'Concat'
 
         op_opt = self.op.BuiltinOptions()
         opt = tflite.ConcatenationOptions()
@@ -35,7 +35,7 @@ class Concat(Operator):
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, concat_param=self.concat_param)
+        layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, concat_param=self.concat_param)
 
         self.setConverted()
 

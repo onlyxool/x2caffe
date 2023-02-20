@@ -18,7 +18,7 @@ class Pooling(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Pooling'
+        self.type = 'Pooling'
 
         op_opt = self.op.BuiltinOptions()
         opt = tflite.Pool2DOptions()
@@ -42,7 +42,7 @@ class Pooling(Operator):
             padding_mode = 'SAME'
 
         legacy_pad = self.model.pad.get(self.op.Inputs(0), {'left': 0, 'right': 0, 'top': 0, 'bottom': 0})
-        padding = handleLegacyPad(padding_mode, self.inputs_shape[0], self.outputs_shape[0], self.pooling_param, legacy_pad, self.type)
+        padding = handleLegacyPad(padding_mode, self.inputs_shape[0], self.outputs_shape[0], self.pooling_param, legacy_pad, self.layer_type)
         self.pooling_param.update(padding)
 
         # FusedActivation
@@ -56,7 +56,7 @@ class Pooling(Operator):
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, pooling_param=self.pooling_param)
+        layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, pooling_param=self.pooling_param)
 
         self.setConverted()
 

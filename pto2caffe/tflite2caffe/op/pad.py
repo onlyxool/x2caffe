@@ -16,7 +16,7 @@ class Pad(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Pad'
+        self.type = 'Pad'
 
         self.parseInputOutput()
 

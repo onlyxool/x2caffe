@@ -14,7 +14,7 @@ class Swish(Operator):
 
 
     def parse(self):
-        self.layer_type = 'HardSwish'
+        self.type = 'HardSwish'
 
         self.parseInputOutput()
 
@@ -25,7 +25,7 @@ class Swish(Operator):
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, swish_param=self.swish_param)
+        layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, swish_param=self.swish_param)
 
         self.setConverted()
 

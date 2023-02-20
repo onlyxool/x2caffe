@@ -23,7 +23,7 @@ class ResizeBilinear(Operator):
         opt = tflite.ResizeBilinearOptions()
         opt.Init(op_opt.Bytes, op_opt.Pos)
 
-        self.layer_type = 'Interp'
+        self.type = 'Interp'
 
         self.interp_param = dict()
         self.interp_param['align_corners'] = opt.AlignCorners()
@@ -37,7 +37,7 @@ class ResizeBilinear(Operator):
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, interp_param=self.interp_param)
+        layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, interp_param=self.interp_param)
 
         self.setConverted()
 

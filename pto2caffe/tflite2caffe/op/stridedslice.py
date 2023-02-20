@@ -17,7 +17,7 @@ class StridedSlice(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Slice'
+        self.type = 'Slice'
 
         self.parseInputOutput()
 
@@ -120,7 +120,7 @@ class StridedSlice(Operator):
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, slice_param=self.slice_param)
+        layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, slice_param=self.slice_param)
 
         self.setConverted()
 

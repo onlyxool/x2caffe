@@ -1,52 +1,15 @@
-import tflite
 import numpy as np
-from base import Base
+from base_Operator import BaseOperator
 from util import shape_map_nhwc2nchw
 
 
-class Operator(Base):
+class Operator(BaseOperator):
 
-    def __init__(self, model, tf_op:tflite.Operator, tf_op_name:str, index:int):
+    def __init__(self, model, tf_op, tf_op_name:str, index:int):
         super().__init__(model, model.graph, index)
         self.op = tf_op
         self.operator_code = tf_op_name
-        self.layer_type = str()
         self.layout = model.layout
-
-        self.attrs = dict()
-
-
-    @property
-    def type(self):
-        return self.layer_type if self.layer_type is not None else self.operator_code
-
-
-    @property
-    def name(self):
-        return self.type + str(self.index)
-
-
-    @property
-    def shorty(self):
-        return '[%s](%s)' % (self.name, self.type)
-
-
-    def str(self):
-        return '[' + self.name + ']  (' + self.type + ')'
-
-
-    @property
-    def attrs2str(self):
-        attrstr = ''
-        for key, value in self.attrs.items():
-            attrstr = attrstr + '    ' + str(key) + ': ' + str(value) + '\n'
-        return attrstr
-
-
-    def __str__(self):
-        inames = str([t for t in self.inputs])
-        onames = str([t for t in self.outputs])
-        return '\n%s\n%s    %s -> %s' % (self.shorty, self.attrs2str, inames, onames)
 
 
     def __parseInput__(self):
@@ -86,7 +49,3 @@ class Operator(Base):
         # Handle Legacy Pad for Ignore Op
         if self.op.Inputs(0) in self.model.pad.keys():
             self.model.pad[self.op.Outputs(0)] = self.model.pad[self.op.Inputs(0)]
-
-
-    def saveConstant(self, name, constant):
-        self.model.constant[name] = constant

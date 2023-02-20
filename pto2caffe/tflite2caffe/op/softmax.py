@@ -15,7 +15,7 @@ class Softmax(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Softmax'
+        self.type = 'Softmax'
 
         self.parseInputOutput()
 
@@ -28,7 +28,7 @@ class Softmax(Operator):
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, softmax_param=self.softmax_param)
+        layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, softmax_param=self.softmax_param)
 
         self.setConverted()
 

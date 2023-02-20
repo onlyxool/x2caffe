@@ -17,7 +17,7 @@ class InnerProduct(Operator):
 
 
     def parse(self):
-        self.layer_type = 'InnerProduct'
+        self.type = 'InnerProduct'
 
         op_opt = self.op.BuiltinOptions()
         opt = tflite.FullyConnectedOptions()
@@ -68,7 +68,7 @@ class InnerProduct(Operator):
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, inner_product_param=self.inner_product_param)
+        layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, inner_product_param=self.inner_product_param)
 
         self.setConverted()
 

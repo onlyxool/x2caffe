@@ -23,7 +23,7 @@ class Convolution(Operator):
 
 
     def parse(self):
-        self.layer_type = 'ConvolutionDepthwise' if self.isDepthwise else 'Convolution'
+        self.type = 'ConvolutionDepthwise' if self.isDepthwise else 'Convolution'
 
         op_opt = self.op.BuiltinOptions()
         opt = tflite.DepthwiseConv2DOptions() if self.isDepthwise else tflite.Conv2DOptions()
@@ -62,7 +62,7 @@ class Convolution(Operator):
             padding_mode = 'SAME'
 
         legacy_pad = self.model.pad.get(self.op.Inputs(0), {'left': 0, 'right': 0, 'top': 0, 'bottom': 0})
-        padding = handleLegacyPad(padding_mode, self.inputs_shape[0], self.outputs_shape[0], self.convolution_param, legacy_pad, self.type)
+        padding = handleLegacyPad(padding_mode, self.inputs_shape[0], self.outputs_shape[0], self.convolution_param, legacy_pad, self.layer_type)
         self.convolution_param.update(padding)
 
         # Fused Activation
@@ -76,7 +76,7 @@ class Convolution(Operator):
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, convolution_param=self.convolution_param)
+        layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, convolution_param=self.convolution_param)
 
         self.setConverted()
 

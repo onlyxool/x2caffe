@@ -27,12 +27,12 @@ class Add(Operator):
         opt.Init(op_opt.Bytes, op_opt.Pos)
 
         if self.inputs_buf[0] is None and self.inputs_buf[1] is None and self.inputs_shape[0] == self.inputs_shape[1]:
-            self.layer_type = 'Eltwise'
+            self.type = 'Eltwise'
             self.eltwise_param = dict()
             self.eltwise_param['operation'] = 1
             self.attrs = self.eltwise_param
         elif self.inputs_shape[0] != self.inputs_shape[1]:
-            self.layer_type = 'Bias'
+            self.type = 'Bias'
 
             if self.inputs_buf[0] is not None and self.inputs_buf[1] is None:
                 self.inputs.reverse()
@@ -51,7 +51,7 @@ class Add(Operator):
                 self.inputs_buf[1] = self.inputs_buf[1].reshape(self.inputs_shape[1])
                 self.bias = self.inputs_buf[1]
             else:
-                self.layer_type = 'Reshape+Bias'
+                self.type = 'Reshape+Bias'
                 self.inter_blob = 'reshape'+str(self.index)
                 self.reshape_param=dict(shape=dict(dim=self.inputs_shape[1]))
                 self.bias = None
@@ -74,12 +74,12 @@ class Add(Operator):
     def convert(self):
         layers = list()
         if self.type == 'Eltwise':
-            layers.append(caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param))
+            layers.append(caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param))
         elif self.type == 'Bias':
-            layers.append(caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.bias, bias_param=self.bias_param))
+            layers.append(caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, self.bias, bias_param=self.bias_param))
         elif self.type == 'Reshape+Bias':
-            layers.append(caffe_layer('Reshape', 'Reshape'+str(self.index), [self.inputs[1]], [None], [self.inter_blob], reshape_param=self.reshape_param))
-            layers.append(caffe_layer('Bias', 'Bias'+str(self.index), [self.inputs[0], self.inter_blob], self.inputs_buf, self.outputs, self.bias, bias_param=self.bias_param))
+            layers.append(caffe_layer(self.layer_type[0], self.name[0], [self.inputs[1]], [None], [self.inter_blob], reshape_param=self.reshape_param))
+            layers.append(caffe_layer(self.layer_type[1], self.name[1], [self.inputs[0], self.inter_blob], self.inputs_buf, self.outputs, self.bias, bias_param=self.bias_param))
 
         self.setConverted()
 

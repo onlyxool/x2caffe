@@ -12,7 +12,7 @@ class Pack(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Pack'
+        self.type = 'Pack'
 
         self.parseInputOutput()
 
