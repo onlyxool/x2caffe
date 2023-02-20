@@ -1,6 +1,6 @@
-## PTO2Caffe
+## Pto2Caffe
 
-Convert a deep learning model from Pytorch,TensorFlow, TFLite, ONNX to Caffe.
+Convert a deep learning model from Pytorch,TensorFlow, TFLite, ONNX, Tvm to Caffe.
 
 #### 1. Dependency
 
@@ -24,17 +24,14 @@ To use pto2caffe, you need
 ​	A common usage example as below:
 
 ```bash
-python convert.py -platform=pytorch -model=/path/to/torchscript/model.pt -root_folder=/path/to/input_data/ -mean 0.485 0.456 0.406 -scale 255 255 255 -std 0.229 0.224 0.225 -bin_shape 3 2560 1440 -compare=1 -crop_h=480 -crop_w=480
+python convert.py -platform=onnx -model=/path/to/onnx/model.onnx -compare=1
 ```
-
 
 **Required parameter:**
 
 - **platform:** Specify the original model type, include Pytorch, Tensorflow, TFLite, ONNX
 
 - **model:** The path of original model file.
-
-- **root_folder:** Specify the input data root folder.
 
 
 **Input Raw Data:**
@@ -61,7 +58,7 @@ python convert.py -platform=pytorch -model=/path/to/torchscript/model.pt -root_f
 - **auto_crop:** Crop the input data according to the model inputs size. Can't apply pytorch model.
 - **log:** log print level, 0: Debug 1: Info 2: Warning, 3: ERROR
 - **compare:** Compare network output, 0: Compare latest layer 1: Compare every layer
-
+- **root_folder:** Specify the input data root folder.
 
 
 #### **Operators:**
