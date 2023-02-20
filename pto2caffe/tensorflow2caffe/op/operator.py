@@ -1,78 +1,13 @@
-from base import Base
 from util import shape_map_nhwc2nchw
+from base_Operator import BaseOperator
 
 
-class Operator(Base):
+class Operator(BaseOperator):
 
     def __init__(self, model, tf_op, index):
         super().__init__(model, model.graph, index)
         self.op = tf_op
         self.operator_code = tf_op.type
-        self.attrs = dict()
-
-        self.type = None
-        self.weight = None
-        self.bias = None
-        self.param = list()
-        self.layers = list()
-
-
-    @property
-    def layer_type(self):
-        if self.type is not None and self.type.find('+') >= 0:
-            return self.type.split('+')
-        elif self.type is not None:
-            return self.type
-        else:
-            return self.operator_code
-
-
-    @property
-    def name(self):
-        if self.type is not None and self.type.find('+') >= 0:
-            return [layer_type+str(self.index)+'_'+str(index) for index, layer_type in enumerate(self.type.split('+'))]
-        elif self.layer_type is not None:
-            return self.layer_type + str(self.index)
-
-
-    @property
-    def shorty(self):
-        return '[%s](%s)' % (str(self.name), str(self.type))
-
-
-    def str(self):
-        return '[' + str(self.name) + ']  (' + str(self.type) + ')'
-
-
-    @property
-    def attrs2str(self):
-        attrstr = ''
-        for key, value in self.attrs.items():
-            attrstr = attrstr + '    ' + str(key) + ': ' + str(value) + '\n'
-        return attrstr
-
-
-    def __str__(self):
-        inames = str([t for t in self.inputs])
-        onames = str([t for t in self.outputs])
-        ishape = str(self.inputs_shape)
-        oshape = str(self.outputs_shape)
-        return '\n%s\n%s    %s -> %s\n    %s -> %s' % (self.shorty, self.attrs2str, inames, onames, ishape, oshape)
-
-
-    def debug(self):
-        print('\nOp:', str(self.name), self.op.name, self.operator_code)
-
-        print('Input:')
-        for op_input in self.op.inputs:
-            print('    ', op_input)
-            print('     Buf', self.model.constant.get(self.model.indentity.get(op_input.name, op_input.name), None))
-
-        print('Output:')
-        for op_output in self.op.outputs:
-            print('    ', op_output)
-
-        print('Attrs:', self.attrs, end='\n\n')
 
 
     def ndim(self, dim):
@@ -143,11 +78,6 @@ class Operator(Base):
         # Handle Legacy Pad for Ignore Op
         if self.inputs[0] in self.model.pad.keys():
             self.model.pad[self.outputs[0]] = self.model.pad[self.inputs[0]]
-
-
-    def saveConstant(self, name, constant):
-        self.type = 'Constant'
-        self.model.constant[name] = constant
 
 
     def unSupported(self, errorMsg=None):
