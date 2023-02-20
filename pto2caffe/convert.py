@@ -166,17 +166,16 @@ def Convert(param=None):
 
 
 def args_():
-    args = argparse.ArgumentParser(description='Tensorflow/Tensorflow lite/ONNX/Pytorch to Caffe Conversion Usage', epilog='')
+    args = argparse.ArgumentParser(description='Tensorflow/Tensorflow lite/ONNX/Pytorch/Tvm to Caffe Conversion Usage', epilog='')
     args.add_argument('-platform',      type = str,     required = True,
-            help = 'Pytorch/Tensorflow/ONNX/TFLite/TVM')
+            help = 'Pytorch/Tensorflow/ONNX/TFLite/Tvm')
     args.add_argument('-model',         type = str,     required = True,
             help = 'Orginal Model File')
     args.add_argument('-root_folder',   type = str,     required = False,
             help = 'Specify the Data root folder')
     args.add_argument('-source',        type = str,     required = False,
             help = 'Specify the data source')
-    args.add_argument('-dtype',         type = str,     required = False,   choices=['u8', 's16', 's32', 'f32'],    default='f32',
-            help = 'Specify the Data type, 0:u8 1:s16 2:f32')
+
     args.add_argument('-bin_shape',     type = int,     required = False,   nargs='+',
             help = 'Specify the Data shape when input data is bin file, default layout is [C,H,W]')
     args.add_argument('-color_format',  type = str,     required = False,   choices=['BGR', 'RGB', 'GRAY'],
@@ -184,10 +183,10 @@ def args_():
 
     args.add_argument('-input_shape',   type = str,     required = False,
             help = 'Model input shape')
+    args.add_argument('-dtype',         type = str,     required = False,   choices=['u8', 's16', 's32', 'f32'],    default='f32',
+            help = 'Specify the Data type, 0:u8 1:s16 2:f32')
     args.add_argument('-layout',        type = str,     required = False,   choices=['NCHW', 'NHWC'],
             help = 'Model input layout [NCHW NHWC]')
-    args.add_argument('-savetensor',    type = int,     required = False,   choices=[0, 1], default = 0,
-            help = 'Save The Input Tensor')
 
     args.add_argument('-scale',         type = float,   required = False,   nargs='+',
             help = 'scale value')
@@ -201,14 +200,13 @@ def args_():
             help = 'Specify if we would like to centrally crop input image')
     args.add_argument('-auto_crop',     type = int,     required = False,   default=1,      choices=[0, 1],
             help = 'Crop the input data according to the model inputs size')
-    args.add_argument('-dump',          type = int,     required = False,   default=-1,     choices=[0, 1, 2, 3],
-            help = 'dump blob  1:print output.  2:print input & ouput')
+
     args.add_argument('-compare',       type = int,     required = False,   default=-1,     choices=[0, 1, 2],
             help = 'Compare network output, 0:Compare latest layer 1:Compare every layer')
     args.add_argument('-log',           type = int,     required = False,   default=2,      choices=[0, 1, 2],
             help = 'log print level, 0:Debug 1:Info 2:Warning, 3:ERROR')
     args.add_argument('-optimizify',    type = int,     required = False,   default=0,      choices=[0, 1, 2, 3, 4, 5, 6],
-            help = 'optimizify model')
+            help = 'optimizify tensorflow model')
     args.add_argument('-simplifier',    type = int,     required = False,   default=0,      choices=[0, 1],
             help = 'simplifier onnx model')
     args.add_argument('-streamlit',     type = int,     required = False,   default=0,      choices=[0, 1],
