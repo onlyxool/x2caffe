@@ -2,7 +2,7 @@ import sys
 import onnx
 import logging
 import numpy as np
-from base import Base
+from base_Model import BaseModel
 
 
 from onnx2caffe.op.add import Add
@@ -123,11 +123,10 @@ OpMap = {
 }
 
 
-class Model(Base):
+class Model(BaseModel):
 
     def __init__(self, onnx_model, param):
-        super().__init__(onnx_model, onnx_model.graph)
-        self.param = param
+        super().__init__(onnx_model, onnx_model.graph, param)
         self.model_version = onnx_model.model_version
         self.producer = onnx_model.producer_name +' '+ onnx_model.producer_version
 
@@ -138,15 +137,6 @@ class Model(Base):
                 self.opset.append(opset_version)
             else:
                 sys.exit('Error: Model opset > 13 or <= 3, it may cause incompatiblility issue. (opset:{})\n'.format(opset_version))
-
-        self.pad = dict()
-        self.shape = dict()
-        self.layers = list()
-        self.constant = dict()
-        self.errorMsg = list()
-        self.indentity = dict()
-        self.operators = list()
-        self.unsupport = list()
 
         self.setInited()
 

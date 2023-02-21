@@ -1,7 +1,7 @@
 import sys
 import logging
 import numpy as np
-from base import Base
+from base_Model import BaseModel
 import tensorflow as tf
 
 from tensorflow2caffe.op.abs import Abs
@@ -175,21 +175,11 @@ OpMap = {
 }
 
 
-class Model(Base):
+class Model(BaseModel):
 
     def __init__(self, model, graph, param):
-        super().__init__(model, graph)
-        self.param = param
-        self.layout = param['layout']
-
-        self.constant = dict()
-        self.indentity = dict()
-        self.pad = dict()
+        super().__init__(model, graph, param)
         self.operations = list()
-        self.operators = list()
-        self.unsupport = list()
-        self.errorMsg = list()
-        self.layers = list()
         self.setInited()
 
 

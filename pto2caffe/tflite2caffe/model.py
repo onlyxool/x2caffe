@@ -3,7 +3,7 @@ import logging
 import numpy as np
 import tensorflow as tf
 
-from base import Base
+from base_Model import BaseModel
 
 from tflite2caffe.op.add import Add
 from tflite2caffe.op.mul import Mul
@@ -108,26 +108,13 @@ def handleFusedActivation(preop):
     return op
 
 
-class Model(Base):
+class Model(BaseModel):
 
     def __init__(self, model:tflite.Model, param, model_byte):
-        super().__init__(model, model.Subgraphs(0))
+        super().__init__(model, model.Subgraphs(0), param)
         self.version = model.Version()
         self.model_byte = model_byte
-
-        self.param = param
-        self.layout = param['layout']
-
         self.inputs_quantization_parameter = list()
-
-        self.constant = dict()
-        self.indentity = dict()
-
-        self.pad = dict()
-        self.operators = list()
-        self.unsupport = list()
-        self.errorMsg = list()
-        self.layers = list()
         self.setInited()
 
 
@@ -274,7 +261,6 @@ class Model(Base):
                     'quantized_dimension': quantized_dimension}
         else:
             return None
-
 
 
     def forward(self, output_name, inputs_tensor):
