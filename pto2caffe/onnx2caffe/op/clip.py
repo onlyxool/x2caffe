@@ -13,21 +13,17 @@ class ReLUX(Operator):
     def parse(self):
         super().__parse__()
 
-        if self.inputs_buf[2] is not None:
-            self.type = 'ReLUX'
+        self.type = 'ReLUX'
+        self.relux_param = dict()
 
-            self.relux_param = dict()
-            if 'max' in self.attrs and 'min' in self.attrs:
-                self.relux_param['x'] = self.attrs['max']
-            else:
-                self.relux_param['x'] = self.inputs_buf[2]
-            self.attrs = self.relux_param
+        if self.model.opset[0] >= 11:
+            self.relux_param['x'] = self.inputs_buf[2] if self.inputs_buf[2] is not None else 3.402823e+38
         else:
-            self.type = 'ReLU'
+            self.relux_param['x'] = self.attrs['max'] if 'max' in self.attrs else 3.402823e+38
+            if 'min' in self.attrs and self.attrs['min'] != 0:
+                print('Warning: Clip Min value is not 0')
 
-            self.relu_param = dict()
-            self.relu_param['negative_slope'] = self.attrs.get('alpha', 0)
-            self.attrs = self.relu_param
+        self.attrs = self.relux_param
 
         self.inputs = self.inputs[:1]
 
@@ -35,10 +31,7 @@ class ReLUX(Operator):
 
 
     def convert(self):
-        if self.type == 'ReLUX':
-            layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, relux_param=self.relux_param)
-        elif self.type == 'ReLU':
-            layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, relu_param=self.relu_param)
+        layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, relux_param=self.relux_param)
 
         self.setConverted()
 
