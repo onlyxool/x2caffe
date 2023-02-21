@@ -10,10 +10,6 @@ class Operator(BaseOperator):
         self.operator_code = tf_op.type
 
 
-    def ndim(self, dim):
-        return self.layout.find(dim)
-
-
     def __parseInput__(self):
         for index, op_input in enumerate(self.op.inputs):
             self.inputs.append(self.model.indentity.get(op_input.name, op_input.name))

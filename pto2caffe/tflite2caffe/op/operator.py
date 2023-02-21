@@ -9,7 +9,6 @@ class Operator(BaseOperator):
         super().__init__(model, model.graph, index)
         self.op = tf_op
         self.operator_code = tf_op_name
-        self.layout = model.layout
 
 
     def __parseInput__(self):

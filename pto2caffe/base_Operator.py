@@ -4,6 +4,8 @@ class BaseOperator(Base):
 
     def __init__(self, model, graph, index):
         super().__init__(model, graph, index)
+        self.layout = model.layout
+
         self.operator_code = None
         self.type = None
         self.weight = None
@@ -55,7 +57,11 @@ class BaseOperator(Base):
         inbuf = str([None if t is None else 'np.array' for t in self.inputs_buf])
         return '\n%s\n%s    %s -> %s\n    %s -> %s\n    %s\n' % (self.shorty, self.attrs2str, inames, onames, ishape, oshape, inbuf)
 
-        
+
+    def ndim(self, dim):
+        return self.layout.index(dim)
+
+
     def inputBuf_byName(self, name):
         for index, input in enumerate(self.inputs):
             if input.find(name) > 0 or input.find(name.lower()) > 0 or input.find(name.upper()) > 0:
