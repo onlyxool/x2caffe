@@ -103,7 +103,7 @@ Parameter::Parameter(const torch::jit::Node* value_node)
     {
         if (!value_node->hasAttribute(torch::jit::attr::value))
         {
-            fprintf(stderr, "no attribute value\n");
+            //fprintf(stderr, "no attribute value\n");
             return;
         }
 

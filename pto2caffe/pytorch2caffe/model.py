@@ -34,7 +34,6 @@ from pytorch2caffe.op.expression import Expression
 from pytorch2caffe.op.convtranspose import Deconvolution
 from pytorch2caffe.op.adaptavgpooling import AdaptiveAvgPooling
 
-from pytorch2caffe.op.debug import Debug
 
 
 logger = logging.getLogger('Pytorch2Caffe')
@@ -78,7 +77,8 @@ OpMap = {
     'nn.AdaptiveAvgPool2d': AdaptiveAvgPooling,
     'F.adaptive_avg_pool2d': AdaptiveAvgPooling,
 
-    'pnnx.Attribute': Debug,
+#'aten::stack': Debug,
+#'pnnx.Attribute': Debug,
 }
 
 ignore_op = ['prim::TupleConstruct']
@@ -88,7 +88,8 @@ class Model(Base):
     def __init__(self, pytorch_file, param, inputs_tensor):
         super().__init__(None, None)
         self.pytorch_file = pytorch_file
-        self.input_tensor = inputs_tensor
+        self.device = torch.device('cpu')#torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.input_tensor = torch.from_numpy(inputs_tensor).to('cpu')
         self.version = ''
 
         input_tensor = torch.as_tensor(inputs_tensor)
@@ -96,6 +97,12 @@ class Model(Base):
 
         self.inputs = []
         self.inputs_shape = [list(input_tensor.shape)]
+
+        self.inputs_dtype = list()
+        self.inputs_maxval = list()
+        self.inputs_minval = list()
+        self.inputs_scale = list()
+        self.inputs_zeropoint = list()
 
         self.param = param
         self.operators = []
@@ -118,7 +125,6 @@ class Model(Base):
                 import sys
                 errorMsg = 'Error: Operator [' + op_type + '] does not Support.\n'
                 sys.exit(errorMsg)
-
             op = OpMap[op_type](self, self.pnnx, op_type, index)
             op.parse()
 

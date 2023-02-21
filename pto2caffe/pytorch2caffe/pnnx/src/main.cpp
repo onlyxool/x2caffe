@@ -512,14 +512,15 @@ const char *get_input_name(unsigned int ops_no, unsigned int input_no)
 
 const char *get_ops_input_shape(unsigned int ops_no, unsigned int input_no)
 {
-    std::string input_shape;
+    std::string input_shape = "";
 
-    if (input_no > pnnx_graph.ops[ops_no]->inputs.size() - 1)
+    if ((input_no + 1) > pnnx_graph.ops[ops_no]->inputs.size())
         return input_shape.c_str();
 
     for (auto dim : pnnx_graph.ops[ops_no]->inputs[input_no]->shape) {
         input_shape = input_shape + std::to_string(dim) + ",";
     }
+
     if (input_shape.length() > 0)
         input_shape.pop_back();
 
@@ -539,9 +540,9 @@ const char *get_output_name(unsigned int ops_no, unsigned int output_no)
 
 const char *get_ops_output_shape(unsigned int ops_no, unsigned int output_no)
 {
-    std::string output_shape;
+    std::string output_shape = "";
 
-    if (output_no > pnnx_graph.ops[ops_no]->outputs.size() - 1)
+    if ((output_no + 1) > pnnx_graph.ops[ops_no]->outputs.size())
         return output_shape.c_str();
 
     for (auto dim : pnnx_graph.ops[ops_no]->outputs[output_no]->shape) {

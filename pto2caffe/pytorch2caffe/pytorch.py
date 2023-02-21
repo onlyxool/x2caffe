@@ -12,6 +12,8 @@ def shape2size(shape:list):
     return size
 
 def get_output(model, input_tensor, layer_name):
+#    device = torch.device('cpu')#torch.device("cuda" if torch.cuda.is_available() else "cpu")
+#    input_tensor = torch.from_numpy(input_tensor).to('cpu')
     if not model.status.forwarded:
         model.pnnx.model_forward(input_tensor)
         model.setForwarded()
