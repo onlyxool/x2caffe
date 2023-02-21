@@ -1,7 +1,7 @@
 from tvm2caffe.op.operator import Operator
 
 
-class Bypass(Operator):
+class Copy(Operator):
 
     def __init__(self, model, relay, index):
         super().__init__(model, relay, index)

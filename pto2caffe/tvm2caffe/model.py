@@ -16,6 +16,7 @@ from tvm2caffe.op.pad import Pad
 from tvm2caffe.op.sum import Sum
 from tvm2caffe.op.bias import Bias
 from tvm2caffe.op.clip import Clip
+from tvm2caffe.op.copy import Copy
 from tvm2caffe.op.relu import ReLU
 from tvm2caffe.op.sqrt import Sqrt
 from tvm2caffe.op.tanh import Tanh
@@ -24,7 +25,6 @@ from tvm2caffe.op.power import Power
 from tvm2caffe.op.prelu import PReLU
 from tvm2caffe.op.split import Split
 from tvm2caffe.op.argmax import Argmax
-from tvm2caffe.op.bypass import Bypass
 from tvm2caffe.op.concat import Concat
 from tvm2caffe.op.divide import Divide
 from tvm2caffe.op.resize import Resize
@@ -48,8 +48,6 @@ from tvm2caffe.op.stridedslice import StridedSlice
 from tvm2caffe.op.convtranspose import ConvTranspose
 from tvm2caffe.op.bypassoperator import ByPassOperator
 
-#from tvm2caffe.op.debug import Debug
-
 
 from caffe_transform import save_caffe_model
 from caffe_transform import make_caffe_input_layer
@@ -64,10 +62,10 @@ OpMap = {
     'max': Max,
     'sum': Sum,
     'clip': Clip,
+    'copy': Copy,
     'sqrt': Sqrt,
     'tanh': Tanh,
     'nn.pad': Pad,
-    'copy': Bypass,
     'power': Power,
     'split': Split,
     'nn.relu': ReLU,

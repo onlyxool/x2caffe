@@ -64,7 +64,6 @@ numpy_dtype = [None, np.float32, np.uint8, np.int8, np.uint16, np.int16, np.int3
 
 logger = logging.getLogger('ONNX2Caffe')
 
-#from onnx2caffe.op.debug import Debug
 OpMap = {
     'Add': Add,
     'Div': Div,

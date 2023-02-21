@@ -1,5 +1,3 @@
-import numpy as np
-
 from caffe_transform import caffe_layer
 from tvm2caffe.op.operator import Operator
 
