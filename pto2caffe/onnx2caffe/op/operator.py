@@ -16,8 +16,8 @@ class Operator(BaseOperator):
         for input in self.node.input:
             self.inputs.append(self.model.indentity.get(input, input))
             self.inputs_buf.append(self.model.constant.get(input, None))
-            if input in self.model.shape:
-                self.inputs_shape.append(self.model.shape[input])
+            if input in self.model.tensor_shape:
+                self.inputs_shape.append(self.model.tensor_shape[input])
             elif input in self.model.constant:
                 self.inputs_shape.append(list(self.model.constant[input].shape))
             else:
@@ -30,7 +30,7 @@ class Operator(BaseOperator):
     def __parseOutput__(self):
         for output in self.node.output:
             self.outputs.append(output)
-            self.outputs_shape.append(self.model.shape.get(output, None))
+            self.outputs_shape.append(self.model.tensor_shape.get(output, None))
 
 
     def __convertAttributeProto__(self, attr):

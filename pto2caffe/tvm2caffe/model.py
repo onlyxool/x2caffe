@@ -2,7 +2,7 @@ import re
 import sys
 import tvm
 import logging
-from base import Base
+from base_Model import BaseModel
 
 from tvm2caffe.relay import preprocess, get_relay_type, get_tensor_shape, remove_numTypeExt
 
@@ -109,7 +109,7 @@ OpMap = {
 logger = logging.getLogger('Tvm2Caffe')
 
 
-class Model(Base):
+class Model(BaseModel):
 
     def __init__(self, tvm_model, tvm_model_params, param):
         required_pass=['RemoveUnusedFunctions', 'ConvertLayout', 'FoldConstant', 'InferType', 'SimplifyInference', 'CombineParallelConv2D', 'FoldScaleAxis', 'ForwardFoldScaleAxis']
@@ -123,25 +123,14 @@ class Model(Base):
             lib = tvm.relay.build(model[0], target='llvm')
 
         model_txt = model[0].astext(show_meta_data=False)
-        super().__init__(model[0], model_txt[model_txt.find('main'):model_txt.rfind('}')].strip())
+        super().__init__(model[0], model_txt[model_txt.find('main'):model_txt.rfind('}')].strip(), param)
 
 
         self.device = tvm.device('llvm', 0)
 #        self.runtime = tvm.contrib.graph_executor.GraphModule(lib["default"](self.device))
         self.runtime = tvm.contrib.debugger.debug_executor.GraphModuleDebug(lib["debug_create"](lib.libmod_name, self.device), [self.device], lib.graph_json, dump_root=None)
 
-        self.param = param
-        self.layout = param['layout']
-
-        self.pad = dict()
         self.relays = list()
-        self.layers = list()
-        self.constant = dict()
-        self.errorMsg = list()
-        self.indentity = dict()
-        self.operators = list()
-        self.unsupport = list()
-        self.tensor_shape = dict()
         self.debug_outputs = dict(zip(OpMap.keys(), [None]*len(OpMap.keys())))
         self.outputs_buf = dict(zip(OpMap.keys(), [None]*len(OpMap.keys())))
 

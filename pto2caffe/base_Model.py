@@ -7,10 +7,10 @@ class BaseModel(Base):
         self.layout = param['layout']
 
         self.pad = dict()
-        self.shape = dict()
         self.layers = list()
         self.constant = dict()
         self.errorMsg = list()
         self.indentity = dict()
         self.operators = list()
         self.unsupport = list()
+        self.tensor_shape = dict()

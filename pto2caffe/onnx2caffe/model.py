@@ -185,11 +185,11 @@ class Model(BaseModel):
 
         # Get Shape
         for value_info in self.graph.value_info:
-            self.shape[value_info.name] = [int(dim.dim_value) for dim in value_info.type.tensor_type.shape.dim]
+            self.tensor_shape[value_info.name] = [int(dim.dim_value) for dim in value_info.type.tensor_type.shape.dim]
         for value_info in self.graph.input:
-            self.shape[value_info.name] = [int(dim.dim_value) for dim in value_info.type.tensor_type.shape.dim]
+            self.tensor_shape[value_info.name] = [int(dim.dim_value) for dim in value_info.type.tensor_type.shape.dim]
         for value_info in self.graph.output:
-            self.shape[value_info.name] = [int(dim.dim_value) for dim in value_info.type.tensor_type.shape.dim]
+            self.tensor_shape[value_info.name] = [int(dim.dim_value) for dim in value_info.type.tensor_type.shape.dim]
 
         # Get Weight & Bias
         for tensor in self.model.graph.initializer:
@@ -203,18 +203,18 @@ class Model(BaseModel):
         print('ONNX Model Input size: (opset=%d)' %self.opset[0])
         for input in self.graph.input:
             if input.name not in self.constant:
-                print(input.name, self.shape[input.name])
+                print(input.name, self.tensor_shape[input.name])
                 self.inputs.append(input.name)
-                self.inputs_shape.append(self.shape[input.name])
+                self.inputs_shape.append(self.tensor_shape[input.name])
                 self.inputs_dtype.append(numpy_dtype[input.type.tensor_type.elem_type])
                 self.inputs_maxval.append(None)
                 self.inputs_minval.append(None)
-                if not all(self.shape[input.name]):
+                if not all(self.tensor_shape[input.name]):
                     sys.exit('Error: Dynamic Model input detected, Please Use -input_shape to overwrite input shape.')
 
         for output in self.graph.output:
             self.outputs.append(output.name)
-            self.outputs_shape.append(self.shape[output.name])
+            self.outputs_shape.append(self.tensor_shape[output.name])
             self.outputs_dtype.append(numpy_dtype[output.type.tensor_type.elem_type])
             self.outputs_maxval.append(None)
             self.outputs_minval.append(None)
@@ -249,7 +249,7 @@ class Model(BaseModel):
         logger.debug("Converting the Model...")
 
         for index, input in enumerate(self.inputs):
-            self.layers.append(make_caffe_input_layer(input, self.shape[input], index, self.param))
+            self.layers.append(make_caffe_input_layer(input, self.tensor_shape[input], index, self.param))
 
         for op in self.operators:
             self.layers.extend(op.convert())
@@ -286,8 +286,8 @@ class Model(BaseModel):
         if output_name[0] in self.outputs:
             outputs = onnx_run(self.model, inputs_tensor)
             return outputs[self.outputs.index(output_name[0])]
-        elif output_name[0] in self.shape.keys():
-            self.model.graph.output.insert(len(self.outputs), onnx.helper.make_tensor_value_info(output_name[0], onnx.TensorProto.FLOAT, self.shape[output_name[0]]))
+        elif output_name[0] in self.tensor_shape.keys():
+            self.model.graph.output.insert(len(self.outputs), onnx.helper.make_tensor_value_info(output_name[0], onnx.TensorProto.FLOAT, self.tensor_shape[output_name[0]]))
             return onnx_run(self.model, inputs_tensor)[len(self.outputs)]
         else:
             return None
