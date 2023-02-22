@@ -11,7 +11,7 @@ class Transpose(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Permute'
+        self.type = 'Permute'
         super().__parse__()
 
         order = list()
@@ -31,7 +31,7 @@ class Transpose(Operator):
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, permute_param=self.permute_param)
+        layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, permute_param=self.permute_param)
 
         self.setConverted()
 

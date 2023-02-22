@@ -11,7 +11,7 @@ class Deconvolution(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Deconvolution'
+        self.type = 'Deconvolution'
         super().__parse__()
 
         # Attributes
@@ -49,7 +49,7 @@ class Deconvolution(Operator):
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, convolution_param=self.convolution_param)
+        layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, convolution_param=self.convolution_param)
 
         self.setConverted()
 

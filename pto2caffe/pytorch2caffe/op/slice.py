@@ -10,13 +10,12 @@ class Slice(Operator):
         self.setInited()
 
 
-    @property
     def type(self):
         return 'Slice'
 
 
     def parse(self):
-        self.layer_type = 'Slice'
+        self.type = 'Slice'
         super().__parse__()
 
         self.slice_param = dict()

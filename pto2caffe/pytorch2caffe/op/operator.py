@@ -1,57 +1,17 @@
-from base import Base
+from base_Operator import BaseOperator
 
-class Operator(Base):
+class Operator(BaseOperator):
 
     def __init__(self, model, pnnx, type_code, index):
         super().__init__(model, None, index)
         self.operator_code = type_code
-        self.layer_type = str()
+
         self.pnnx = pnnx
-
-        self.inputs = []
-        self.inputs_shape = []
-        self.inputs_buf = []
-
-        self.outputs = []
-        self.outputs_shape = []
-
-        self.pre = []
-        self.post = []
-
-        self.attrs = dict()
-
-
-    @property
-    def type(self):
-        return self.layer_type if self.layer_type is not None else self.operator_code
 
 
     @property
     def name(self):
         return self.pnnx.get_ops_name(self.index)
-
-
-    @property
-    def shorty(self):
-        return '[%s](%s)' % (self.name, self.type)
-
-
-    def str(self):
-        return '[' + self.name + ']  (' + self.type + ')'
-
-
-    @property
-    def attrs2str(self):
-        attrstr = ''
-        for key, value in self.attrs.items():
-            attrstr = attrstr + '    ' + str(key) + ': ' + str(value) + '\n'
-        return attrstr
-
-
-    def __str__(self):
-        inames = str([t for t in self.inputs])
-        onames = str([t for t in self.outputs])
-        return '\n%s\n%s    %s -> %s' % (self.shorty, self.attrs2str, inames, onames)
 
 
     def __byPassLegacy__(self):
@@ -121,4 +81,4 @@ class Operator(Base):
         self.__parseInput__()
         self.__parseOutput__()
         self.__parseAttributes__()
-        self.__byPassLegacy__()
+#        self.__byPassLegacy__()

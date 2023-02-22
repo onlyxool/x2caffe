@@ -11,7 +11,7 @@ class Linear(Operator):
 
 
     def parse(self):
-        self.layer_type = 'InnerProduct'
+        self.type = 'InnerProduct'
         super().__parse__()
 
         self.weight = self.inputs_buf[self.inputs.index('weight')]
@@ -40,7 +40,7 @@ class Linear(Operator):
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, inner_product_param=self.inner_product_param)
+        layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, inner_product_param=self.inner_product_param)
 
         self.setConverted()
 

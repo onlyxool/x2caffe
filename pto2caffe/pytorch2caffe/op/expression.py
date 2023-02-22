@@ -81,7 +81,7 @@ class Expression(Operator):
         if expr.find('add') != -1:
             if self.inputs_shape[0] == self.inputs_shape[1]:
                 # Eltwise Layer
-                self.layer_type = 'Eltwise'
+                self.type = 'Eltwise'
                 self.eltwise_param = dict()
                 self.eltwise_param['operation'] = 1 # Caffe Eltwise SUM
                 self.attrs = self.eltwise_param
@@ -90,13 +90,13 @@ class Expression(Operator):
         elif expr.find('mul') != -1:
             if self.inputs_shape[0] == self.inputs_shape[1]:
                 # Eltwise Layer
-                self.layer_type = 'Eltwise'
+                self.type = 'Eltwise'
                 self.eltwise_param = dict()
                 self.eltwise_param['operation'] = 0 # Caffe Eltwise PROD
                 self.attrs = self.eltwise_param
             else:
                 # Scale Layer
-                self.layer_type = 'Scale'
+                self.type = 'Scale'
                 self.scale_param = dict()
 
                 self.scale_param['bias_term'] = False
@@ -120,7 +120,7 @@ class Expression(Operator):
 
     def convert(self):
         if self.type == 'Eltwise':
-            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param)
+            layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param)
             self.setConverted()
             return [layer]
         elif self.type == 'Scale':
@@ -128,6 +128,6 @@ class Expression(Operator):
                 reshape_param = dict(shape=dict(dim=self.inputs_shape[1]))
                 pre_layer = caffe_layer('Reshape', 'Reshape'+str(self.index), [self.inputs[1]], [None], ['reshape'+str(self.index)], reshape_param=reshape_param)
                 self.inputs[1] = 'reshape' + str(self.index)
-            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, scale_param=self.scale_param)
+            layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, scale_param=self.scale_param)
             self.setConverted()
             return [pre_layer, layer]

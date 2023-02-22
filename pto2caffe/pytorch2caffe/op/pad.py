@@ -1,4 +1,3 @@
-from caffe_transform import caffe_layer
 from pytorch2caffe.op.operator import Operator
 
 
@@ -11,7 +10,7 @@ class Pad(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Pad'
+        self.type = 'Pad'
         super().__parse__()
 
         if float(self.attrs.get('value', 0.0)) != 0.0 or self.attrs['mode'] != 'constant':

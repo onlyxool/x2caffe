@@ -11,7 +11,7 @@ class Flatten(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Flatten'
+        self.type = 'Flatten'
         super().__parse__()
 
         self.flatten_param = dict()
@@ -24,7 +24,7 @@ class Flatten(Operator):
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, flatten_param=self.flatten_param)
+        layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, flatten_param=self.flatten_param)
 
         self.setConverted()
 

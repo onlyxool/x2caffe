@@ -24,7 +24,7 @@ class Upsample(Operator):
         if mode == 'nearest':
             if scale_factor % 1 == 0:
                 # Deconvolution Layer
-                self.layer_type = 'Deconvolution'
+                self.type = 'Deconvolution'
 
                 # Attributes
                 self.convolution_param = dict()
@@ -41,7 +41,7 @@ class Upsample(Operator):
                 self.inputs_shape.append(self.inputs_buf[1].shape)
             else:
                 # Upsample Layer
-                self.layer_type = 'Upsample'
+                self.type = 'Upsample'
 
                 # Attributes
                 self.upsample_param = dict()
@@ -49,7 +49,7 @@ class Upsample(Operator):
                 self.attrs = self.upsample_param
         elif mode == 'bilinear':
             # Interp Layer
-            self.layer_type = 'Interp'
+            self.type = 'Interp'
             #self.attrs['size']
 
             # Attributes
@@ -66,11 +66,11 @@ class Upsample(Operator):
 
     def convert(self):
         if self.type == 'Deconvolution':
-            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, None, convolution_param=self.convolution_param)
+            layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, None, convolution_param=self.convolution_param)
         elif self.type == 'Upsample':
-            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, upsample_param=self.upsample_param)
+            layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, upsample_param=self.upsample_param)
         elif self.type == 'Interp':
-            layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, interp_param=self.interp_param)
+            layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, interp_param=self.interp_param)
 
         self.setConverted()
 

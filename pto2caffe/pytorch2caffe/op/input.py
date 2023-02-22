@@ -11,7 +11,7 @@ class Input(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Input'
+        self.type = 'Input'
         super().__parse__()
 
         for output in self.outputs:

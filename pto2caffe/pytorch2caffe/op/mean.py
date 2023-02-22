@@ -11,7 +11,7 @@ class Mean(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Pooling'
+        self.type = 'Pooling'
         super().__parse__()
 
         #self.attrs['keepdim']
@@ -33,7 +33,7 @@ class Mean(Operator):
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, pooling_param=self.pooling_param)
+        layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, pooling_param=self.pooling_param)
 
         self.setConverted()
 

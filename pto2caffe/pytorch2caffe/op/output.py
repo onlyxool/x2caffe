@@ -11,7 +11,7 @@ class Output(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Output'
+        self.type = 'Output'
         super().__parse__()
 
 

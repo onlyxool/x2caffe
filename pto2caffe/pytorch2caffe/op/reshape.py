@@ -11,7 +11,7 @@ class Reshape(Operator):
 
 
     def parse(self):
-        self.layer_type = 'Reshape'
+        self.type = 'Reshape'
         super().__parse__()
 
         # Attributes
@@ -24,7 +24,7 @@ class Reshape(Operator):
 
 
     def convert(self):
-        layer = caffe_layer(self.type, self.name, self.inputs, self.inputs_buf, self.outputs, reshape_param=self.reshape_param)
+        layer = caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, reshape_param=self.reshape_param)
 
         self.setConverted()
 
