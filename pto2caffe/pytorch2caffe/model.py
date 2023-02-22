@@ -1,6 +1,7 @@
+import sys
 import torch
 import logging
-from base import Base
+from base_Model import BaseModel
 
 from pytorch2caffe.pnnx import Pnnx
 from caffe_transform import save_caffe_model
@@ -83,10 +84,10 @@ OpMap = {
 
 ignore_op = ['prim::TupleConstruct']
 
-class Model(Base):
+class Model(BaseModel):
 
     def __init__(self, pytorch_file, param, inputs_tensor):
-        super().__init__(None, None)
+        super().__init__(None, None, param)
         self.pytorch_file = pytorch_file
         self.device = torch.device('cpu')#torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.input_tensor = torch.from_numpy(inputs_tensor).to('cpu')
@@ -94,19 +95,8 @@ class Model(Base):
 
         input_tensor = torch.as_tensor(inputs_tensor)
         self.inputs_buf = [input_tensor]
-
-        self.inputs = []
         self.inputs_shape = [list(input_tensor.shape)]
 
-        self.inputs_dtype = list()
-        self.inputs_maxval = list()
-        self.inputs_minval = list()
-        self.inputs_scale = list()
-        self.inputs_zeropoint = list()
-
-        self.param = param
-        self.operators = []
-        self.layers = []
         self.legacys = []
         self.setInited()
 
@@ -122,7 +112,6 @@ class Model(Base):
                 continue
 
             if op_type not in OpMap:
-                import sys
                 errorMsg = 'Error: Operator [' + op_type + '] does not Support.\n'
                 sys.exit(errorMsg)
             op = OpMap[op_type](self, self.pnnx, op_type, index)
@@ -149,10 +138,7 @@ class Model(Base):
 
         for op in self.operators:
             logger.debug(op)
-            layers = op.convert()
-
-            for layer in layers:
-                self.layers.append(layer)
+            self.layers.extend(op.convert())
 
         self.setConverted()
 
