@@ -1,6 +1,7 @@
 import sys
 import torch
 import logging
+import numpy as np
 from base_Model import BaseModel
 
 from pytorch2caffe.pnnx import Pnnx
@@ -86,16 +87,13 @@ ignore_op = ['prim::TupleConstruct']
 
 class Model(BaseModel):
 
-    def __init__(self, pytorch_file, param, inputs_tensor):
+    def __init__(self, pytorch_file, param):#, inputs_tensor):
         super().__init__(None, None, param)
         self.pytorch_file = pytorch_file
         self.device = torch.device('cpu')#torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.input_tensor = torch.from_numpy(inputs_tensor).to('cpu')
-        self.version = ''
 
-        input_tensor = torch.as_tensor(inputs_tensor)
-        self.inputs_buf = [input_tensor]
-        self.inputs_shape = [list(input_tensor.shape)]
+        self.inputs_shape = [list(param['input_shape'])]
+        self.inputs_dtype = [np.float32 for i in range(len(self.inputs_shape))]
 
         self.legacys = []
         self.setInited()
@@ -144,4 +142,14 @@ class Model(BaseModel):
 
 
     def save(self, caffe_model_path):
-        save_caffe_model(caffe_model_path, self.layers)
+        return save_caffe_model(caffe_model_path, self.layers)
+
+
+    def forward(self, output_name, inputs_tensor):
+        if not self.status.forwarded:
+            self.pnnx.model_forward(inputs_tensor[0])
+            self.setForwarded()
+
+        for op in self.operators:
+            if op.name == output_name:
+                return self.pnnx.get_ops_output(output_name, np.prod(op.outputs_shape[0]))

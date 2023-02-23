@@ -5,6 +5,7 @@ class BaseModel(Base):
         super().__init__(model, graph)
         self.param = param
         self.layout = param['layout']
+        self.platform = param['platform']
 
         self.pad = dict()
         self.layers = list()

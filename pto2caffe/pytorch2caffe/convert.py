@@ -1,6 +1,6 @@
 import sys
 import torch
-from compare import compare
+from compare import compare2
 from preprocess import get_input_tensor
 from pytorch2caffe.model import Model
 
@@ -15,11 +15,15 @@ def check_model_file(pytorch_file):
 def convert(pytorch_file, caffe_model_path, param=None):
     check_model_file(pytorch_file)
 
-    input_tensor = get_input_tensor(param, param['input_shape'], param['dtype'], None)
-
-    model = Model(pytorch_file, param, input_tensor)
+    model = Model(pytorch_file, param)
     model.parse()
     model.convert()
-    model.save(caffe_model_path)
+    caffe_net =model.save(caffe_model_path)
 
-    compare('pytorch', model, caffe_model_path, input_tensor, param.get('compare', -1))
+    input_tensor = get_input_tensor(param, param['input_shape'], param['dtype'], None)
+
+    inputs_tensor = list()
+    for index, input_name in enumerate(model.inputs):
+        inputs_tensor.append(get_input_tensor(param, model.inputs_shape[index], model.inputs_dtype[index], None))
+
+    compare2(model, caffe_net, inputs_tensor, param.get('compare', -1))
