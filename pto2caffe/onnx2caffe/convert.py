@@ -1,6 +1,6 @@
 import sys
 import onnx
-from compare import compare2
+from compare import compare
 from preprocess import get_input_tensor
 from onnx2caffe.model import Model
 
@@ -66,4 +66,4 @@ def convert(onnx_file, caffe_model_path, param=None):
         inputs_tensor.append(get_input_tensor(param, model.inputs_shape[index], model.inputs_dtype[index], None))
 
     if opset >= 7:
-        compare2(model, caffe_net, inputs_tensor, param.get('compare', -1))
+        compare(model, caffe_net, inputs_tensor, param.get('compare', -1))

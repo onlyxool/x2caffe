@@ -3,7 +3,7 @@ import sys
 import tvm
 import pathlib
 
-from compare import compare2
+from compare import compare
 from preprocess import get_input_tensor
 from tvm2caffe.model import Model
 from util import shape_map_nhwc2nchw
@@ -122,4 +122,4 @@ def convert(model_file, caffe_model_path, param=None):
         input_shape = shape_map_nhwc2nchw(model.inputs_shape[index]) if model.layout == 'NHWC' else model.inputs_shape[index]
         inputs_tensor.append(get_input_tensor(param, input_shape, model.inputs_dtype[index], None))
 
-    compare2(model, caffe_net, inputs_tensor, param.get('compare', -1))
+    compare(model, caffe_net, inputs_tensor, param.get('compare', -1))

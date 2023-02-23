@@ -5,7 +5,7 @@ from tensorflow.core.protobuf import saved_model_pb2
 from tensorflow.core.framework import graph_pb2
 from tensorflow.python.framework.convert_to_constants import convert_variables_to_constants_v2
 
-from compare import compare2
+from compare import compare
 from preprocess import get_input_tensor
 from tensorflow2caffe.model import Model
 
@@ -196,4 +196,4 @@ def convert(pb_file, caffe_model_path, param=None):
     for index, input_name in enumerate(model.inputs):
         inputs_tensor.append(get_input_tensor(param, model.inputs_shape[index], model.inputs_dtype[index], None))
 
-    compare2(model, caffe_net, inputs_tensor, param.get('compare', -1))
+    compare(model, caffe_net, inputs_tensor, param.get('compare', -1))
