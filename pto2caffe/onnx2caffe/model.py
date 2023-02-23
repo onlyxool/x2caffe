@@ -261,7 +261,7 @@ class Model(BaseModel):
 
 
     def forward(self, output_name, inputs_tensor):
-        if output_name[0].find('split') >= 0 or output_name[0].find('useless') >= 0:
+        if output_name.find('split') >= 0 or output_name.find('useless') >= 0:
             return None
 
         def onnx_run(model, inputs_tensor):
@@ -282,11 +282,11 @@ class Model(BaseModel):
 
             return onnx_session.run(output, input_feed=input_feed)
 
-        if output_name[0] in self.outputs:
+        if output_name in self.outputs:
             outputs = onnx_run(self.model, inputs_tensor)
-            return outputs[self.outputs.index(output_name[0])]
-        elif output_name[0] in self.tensor_shape.keys():
-            self.model.graph.output.insert(len(self.outputs), onnx.helper.make_tensor_value_info(output_name[0], onnx.TensorProto.FLOAT, self.tensor_shape[output_name[0]]))
+            return outputs[self.outputs.index(output_name)]
+        elif output_name in self.tensor_shape.keys():
+            self.model.graph.output.insert(len(self.outputs), onnx.helper.make_tensor_value_info(output_name, onnx.TensorProto.FLOAT, self.tensor_shape[output_name]))
             return onnx_run(self.model, inputs_tensor)[len(self.outputs)]
         else:
             return None

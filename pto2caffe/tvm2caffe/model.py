@@ -244,7 +244,7 @@ class Model(BaseModel):
 
 
     def forward(self, output_name, inputs_tensor):
-        if not output_name[0].isdigit():
+        if not output_name.isdigit():
             return None
 
         if self.param['log'] == 0:
@@ -270,8 +270,8 @@ class Model(BaseModel):
             self.setForwarded()
 
         for (key, value) in self.debug_outputs.items():
-            if self.outputs_buf[key] is not None and self.debug_outputs[key] is not None and output_name[0] in self.debug_outputs[key]:
-                output = self.outputs_buf[key][self.debug_outputs[key].index(output_name[0])]
+            if self.outputs_buf[key] is not None and self.debug_outputs[key] is not None and output_name in self.debug_outputs[key]:
+                output = self.outputs_buf[key][self.debug_outputs[key].index(output_name)]
                 break
 #        output = self.runtime.get_output(0).numpy()
 

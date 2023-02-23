@@ -312,8 +312,8 @@ class Model(BaseModel):
         return save_caffe_model(caffe_model_path, self.layers)
 
 
-    def forward(self, outputs_name, inputs_tensor):
-        if outputs_name[0].find('split') >= 0:
+    def forward(self, output_name, inputs_tensor):
+        if output_name.find('split') >= 0:
             return None
 
         def wrap_frozen_graph(graph_def, inputs, outputs, print_graph=False):
@@ -328,7 +328,7 @@ class Model(BaseModel):
                 tf.nest.map_structure(import_graph.as_graph_element, outputs))
 
         # Wrap frozen graph to ConcreteFunctions
-        frozen_func = wrap_frozen_graph(graph_def=self.graph, inputs=self.inputs, outputs=outputs_name, print_graph=True)
+        frozen_func = wrap_frozen_graph(graph_def=self.graph, inputs=self.inputs, outputs=[output_name], print_graph=True)
 
         if len(self.inputs) == 1: #TODO
             input0 = inputs_tensor[0].transpose(0, 2, 3, 1) if self.layout == 'NHWC' and len(self.inputs_shape[0]) == 4 else inputs_tensor[0]
