@@ -1,4 +1,5 @@
 import numpy as np
+import tensorflow as tf
 
 from caffe_transform import caffe_layer
 from tensorflow2caffe.op.operator import Operator
@@ -17,7 +18,6 @@ class Maximum(Operator):
 
         if self.inputs_buf[0] is not None and self.inputs_buf[1] is not None:
             self.type = 'Maximum'
-            import tensorflow as tf
             x = tf.constant(self.inputs_buf[0], dtype=self.op.inputs[0].dtype)
             y = tf.constant(self.inputs_buf[1], dtype=self.op.inputs[1].dtype)
             self.saveConstant(self.outputs[0], tf.raw_ops.Maximum(x=x, y=y, name=None).numpy())
@@ -33,8 +33,6 @@ class Maximum(Operator):
                 self.dummy_data_param = dict()
                 self.dummy_data_param['data_filler'] = dict(type='constant', value=self.inputs_buf[1])
                 self.dummy_data_param['shape'] = dict(dim=self.inputs_shape[0])
-
-                self.inter_blob = 'preDummy_split' + str(self.index)
 
                 self.eltwise_param = dict()
                 self.eltwise_param['operation'] = 2
@@ -55,8 +53,8 @@ class Maximum(Operator):
         if self.type == 'Eltwise':
             layers.append(caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param))
         elif self.type == 'Dummy+Eltwise':
-            layers.append(caffe_layer(self.layer_type[0], self.name[0], self.inputs, self.inputs_buf, [self.inter_blob], dummy_data_param=self.dummy_data_param))
-            layers.append(caffe_layer(self.layer_type[1], self.name[1], [self.inter_blob], self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param))
+            layers.append(caffe_layer(self.layer_type[0], self.name[0], [self.inputs[1]], self.inputs_buf, self.interblob, self.inputs_buf[1], dummy_data_param=self.dummy_data_param))
+            layers.append(caffe_layer(self.layer_type[1], self.name[1], [self.inputs[0], self.interblob[0]], self.inputs_buf, self.outputs, eltwise_param=self.eltwise_param))
         elif self.type == 'ReLU':
             layers.append(caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, relu_param=self.relu_param))
 

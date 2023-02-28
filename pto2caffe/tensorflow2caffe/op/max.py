@@ -48,7 +48,6 @@ class Max(Operator):
                 if not self.attrs['keep_dims']:
                     self.type = 'Pooling+Reshape'
                     self.keep_dims = False
-                    self.reshape = 'Max_' + self.op.name + '_split'
                     self.reshape_param = dict(shape=dict(dim=self.outputs_shape[0]))
                 else:
                     self.keep_dims = True
@@ -72,8 +71,8 @@ class Max(Operator):
         elif self.type == 'Pooling':
             layers.append(caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, pooling_param=self.pooling_param))
         elif self.type == 'Pooling+Reshape':
-            layers.append(caffe_layer(self.layer_type[0], self.name[0], self.inputs, self.inputs_buf, [self.reshape], pooling_param=self.pooling_param))
-            layers.append(caffe_layer(self.layer_type[1], self.name[1], [self.reshape], [None], self.outputs, reshape_param=self.reshape_param))
+            layers.append(caffe_layer(self.layer_type[0], self.name[0], self.inputs, self.inputs_buf, self.interblob, pooling_param=self.pooling_param))
+            layers.append(caffe_layer(self.layer_type[1], self.name[1], self.interblob, [None], self.outputs, reshape_param=self.reshape_param))
 
         self.setConverted()
 

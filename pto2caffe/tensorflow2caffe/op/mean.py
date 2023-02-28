@@ -21,7 +21,6 @@ class Mean(Operator):
                 self.type = 'Pooling'
             else:
                 self.type = 'Pooling+Reshape'
-                self.reshape = 'Mean_' + self.op.name + '_split'
                 self.reshape_param = dict(shape=dict(dim=self.outputs_shape[0]))
 
             self.pooling_param = dict()
@@ -42,9 +41,6 @@ class Mean(Operator):
         elif (axis.tolist() == 3 and self.layout == 'NHWC') or (axis.tolist() == 1 and self.layout == 'NCHW'):
             self.type = 'Permute+Reduction+Permute'
 
-            self.inter_blob0 = 'prePremute_split' + str(self.index)
-            self.inter_blob1 = 'postPremute_split' + str(self.index)
-
             self.reduction_param = dict()
             self.reduction_param['operation'] = 4
             self.reduction_param['axis'] = 3
@@ -61,12 +57,12 @@ class Mean(Operator):
         if self.type == 'Pooling':
             layers.append(caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, pooling_param=self.pooling_param))
         elif self.type == 'Pooling+Reshape':
-            layers.append(caffe_layer(self.layer_type[0], self.name[0], self.inputs, self.inputs_buf, [self.reshape], pooling_param=self.pooling_param))
-            layers.append(caffe_layer(self.layer_type[1], self.name[1], [self.reshape], [None], self.outputs, reshape_param=self.reshape_param))
+            layers.append(caffe_layer(self.layer_type[0], self.name[0], self.inputs, self.inputs_buf, self.interblob, pooling_param=self.pooling_param))
+            layers.append(caffe_layer(self.layer_type[1], self.name[1], self.interblob, [None], self.outputs, reshape_param=self.reshape_param))
         elif self.type == 'Permute+Reduction+Permute':
-            layers.append(caffe_layer(self.layer_type[0], self.name[0], self.inputs, self.inputs_buf, [self.inter_blob0], permute_param=dict(order=[0,2,3,1])))
-            layers.append(caffe_layer(self.layer_type[1], self.name[1], [self.inter_blob0], self.inputs_buf, [self.inter_blob1], reduction_param=self.reduction_param))
-            layers.append(caffe_layer(self.layer_type[2], self.name[2], [self.inter_blob1], self.inputs_buf, self.outputs, permute_param=dict(order=[0,3,1,2])))
+            layers.append(caffe_layer(self.layer_type[0], self.name[0], self.inputs, self.inputs_buf, [self.interblob[0]], permute_param=dict(order=[0,2,3,1])))
+            layers.append(caffe_layer(self.layer_type[1], self.name[1], [self.interblob[0]], self.inputs_buf, [self.interblob[1]], reduction_param=self.reduction_param))
+            layers.append(caffe_layer(self.layer_type[2], self.name[2], [self.interblob[1]], self.inputs_buf, self.outputs, permute_param=dict(order=[0,3,1,2])))
 
         self.setConverted()
 

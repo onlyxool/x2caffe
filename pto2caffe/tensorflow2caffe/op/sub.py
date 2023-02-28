@@ -53,11 +53,6 @@ class Sub(Operator):
             self.inputs_shape.reverse()
             self.inputs_buf.reverse()
 
-            self.scale0 = 'Scale_split_sub'+str(self.index)
-            self.scale1 = 'Scale_split_neg'+str(self.index)
-            self.scale0_outputs = ['Scale_split_sub'+str(self.index)]
-            self.scale1_inputs = ['Scale_split_sub'+str(self.index), 'Scale_split_neg_weight']
-
             # Weight
             self.weight0 = np.ones(self.inputs_shape[0]).astype(np.float32)
             self.weight1 = np.ones(self.outputs_shape[0]).astype(np.float32) * -1
@@ -95,8 +90,8 @@ class Sub(Operator):
         if self.type == 'Scale':
             layers.append(caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, scale_param=self.scale_param))
         if self.type == 'Scale+Scale':
-            layers.append(caffe_layer(self.layer_type[0], self.name[0], self.inputs, self.inputs_buf, self.scale0_outputs, self.weight0, self.bias0, scale_param=self.scale_param0))
-            layers.append(caffe_layer(self.layer_type[1], self.name[1], self.scale1_inputs, [None, self.weight1], self.outputs, self.weight1, self.bias1, scale_param=self.scale_param1))
+            layers.append(caffe_layer(self.layer_type[0], self.name[0], self.inputs, self.inputs_buf, self.interblob, self.weight0, self.bias0, scale_param=self.scale_param0))
+            layers.append(caffe_layer(self.layer_type[1], self.name[1], self.interblob, [None, self.weight1], self.outputs, self.weight1, self.bias1, scale_param=self.scale_param1))
 
         self.setConverted()
 

@@ -27,7 +27,7 @@ class Unpack(Operator):
                 self.attrs = self.reshape_param
                 self.setParsed()
             else:
-                self.type = 'Slice'
+                self.type = 'Slice' + 'Reshape' * len(self.inputs)
 
                 # Attribute axis
                 self.slice_param = dict()
@@ -40,12 +40,6 @@ class Unpack(Operator):
                 slice_points = np.arange(start=1, stop=self.attrs['num'], step=1, dtype = np.int32).tolist()
                 self.slice_param['slice_point'] = slice_points
 
-
-                # Append Extra Reshape Layer
-                self.reshapes = list()
-                for index, output in enumerate(self.outputs):
-                    self.reshapes.append('Unpack_' + self.op.name + '_split' + str(index))
-
                 self.reshape_param = dict(shape=dict(dim=self.outputs_shape[0]))
 
                 self.attrs = self.slice_param
@@ -55,10 +49,10 @@ class Unpack(Operator):
 
     def convert(self):
         layers = list()
-        if self.type == 'Slice':
-            layers.append(caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.reshapes, slice_param=self.slice_param))
-            for index, reshape_name in enumerate(self.reshapes):
-                layers.append(caffe_layer('Reshape', reshape_name, [reshape_name], [None], [self.outputs[index]], reshape_param=self.reshape_param))
+        if self.type.startswith('Slice'):
+            layers.append(caffe_layer(self.layer_type[0], self.name, self.inputs, self.inputs_buf, self.interblob, slice_param=self.slice_param))
+            for index, input_name in enumerate(self.inputs):
+                layers.append(caffe_layer(self.layer_type[index+1], self.name[index+1], self.interblob[index], [None], [self.outputs[index]], reshape_param=self.reshape_param))
         elif self.type == 'Reshape':
             layers.append(caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, reshape_param=self.reshape_param))
 

@@ -26,12 +26,7 @@ class Pack(Operator):
             import numpy as np
             self.saveConstant(self.outputs[0], np.stack(self.inputs_buf))
         else:
-            self.type = 'Concat'
-
-            # Append Extra Reshape
-            self.reshapes = list()
-            for index, input in enumerate(self.inputs):
-                self.reshapes.append('Pack_' + self.op.name + '_split' + str(index))
+            self.type = 'Reshape+' * len(self.inputs) + 'Concat'
 
             # Reshape Attribute
             if self.attrs['axis'] == 0:
@@ -53,10 +48,10 @@ class Pack(Operator):
 
     def convert(self):
         layers = list()
-        for index, reshape_name in enumerate(self.reshapes):
-            layers.append(caffe_layer('Reshape', reshape_name, [self.inputs[index]], [None], [reshape_name], reshape_param=self.reshape_param))
+        for index, input_name in enumerate(self.inputs):
+            layers.append(caffe_layer(self.layer_type[index], self.name[index], [self.inputs[index]], [None], self.interblob[index], reshape_param=self.reshape_param))
 
-        layers.append(caffe_layer(self.layer_type, self.name, self.reshapes, self.inputs_buf, self.outputs, concat_param=self.concat_param))
+        layers.append(caffe_layer(self.layer_type[len(self.inputs)], self.name[len(self.inputs)], self.interblob, self.inputs_buf, self.outputs, concat_param=self.concat_param))
 
         self.setConverted()
 
