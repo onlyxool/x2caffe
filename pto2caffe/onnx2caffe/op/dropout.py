@@ -20,7 +20,7 @@ class Dropout(Operator):
 
         # Attributes
         self.dropout_param = dict()
-        self.dropout_param['dropout_ratio'] = self.attrs['ratio']
+        self.dropout_param['dropout_ratio'] = self.attrs['ratio'] if self.model.opset[0] <= 10 else self.inputs_buf[1]
         self.attrs = self.dropout_param
 
         self.setParsed()
