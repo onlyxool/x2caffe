@@ -22,13 +22,15 @@ class Split(Operator):
             return
 
         self.slice_param = dict()
-        self.slice_param['axis'] = dim_map_nhwc2nchw[self.attrs['axis']] if self.layout == 'NHWC' else self.attrs['axis']
+        if 'axis' in self.attrs.keys():
+            self.slice_param['axis'] = dim_map_nhwc2nchw[self.attrs['axis']] if self.layout == 'NHWC' else self.attrs['axis']
+        else:
+            self.slice_param['axis'] = 0
 
         # Slice Point
         self.slice_param['slice_point'] = list()
-        for i in range(indices_or_sections):
-            self.slice_param['slice_point'].append(self.outputs_shape[i][self.slice_param['axis']]*i)
-        self.slice_param['slice_point'].remove(0)
+        for i in indices_or_sections:
+            self.slice_param['slice_point'].append(i)
 
         self.attrs = self.slice_param
 
