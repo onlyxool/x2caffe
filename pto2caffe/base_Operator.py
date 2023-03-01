@@ -27,7 +27,7 @@ class BaseOperator(Base):
     @property
     def name(self):
         if self.type is not None and self.type.find('+') >= 0:
-            return [layer_type+str(self.index)+'_'+str(index) for index, layer_type in enumerate(self.type.split('+'))]
+            return [layer_type + str(self.index) + '_' + str(index) for index, layer_type in enumerate(self.type.split('+'))]
         elif self.layer_type is not None:
             return self.layer_type + str(self.index)
 
@@ -54,12 +54,20 @@ class BaseOperator(Base):
         onames = str([t for t in self.outputs])
         ishape = str(self.inputs_shape)
         oshape = str(self.outputs_shape)
-        inbuf = str([None if t is None else 'np.array' for t in self.inputs_buf])
-        return '\n%s\n%s    %s -> %s\n    %s -> %s\n    %s\n' % (self.shorty, self.attrs2str, inames, onames, ishape, oshape, inbuf)
+        inbufs = str([None if t is None else 'np.array' for t in self.inputs_buf])
+        return '\n%s\n%s    %s -> %s\n    %s -> %s\n    %s\n' % (self.shorty, self.attrs2str, inames, onames, ishape, oshape, inbufs)
 
 
     def ndim(self, dim):
         return self.layout.index(dim)
+
+
+    @property
+    def interblob(self):
+        if self.type is not None and self.type.find('+') >= 0:
+            return ['intermediate_' + str(self.index) + '_' + str(index) for index in range(self.type.count('+'))]
+        elif self.type is not None:
+            raise ValueError
 
 
     def inputBuf_byName(self, name):
