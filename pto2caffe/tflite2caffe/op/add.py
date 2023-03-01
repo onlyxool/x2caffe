@@ -52,7 +52,6 @@ class Add(Operator):
                 self.bias = self.inputs_buf[1]
             else:
                 self.type = 'Reshape+Bias'
-                self.inter_blob = 'reshape'+str(self.index)
                 self.reshape_param=dict(shape=dict(dim=self.inputs_shape[1]))
                 self.bias = None
 
@@ -78,8 +77,8 @@ class Add(Operator):
         elif self.type == 'Bias':
             layers.append(caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, self.bias, bias_param=self.bias_param))
         elif self.type == 'Reshape+Bias':
-            layers.append(caffe_layer(self.layer_type[0], self.name[0], [self.inputs[1]], [None], [self.inter_blob], reshape_param=self.reshape_param))
-            layers.append(caffe_layer(self.layer_type[1], self.name[1], [self.inputs[0], self.inter_blob], self.inputs_buf, self.outputs, self.bias, bias_param=self.bias_param))
+            layers.append(caffe_layer(self.layer_type[0], self.name[0], [self.inputs[1]], [None], self.interblob, reshape_param=self.reshape_param))
+            layers.append(caffe_layer(self.layer_type[1], self.name[1], [self.inputs[0], self.interblob[0]], self.inputs_buf, self.outputs, self.bias, bias_param=self.bias_param))
 
         self.setConverted()
 

@@ -34,10 +34,10 @@ class Slice(Operator):
 
             if self.inputs_buf[1][op_axis] == 0:
                 slice_points = self.inputs_buf[2][op_axis]
-                self.outputs.insert(0, self.name+'_useless')
+                self.outputs.insert(0, 'intermediate_' + str(self.index))
             elif self.inputs_buf[1][op_axis] > 0:
                 slice_points = self.inputs_buf[1][op_axis]
-                self.outputs.append(self.name+'_useless')
+                self.outputs.append('intermediate_' + str(self.index))
             else:
                 raise NotImplementedError
             self.slice_param['slice_point'] = slice_points
