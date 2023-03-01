@@ -25,10 +25,8 @@ class GlobalAveragePool(Operator):
             self.reduction_param['axis'] = 2
             self.attrs = self.reduction_param
 
-            self.inter_blob0 = 'reshape'+str(self.index)
             self.reshape_param = dict(shape=dict(dim=self.outputs_shape[0]))
 
-            self.inter_blob1 = 'scale'+str(self.index)
             self.scale_param = dict()
             self.scale_param['axis'] = 0
             self.scale_param['num_axes'] = len(self.inputs_shape[0])
@@ -59,9 +57,9 @@ class GlobalAveragePool(Operator):
         if self.type == 'Pooling':
             layers.append(caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, pooling_param=self.pooling_param))
         elif self.type == 'Reduction+Reshape+Scale':
-            layers.append(caffe_layer(self.layer_type[0], self.name[0], self.inputs, self.inputs_buf, [self.inter_blob0], reduction_param=self.reduction_param))
-            layers.append(caffe_layer(self.layer_type[1], self.name[1], [self.inter_blob0], [None], [self.inter_blob1], reshape_param=self.reshape_param))
-            layers.append(caffe_layer(self.layer_type[2], self.name[2], [self.inter_blob1], [None, self.weight], self.outputs, self.weight, scale_param=self.scale_param))
+            layers.append(caffe_layer(self.layer_type[0], self.name[0], self.inputs, self.inputs_buf, [self.interblob[0]], reduction_param=self.reduction_param))
+            layers.append(caffe_layer(self.layer_type[1], self.name[1], [self.interblob[0]], [None], [self.interblob[1]], reshape_param=self.reshape_param))
+            layers.append(caffe_layer(self.layer_type[2], self.name[2], [self.interblob[1]], [None, self.weight], self.outputs, self.weight, scale_param=self.scale_param))
 
         self.setConverted()
 

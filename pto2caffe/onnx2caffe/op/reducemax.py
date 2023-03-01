@@ -24,7 +24,6 @@ class ReduceMax(Operator):
                 self.type = 'Pooling'
             else:
                 self.type = 'Pooling+Reshape'
-                self.inter_blob = 'reducemax_split_reshape'
 
             self.pooling_param = dict()
             self.pooling_param['pool'] = 0
@@ -46,7 +45,6 @@ class ReduceMax(Operator):
         elif input_axes[-len(axes):len(self.inputs_shape[0])] == axes:
             if self.attrs.get('keepdims', True):
                 self.type = 'Reduction+Reshape'
-                self.inter_blob = 'reducemax_split_reshape'
             else:
                 self.type = 'Reduction'
 
@@ -59,8 +57,6 @@ class ReduceMax(Operator):
         elif len(axes) == 1 and input_axes.index(axes[0]) < input_axes[-1]:
             if self.attrs.get('keepdims', True):
                 self.type = 'Permute+Reduction+Permute'
-                self.inter_blob1 = 'prePermute_reducemax_split_reshape'
-                self.inter_blob2 = 'postPermute_reducemax_split_reshape'
             else:
                 self.type = 'Permute+Reduction+Permute+Reshape'
                 raise NotImplementedError
@@ -94,17 +90,17 @@ class ReduceMax(Operator):
         if self.type == 'Pooling':
             layers.append(caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, pooling_param=self.pooling_param))
         elif self.type == 'Pooling+Reshape':
-            layers.append(caffe_layer(self.layer_type[0], self.name[0], self.inputs, self.inputs_buf, [self.inter_blob], pooling_param=self.pooling_param))
-            layers.append(caffe_layer(self.layer_type[1], self.name[1], [self.inter_blob], [None], self.outputs, reshape_param=dict(shape=dict(dim=self.outputs_shape[0]))))
+            layers.append(caffe_layer(self.layer_type[0], self.name[0], self.inputs, self.inputs_buf, self.interblob, pooling_param=self.pooling_param))
+            layers.append(caffe_layer(self.layer_type[1], self.name[1], self.interblob, [None], self.outputs, reshape_param=dict(shape=dict(dim=self.outputs_shape[0]))))
         elif self.type == 'Reduction':
             layers.append(caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, reduction_param=self.reduction_param))
         elif self.type == 'Reduction+Reshape':
-            layers.append(caffe_layer(self.layer_type[0], self.name[0], self.inputs, self.inputs_buf, [self.inter_blob], reduction_param=self.reduction_param))
-            layers.append(caffe_layer(self.layer_type[1], self.name[1], [self.inter_blob], [None], self.outputs, reshape_param=dict(shape=dict(dim=self.outputs_shape[0]))))
+            layers.append(caffe_layer(self.layer_type[0], self.name[0], self.inputs, self.inputs_buf, self.interblob, reduction_param=self.reduction_param))
+            layers.append(caffe_layer(self.layer_type[1], self.name[1], self.interblob, [None], self.outputs, reshape_param=dict(shape=dict(dim=self.outputs_shape[0]))))
         elif self.type == 'Permute+Reduction+Permute':
-            layers.append(caffe_layer(self.layer_type[0], self.name[0], self.inputs, self.inputs_buf, [self.inter_blob1], permute_param=self.permute_param0))
-            layers.append(caffe_layer(self.layer_type[1], self.name[1], [self.inter_blob1], self.inputs_buf, [self.inter_blob2], reduction_param=self.reduction_param))
-            layers.append(caffe_layer(self.layer_type[2], self.name[2], [self.inter_blob2], self.inputs_buf, self.outputs, permute_param=self.permute_param1))
+            layers.append(caffe_layer(self.layer_type[0], self.name[0], self.inputs, self.inputs_buf, [self.interblob[0]], permute_param=self.permute_param0))
+            layers.append(caffe_layer(self.layer_type[1], self.name[1], [self.interblob[0]], self.inputs_buf, [self.interblob[1]], reduction_param=self.reduction_param))
+            layers.append(caffe_layer(self.layer_type[2], self.name[2], [self.interblob[1]], self.inputs_buf, self.outputs, permute_param=self.permute_param1))
 
         self.setConverted()
 

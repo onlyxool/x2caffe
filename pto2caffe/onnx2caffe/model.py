@@ -261,7 +261,7 @@ class Model(BaseModel):
 
 
     def forward(self, output_name, inputs_tensor):
-        if output_name.find('split') >= 0 or output_name.find('useless') >= 0:
+        if output_name.find('intermediate') >= 0:
             return None
 
         def onnx_run(model, inputs_tensor):

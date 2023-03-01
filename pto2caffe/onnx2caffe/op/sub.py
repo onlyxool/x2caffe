@@ -38,8 +38,6 @@ class Sub(Operator):
         elif self.inputs_buf[0] is None and self.inputs_buf[1] is None:
             self.type = 'Scale+Bias'
 
-            self.inter_blob = 'bias_split'+str(self.index)
-
             self.scale_param = dict()
             self.weight = np.ones(self.inputs_shape[1]).astype(np.float32) * -1
 
@@ -83,11 +81,11 @@ class Sub(Operator):
         elif self.type == 'Bias':
             layers.append(caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, self.bias, bias_param=self.bias_param))
         elif self.type == 'Scale+Bias':
-            layers.append(caffe_layer(self.layer_type[0], self.name[0], [self.inputs[1]], self.inputs_buf, [self.inter_blob], self.weight, scale_param=self.scale_param))
-            layers.append(caffe_layer(self.layer_type[1], self.name[1], [self.inputs[0], self.inter_blob], self.inputs_buf, self.outputs, self.bias, bias_param=self.bias_param))
+            layers.append(caffe_layer(self.layer_type[0], self.name[0], [self.inputs[1]], self.inputs_buf, self.interblob, self.weight, scale_param=self.scale_param))
+            layers.append(caffe_layer(self.layer_type[1], self.name[1], self.inputs[0]+self.interblob, self.inputs_buf, self.outputs, self.bias, bias_param=self.bias_param))
         elif self.type == 'Bias+Scale':
-            layers.append(caffe_layer(self.layer_type[0], self.name[0], [self.inputs[0], self.inter_blob], self.inputs_buf, self.outputs, self.bias, bias_param=self.bias_param))
-            layers.append(caffe_layer(self.layer_type[1], self.name[1], [self.inputs[1]], self.inputs_buf, [self.inter_blob], self.weight, scale_param=self.scale_param))
+            layers.append(caffe_layer(self.layer_type[0], self.name[0], self.inputs, self.inputs_buf, self.interblob, self.bias, bias_param=self.bias_param))
+            layers.append(caffe_layer(self.layer_type[1], self.name[1], self.interblob, [None, self.weight], self.outputs, self.weight, scale_param=self.scale_param))
 
         self.setConverted()
 

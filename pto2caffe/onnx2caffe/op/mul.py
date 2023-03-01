@@ -51,7 +51,6 @@ class Mul(Operator):
                     return
                 self.type = 'Reshape+Scale'
                 self.inputs_shape[1] = weight_shape
-                self.inter_blob = 'reshape_scale'+str(self.index)
 
             self.scale_param = dict()
             if self.model.opset[0] >= 7:
@@ -75,8 +74,8 @@ class Mul(Operator):
         elif self.type == 'Scale':
             layers.append(caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, scale_param=self.scale_param))
         elif self.type == 'Reshape+Scale':
-            layers.append(caffe_layer(self.layer_type[0], self.name[0], [self.inputs[1]], [None], [self.inter_blob], reshape_param=dict(shape=dict(dim=self.inputs_shape[1]))))
-            layers.append(caffe_layer(self.layer_type[1], self.name[1], [self.inputs[0], self.inter_blob], self.inputs_buf, self.outputs, self.weight, self.bias, scale_param=self.scale_param))
+            layers.append(caffe_layer(self.layer_type[0], self.name[0], [self.inputs[1]], [None], self.interblob, reshape_param=dict(shape=dict(dim=self.inputs_shape[1]))))
+            layers.append(caffe_layer(self.layer_type[1], self.name[1], self.inputs[0]+self.interblob, self.inputs_buf, self.outputs, self.weight, self.bias, scale_param=self.scale_param))
 
         self.setConverted()
 
