@@ -60,10 +60,10 @@ class StridedSlice(Operator):
 
                 if start == 0:
                     slice_point = end
-                    self.outputs.append(self.name+'_useless')
+                    self.outputs.append('intermediate_' + str(self.index))
                 elif end == self.op.inputs[0].shape[axis_index[0]]:
                     slice_point = start
-                    self.outputs.insert(0, self.name+'_useless')
+                    self.outputs.insert(0, 'intermediate_' + str(self.index))
                 else:
                     errorMsg = 'Can\'t support begin: ' + str(self.inputs_buf[1]) + ' end: ' + str(self.inputs_buf[2])
                     self.unSupported(errorMsg)
