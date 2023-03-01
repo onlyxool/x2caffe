@@ -53,14 +53,14 @@ class StridedSlice(Operator):
         self.slice_param = dict()
         if start == 0:
             self.slice_param['slice_point'] = [end]
-            self.outputs.append(self.name+'_useless')
+            self.outputs.append('intermediate_' + str(self.index))
         elif end == self.inputs_shape[0][axes[0]]:
             self.slice_param['slice_point'] = [start]
-            self.outputs.insert(0, self.name+'_useless')
+            self.outputs.insert(0, 'intermediate_' + str(self.index))
         else:
             self.slice_param['slice_point'] = [start, end]
-            self.outputs.insert(0, self.name+'_useless_pre')
-            self.outputs.append(self.name+'_useless_post')
+            self.outputs.insert(0, 'intermediate_' + str(self.index) + '_0')
+            self.outputs.append('intermediate_' + str(self.index) + '_1')
 
         self.slice_param['axis'] = axes[0]
         for index, point in enumerate(self.slice_param['slice_point']):

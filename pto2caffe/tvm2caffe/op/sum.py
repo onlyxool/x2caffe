@@ -26,7 +26,6 @@ class Sum(Operator):
                 self.type = 'Reduction'
             else:
                 self.type = 'Reduction+Reshape'
-                self.inter_blob = 'reduction_reshape_split'+str(self.index)
 
             self.reduction_param = dict()
             self.reduction_param['operation'] = 1
@@ -36,15 +35,11 @@ class Sum(Operator):
         elif self.attrs['axis'] == [1] and len(self.inputs_shape[0]) == 4:
             if self.attrs['keepdims']:
                 self.type = 'Permute+Reduction+Reshape+Permute'
-                self.inter_blob0 = 'reduction_permute0_split'+str(self.index)
-                self.inter_blob1 = 'reduction_reshape1_split'+str(self.index)
-                self.inter_blob2 = 'reduction_permute2_split'+str(self.index)
                 self.permute_param0 = dict(order=[0,2,3,1])
                 self.reshape_param = dict(shape=dict(dim=[self.outputs_shape[0][0], self.outputs_shape[0][2], self.outputs_shape[0][3], 1] ))
                 self.permute_param1 = dict(order=[0,3,1,2])
             else:
                 self.type = 'Permute+Reduction'
-                self.inter_blob = 'reduction_permute_split'+str(self.index)
 
 
             self.reduction_param = dict()
@@ -62,13 +57,13 @@ class Sum(Operator):
         if self.type == 'Reduction':
             layers.append(caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, reduction_param=self.reduction_param))
         elif self.type == 'Reduction+Reshape':
-            layers.append(caffe_layer(self.layer_type[0], self.name[0], self.inputs, self.inputs_buf, [self.inter_blob], reduction_param=self.reduction_param))
-            layers.append(caffe_layer(self.layer_type[1], self.name[1], [self.inter_blob], [None], self.outputs, reshape_param=dict(shape=dict(dim=self.outputs_shape[0]))))
+            layers.append(caffe_layer(self.layer_type[0], self.name[0], self.inputs, self.inputs_buf, self.interblob, reduction_param=self.reduction_param))
+            layers.append(caffe_layer(self.layer_type[1], self.name[1], self.interblob, [None], self.outputs, reshape_param=dict(shape=dict(dim=self.outputs_shape[0]))))
         elif self.type == 'Permute+Reduction+Reshape+Permute':
-            layers.append(caffe_layer(self.layer_type[0]), self.name[0], [self.inputs[0]], self.inputs_buf, [self.inter_blob0], permute_param=self.permute_param0)
-            layers.append(caffe_layer(self.layer_type[1]), self.name[1], [self.inter_blob0], self.inputs_buf, [self.inter_blob1], reduction_param=self.reduction_param)
-            layers.append(caffe_layer(self.layer_type[2]), self.name[2], [self.inter_blob1], self.inputs_buf, [self.inter_blob2], reshape_param=self.reshape_param)
-            layers.append(caffe_layer(self.layer_type[3]), self.name[3], [self.inter_blob2], self.inputs_buf, self.outputs, permute_param=self.permute_param1)
+            layers.append(caffe_layer(self.layer_type[0]), self.name[0], [self.inputs[0]], self.inputs_buf, [self.interblob[0]], permute_param=self.permute_param0)
+            layers.append(caffe_layer(self.layer_type[1]), self.name[1], [self.interblob[0]], self.inputs_buf, [self.interblob[1]], reduction_param=self.reduction_param)
+            layers.append(caffe_layer(self.layer_type[2]), self.name[2], [self.interblob[1]], self.inputs_buf, [self.interblob[2]], reshape_param=self.reshape_param)
+            layers.append(caffe_layer(self.layer_type[3]), self.name[3], [self.interblob[2]], self.inputs_buf, self.outputs, permute_param=self.permute_param1)
 
         self.setConverted()
 
