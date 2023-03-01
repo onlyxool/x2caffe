@@ -29,13 +29,15 @@ class Pack(Operator):
             self.type = 'Reshape+' * len(self.inputs) + 'Concat'
 
             # Reshape Attribute
-            if self.attrs['axis'] == 0:
-                self.reshape_param = dict(shape=dict(dim=[1]+self.inputs_shape[index]))
-            elif self.attrs['axis'] == len(self.outputs_shape[0]) - 1:
-                self.reshape_param = dict(shape=dict(dim=self.inputs_shape[index]+[1]))
-            else:
-                self.unSupported('Can\'t support: axis == ' + str(self.attrs['axis']))
-                return
+            self.reshape_param = list()
+            for index, input_name in enumerate(self.inputs):
+                if self.attrs['axis'] == 0:
+                    self.reshape_param.append(dict(shape=dict(dim=[1]+self.inputs_shape[index])))
+                elif self.attrs['axis'] == len(self.outputs_shape[0]) - 1:
+                    self.reshape_param.append(dict(shape=dict(dim=self.inputs_shape[index]+[1])))
+                else:
+                    self.unSupported('Can\'t support: axis == ' + str(self.attrs['axis']))
+                    return
 
             # Concat Attribute
             self.concat_param = dict()
@@ -49,7 +51,7 @@ class Pack(Operator):
     def convert(self):
         layers = list()
         for index, input_name in enumerate(self.inputs):
-            layers.append(caffe_layer(self.layer_type[index], self.name[index], [self.inputs[index]], [None], self.interblob[index], reshape_param=self.reshape_param))
+            layers.append(caffe_layer(self.layer_type[index], self.name[index], [self.inputs[index]], [None], self.interblob[index], reshape_param=self.reshape_param[index]))
 
         layers.append(caffe_layer(self.layer_type[len(self.inputs)], self.name[len(self.inputs)], self.interblob, self.inputs_buf, self.outputs, concat_param=self.concat_param))
 
