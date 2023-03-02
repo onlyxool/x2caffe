@@ -50,3 +50,9 @@ class Operator(BaseOperator):
         # Handle Legacy Pad for Ignore Op
         if self.op.Inputs(0) in self.model.pad.keys():
             self.model.pad[self.op.Outputs(0)] = self.model.pad[self.op.Inputs(0)]
+
+
+    def unSupported(self, errorMsg=None):
+        if errorMsg is not None:
+            self.model.errorMsg.append('Error: Op (' + self.operator_code + '): ' + errorMsg)
+        self.model.unsupport.append(self.operator_code)
