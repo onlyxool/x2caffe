@@ -59,7 +59,8 @@ class ReduceMax(Operator):
                 self.type = 'Permute+Reduction+Permute'
             else:
                 self.type = 'Permute+Reduction+Permute+Reshape'
-                raise NotImplementedError
+                self.unSupported('axes:' + str(axes) + ' input_shape:' + str(self.inputs_shape[0]))
+                return
 
             from copy import deepcopy
             permute0 = deepcopy(input_axes)
@@ -82,7 +83,8 @@ class ReduceMax(Operator):
             self.attrs = self.reduction_param
             self.setParsed()
         else:
-            raise NotImplementedError
+            self.unSupported('axes:' + str(axes) + ' input_shape:' + str(self.inputs_shape[0]))
+            return
 
 
     def convert(self):

@@ -21,7 +21,8 @@ class ReduceMean(Operator):
 
         if self.inputs_buf[0] is not None:
             if len(self.attrs['axes']) > 1:
-                raise NotImplementedError
+                self.unSupported('axes length > 1')
+                return
 
             import numpy as np
             self.saveConstant(self.outputs[0], np.mean(self.inputs_buf[0], axis=self.attrs['axes'][0], dtype=self.inputs_buf[0].dtype, keepdims=self.attrs.get('keepdims', True)))
@@ -64,7 +65,8 @@ class ReduceMean(Operator):
             if self.attrs.get('keepdims', True):
                 self.type = 'Permute+Reduction+Permute'
             else:
-                raise NotImplementedError
+                self.unSupported('axes:' + str(axes) + ' input_shape:' + str(self.inputs_shape[0]))
+                return
 
             from copy import deepcopy
             permute0 = deepcopy(input_axes)
@@ -87,8 +89,8 @@ class ReduceMean(Operator):
             self.attrs = self.reduction_param
             self.setParsed()
         else:
-            print(axes, self.inputs_shape, self.outputs_shape)
-            raise NotImplementedError
+            self.unSupported('axes:' + str(axes) + ' input_shape:' + str(self.inputs_shape[0]))
+            return
 
 
     def convert(self):

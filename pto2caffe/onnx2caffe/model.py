@@ -4,7 +4,6 @@ import logging
 import numpy as np
 from base_Model import BaseModel
 
-
 from onnx2caffe.op.add import Add
 from onnx2caffe.op.div import Div
 from onnx2caffe.op.elu import Elu
@@ -54,11 +53,11 @@ from onnx2caffe.op.convtranspose import Deconvolution
 from onnx2caffe.op.globalaveragepool import GlobalAveragePool
 from onnx2caffe.op.instancenormalization import InstanceNormalization
 
-
 from onnx2caffe.op.mish import Mish
 
 from caffe_transform import save_caffe_model
 from caffe_transform import make_caffe_input_layer
+
 
 numpy_dtype = [None, np.float32, np.uint8, np.int8, np.uint16, np.int16, np.int32, np.int64, 'string', np.bool, np.float16, np.double, np.uint32, np.uint64, np.complex64, np.complex128, 'bfloat16']
 
@@ -106,6 +105,7 @@ OpMap = {
     'Gemm': InnerProduct,
     'Constant': Constant,
     'Softplus': Softplus,
+    'Upsample': Upsample,
     'Transpose': Permute,
     'Unsqueeze': Reshape,
     'ReduceMax': ReduceMax,
@@ -117,7 +117,6 @@ OpMap = {
     'BatchNormalization': BatchNorm,
     'GlobalAveragePool': GlobalAveragePool,
     'InstanceNormalization': InstanceNormalization,
-    'Upsample': Upsample, #Deprecated
     'Mish': Mish, # Yolov4
 }
 
@@ -224,7 +223,6 @@ class Model(BaseModel):
                 continue
 
             if node.op_type not in OpMap: # Unsupport OP
-                logger.debug(node.op_type, node.name)
                 self.unsupport.append(node.op_type)
                 continue
 

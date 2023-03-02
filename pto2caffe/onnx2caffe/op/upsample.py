@@ -33,7 +33,8 @@ class Upsample(Operator):
         if scale_factor_height == scale_factor_width:
             scale_factor = scale_factor_width
         else:
-            raise NotImplementedError
+            self.unSupported('Only Support square input (height == width)')
+            return
 
         if scale_factor % 1 == 0 and self.outputs_shape[0] is not None:
             # Deconvolution Layer

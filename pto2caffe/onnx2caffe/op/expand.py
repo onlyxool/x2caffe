@@ -67,7 +67,8 @@ class Expand(Operator):
 
             self.setParsed()
         else:
-            raise NotImplementedError
+            self.unSupported('axes:' + str(axes))
+            return
 
 
     def convert(self):

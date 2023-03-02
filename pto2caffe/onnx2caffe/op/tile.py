@@ -25,7 +25,8 @@ class Tile(Operator):
             elif self.inputs_shape[0] is not None and self.outputs_shape[0] is not None:
                 axes = np.nonzero(np.array(self.outputs_shape[0]) - np.array(self.inputs_shape[0]))[0].tolist()
             else:
-                raise NotImplementedError
+                self.unSupported('Can\'t read axes.')
+                return
 
             if len(axes) == 1:
                 self.type = 'Tile'
@@ -37,7 +38,8 @@ class Tile(Operator):
 
                 self.setParsed()
             else:
-                raise NotImplementedError
+                self.unSupported('axes length > 1')
+                return
 
 
 

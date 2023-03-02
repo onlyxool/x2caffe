@@ -42,7 +42,8 @@ class Slice(Operator):
             elif len(axes) == 4:
                 output = self.inputs_buf[0][starts[0]:ends[0], starts[1]:ends[1], starts[2]:ends[2], starts[3]:ends[3]]
             else:
-                raise NotImplementedError
+                self.unSupported('axes:' + str(axes))
+                return
 
             self.saveConstant(self.node.output[0], output)
             return
