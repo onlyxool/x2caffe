@@ -57,6 +57,7 @@ class Base(ABC):
         self.inputs_dtype = list()
         self.inputs_maxval = list()
         self.inputs_minval = list()
+        self.inputs_quantization_parameter = list()
 
         self.outputs = list()
         self.outputs_shape = list()
