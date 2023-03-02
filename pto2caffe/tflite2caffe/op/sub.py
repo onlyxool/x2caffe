@@ -92,10 +92,7 @@ class Sub(Operator):
             print(self.inputs_buf, self.inputs_shape)
             raise NotImplementedError(self.operator_code)
 
-
-        activ_type_code = opt.FusedActivationFunction()
-        if activ_type_code is not tflite.ActivationFunctionType.NONE:
-            self.activ_type_code = activ_type_code
+        self.activ_type_code = opt.FusedActivationFunction()
 
         self.setParsed()
 

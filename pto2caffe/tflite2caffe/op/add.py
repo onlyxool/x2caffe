@@ -63,9 +63,7 @@ class Add(Operator):
             print(self.inputs_shape, self.inputs_buf)
             raise NotImplementedError
 
-        activ_type_code = opt.FusedActivationFunction()
-        if activ_type_code is not tflite.ActivationFunctionType.NONE:
-            self.activ_type_code = activ_type_code
+        self.activ_type_code = opt.FusedActivationFunction()
 
         self.setParsed()
 

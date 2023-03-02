@@ -1,8 +1,8 @@
+import sys
 import tflite
 import logging
 import numpy as np
 import tensorflow as tf
-
 from base_Model import BaseModel
 
 from tflite2caffe.op.add import Add
@@ -35,7 +35,6 @@ from tflite2caffe.op.resizenearest import ResizeNearest
 from tflite2caffe.op.fullyconnected import InnerProduct
 from tflite2caffe.op.resizebilinear import ResizeBilinear
 
-
 from util import shape_map_nhwc2nchw
 from caffe_transform import save_caffe_model
 from caffe_transform import make_caffe_input_layer
@@ -60,11 +59,11 @@ OpMap = {
     'SHAPE': Shape,
     'SLICE': Slice,
     'SPLIT': Split,
-    'QUANTIZE': ByPass,
     'MEAN': ReduceMean,
     'RESHAPE': Reshape,
     'SQUEEZE': Reshape,
     'SOFTMAX': Softmax,
+    'QUANTIZE': ByPass,
     'LOGISTIC': Sigmoid,
     'HARD_SWISH': Swish,
     'TRANSPOSE': Permute,
@@ -84,28 +83,31 @@ OpMap = {
     'RESIZE_NEAREST_NEIGHBOR': ResizeNearest,
 }
 
+ActOpMap = [
+    tflite.ActivationFunctionType.RELU,
+    tflite.ActivationFunctionType.RELU6,
+]
 
-def handleFusedActivation(preop):
-    if preop.activ_type_code == tflite.ActivationFunctionType.RELU:
-        op = ReLU(preop.model, None, 'RELU', preop.index)
-    elif preop.activ_type_code == tflite.ActivationFunctionType.RELU_N1_TO_1:
-        raise NotImplementedError('ReluN1To1 is not supported.')
-    elif preop.activ_type_code == tflite.ActivationFunctionType.RELU6:
-        op = ReLUX(preop.model, None, 'RELU6', preop.index)
-    elif preop.activ_type_code == tflite.ActivationFunctionType.TANH:
-         raise NotImplementedError('Tanh is not supported.')
-    elif preop.activ_type_code == tflite.ActivationFunctionType.SIGN_BIT:
-         raise NotImplementedError('SignBits is not supported.')
-    else:
-        return
+UnSupprotActOp = {
+    tflite.ActivationFunctionType.TANH: 'TANH',
+    tflite.ActivationFunctionType.SIGN_BIT: 'SIGN_BIT',
+    tflite.ActivationFunctionType.RELU_N1_TO_1: 'RELU_N1_TO_1',
+}
 
-    for output in preop.outputs:
-        op.outputs.append(output)
-        op.inputs.append(output)
-    op.inputs_buf.append(None)
-    op.parse()
+def handleFusedActivation(op):
+    if op.activ_type_code == tflite.ActivationFunctionType.RELU:
+        actop = ReLU(op.model, None, 'RELU', op.index)
+    elif op.activ_type_code == tflite.ActivationFunctionType.RELU6:
+        actop = ReLUX(op.model, None, 'RELU6', op.index)
 
-    return op
+    for output in op.outputs:
+        actop.outputs.append(output)
+        actop.inputs.append(output)
+    actop.inputs_buf.append(None)
+
+    actop.parse()
+
+    return actop
 
 
 class Model(BaseModel):
@@ -114,7 +116,6 @@ class Model(BaseModel):
         super().__init__(model, model.Subgraphs(0), param)
         self.version = model.Version()
         self.model_byte = model_byte
-        self.inputs_quantization_parameter = list()
         self.setInited()
 
 
@@ -122,7 +123,8 @@ class Model(BaseModel):
         logger.debug("Parsing the TFLite Model...")
 
         if self.model.SubgraphsLength() > 1:
-            raise ValueError('TFLite model include ' + str(self.model.SubgraphsLength()) + ' graphs.')
+            errorMsg = '\nError: TFLite model include more than one graphs: ' + str(self.model.SubgraphsLength()) + '\n'
+            sys.exit(errorMsg)
 
         print('TFLite Model Input size: (graph version=%d)' %self.version)
         for i in range(self.graph.InputsLength()):
@@ -146,8 +148,7 @@ class Model(BaseModel):
                     constant = np.frombuffer(raw, dtype=numpy_dtype[self.graph.Tensors(i).Type()])[0]
                 else:
                     constant = np.frombuffer(raw, dtype=numpy_dtype[self.graph.Tensors(i).Type()]).reshape(self.graph.Tensors(i).ShapeAsNumpy())
-                constant = self.dequantize(constant, i)
-                self.constant[i] = constant
+                self.constant[i] = self.dequantize(constant, i)
             else:
                 raise NotImplementedError
 
@@ -174,18 +175,20 @@ class Model(BaseModel):
             op = OpMap[tf_op_name](self, tf_op, tf_op_name, index)
             op.parse()
 
-            logger.debug(op)
             if op.status.parsed:
                 self.operators.append(op)
-                if hasattr(op, 'activ_type_code'):
-                    act_op = handleFusedActivation(op)
-                    self.operators.append(act_op)
+
+            # FusedActivation
+            if op.activ_type_code in ActOpMap:
+                self.operators.append(handleFusedActivation(op))
+            elif op.activ_type_code in UnSupprotActOp:
+                self.unsupport.append(UnSupprotActOp[op.activ_type_code])
+
 
         for errorMsg in list(set(self.errorMsg)):
             print(errorMsg)
 
         if len(self.unsupport) > 0:
-            import sys
             errorMsg = 'Error: Operator ' + str(list(set(self.unsupport))) + ' does not Support.\n'
             sys.exit(errorMsg)
 
@@ -199,7 +202,6 @@ class Model(BaseModel):
             self.layers.append(make_caffe_input_layer(input_name, self.inputs_shape[index], index, self.param))
 
         for op in self.operators:
-            logger.debug(op)
             self.layers.extend(op.convert())
 
         self.setConverted()
@@ -264,12 +266,10 @@ class Model(BaseModel):
 
 
     def forward(self, output_name, inputs_tensor):
-        if isinstance(output_name, str):
-            try:
-                output_name = int(output_name.split('_')[0])
-            except:
-                return None
-
+        if output_name.split('_')[0].isdigit():
+            output_name = int(output_name.split('_')[0])
+        else:
+            return None
 
         def OutputsOffset(subgraph, j):
             import flatbuffers

@@ -24,7 +24,6 @@ class InnerProduct(Operator):
         opt.Init(op_opt.Bytes, op_opt.Pos)
         #opt.WeightsFormat()
         #opt.KeepNumDims()
-        #opt.FusedActivationFunction()
         #opt.AsymmetricQuantizeInputs())
 
         self.parseInputOutput()
@@ -58,9 +57,7 @@ class InnerProduct(Operator):
         else:
             self.inner_product_param['bias_term'] = False
 
-        activ_type_code = opt.FusedActivationFunction()
-        if activ_type_code is not tflite.ActivationFunctionType.NONE:
-            self.activ_type_code = activ_type_code
+        self.activ_type_code = opt.FusedActivationFunction()
 
         self.attrs = self.inner_product_param
 

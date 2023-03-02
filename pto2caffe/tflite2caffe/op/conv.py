@@ -65,10 +65,7 @@ class Convolution(Operator):
         padding = handleLegacyPad(padding_mode, self.inputs_shape[0], self.outputs_shape[0], self.convolution_param, legacy_pad, self.layer_type)
         self.convolution_param.update(padding)
 
-        # Fused Activation
-        activ_type_code = opt.FusedActivationFunction()
-        if activ_type_code is not tflite.ActivationFunctionType.NONE:
-            self.activ_type_code = activ_type_code
+        self.activ_type_code = opt.FusedActivationFunction()
 
         self.attrs = self.convolution_param
 

@@ -1,3 +1,5 @@
+import sys
+import tflite
 import numpy as np
 from base_Operator import BaseOperator
 from util import shape_map_nhwc2nchw
@@ -5,10 +7,11 @@ from util import shape_map_nhwc2nchw
 
 class Operator(BaseOperator):
 
-    def __init__(self, model, tf_op, tf_op_name:str, index:int):
+    def __init__(self, model, tf_op:tflite.Operator, tf_op_name:str, index:int):
         super().__init__(model, model.graph, index)
         self.op = tf_op
         self.operator_code = tf_op_name
+        self.activ_type_code = tflite.ActivationFunctionType.NONE
 
 
     def __parseInput__(self):
@@ -41,7 +44,6 @@ class Operator(BaseOperator):
 
     def byPassOperator(self):
         if len(self.outputs) == 0 or len(self.inputs) == 0:
-            import sys
             sys.exit('Error: Use byPassOperator() after parseInputOutput().')
 
         self.model.indentity[self.outputs[0]] = self.model.indentity.get(self.inputs[0], self.inputs[0])
