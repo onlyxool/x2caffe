@@ -59,9 +59,6 @@ class Add(Operator):
             self.bias_param['axis'] = self.inputs_shape[0].index(self.inputs_shape[1][0]) if len(self.inputs_shape[1]) > 0 else 0
             self.bias_param['num_axes'] = len(self.inputs_shape[1])
             self.attrs = self.bias_param
-        else:
-            print(self.inputs_shape, self.inputs_buf)
-            raise NotImplementedError
 
         self.activ_type_code = opt.FusedActivationFunction()
 
