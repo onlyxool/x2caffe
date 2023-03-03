@@ -61,9 +61,9 @@ def get_input_tensor(param, input_shape, dtype, quantization_parameter=None):
 
 
 def mean(tensor, means):
-    if len(means) == tensor.shape[0]:
+    if len(means) == tensor.shape[1]:
         for i, mean in enumerate(means):
-            tensor[i,:,:] = tensor[i,:,:] - mean
+            tensor[:, i, :, :] = tensor[:, i, :, :] - mean
     else:
         errorMsg = 'mean length not equal tensor channel (' + str(len(means)) + ' != ' + str(tensor.shape[0]) + ')'
         sys.exit(errorMsg)
@@ -84,9 +84,9 @@ def crop(tensor, crop_h, crop_w):
 
 
 def std(tensor, stds):
-    if len(stds) == tensor.shape[0]:
+    if len(stds) == tensor.shape[1]:
         for i, std in enumerate(stds):
-            tensor[i,:,:] = tensor[i,:,:] / std
+            tensor[:, i, :, :] = tensor[:, i, :, :] / std
     else:
         errorMsg = 'std length not equal tensor channel (' + str(len(stds)) + ' != ' + str(tensor.shape[0]) + ')'
         sys.exit(errorMsg)
@@ -95,9 +95,9 @@ def std(tensor, stds):
 
 
 def scale(tensor, scales):
-    if len(scales) == tensor.shape[0]:
+    if len(scales) == tensor.shape[1]:
         for i, scale in enumerate(scales):
-            tensor[i,:,:] = tensor[i,:,:] / scale
+            tensor[: i, :, :] = tensor[:, i, :, :] / scale
     elif len(scales) == 1:
         tensor = tensor / scales[0]
     else:
