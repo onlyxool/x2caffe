@@ -139,45 +139,6 @@ class Model(BaseModel):
         self.setInited()
 
 
-    def ReplaceActivation(self, node, op_list, activation):
-        skip_op = []
-        for i in range(len(node)):
-            if i >= len(node):
-                break
-            isflag = True
-            cnt = 0
-            for j in range(len(op_list)):
-                if (i+j+cnt>=len(node)) or (node[i+j+cnt].op_type != op_list[j]):
-                    isflag = False
-                    break
-
-                while (i+j+cnt+1 < len(node)) and  node[i+j+cnt+1].op_type in skip_op:
-                    cnt+=1
-
-            if(isflag):
-                node[i].output[0] = node[i+len(op_list)-1+cnt].output[0]
-                node[i].op_type = activation
-                for j in range(len(op_list) - 1 + cnt):
-                    node.remove(node[i+1])
-
-
-    def preprocess(self):
-#        nodes = self.graph.node
-#        self.ReplaceActivation(nodes, ['Exp', 'Add' , 'Log', 'Tanh', 'Mul'], 'Mish')
-#        self.ReplaceActivation(nodes, ['Add', 'Clip' , 'Div', 'Mul'], 'Hardswish')
-#        self.ReplaceActivation(nodes, ['Sigmoid', 'Mul'], 'Swish')
-
-        if self.graph.node[0].op_type == 'Transpose' and self.model.producer_name == 'tf2onnx':
-            print(self.model.producer_name)
-            for attr in self.graph.node[0].attribute:
-                if attr.name == 'perm' and list(attr.ints) == [0, 3, 1, 2]:
-                    if self.graph.node[1].input[0] == self.graph.node[0].output[0]:
-                        self.graph.node[1].input[0] = self.graph.node[0].input[0]
-
-                    self.graph.node.remove(self.graph.node[0])
-                    self.layout = 'NHWC'
-
-
     def parse(self):
         logger.debug("Parsing the ONNX Model...")
 
