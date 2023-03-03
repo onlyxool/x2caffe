@@ -70,8 +70,8 @@ class InnerProduct(Operator):
         if self.type == 'InnerProduct':
             layers.append(caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, inner_product_param=self.inner_product_param))
         elif self.type == 'Permute+InnerProduct':
-            layers.append(caffe_layer(self.layer_type[0], self.name[0], [self.inputs[0]], [None], [self.inputs[0]+'pre'], permute_param=self.permute_param))
-            layers.append(caffe_layer(self.layer_type[1], self.name[1], [self.inputs[0]+'pre'], self.inputs_buf, self.outputs, self.weight, self.bias, inner_product_param=self.inner_product_param))
+            layers.append(caffe_layer(self.layer_type[0], self.name[0], [self.inputs[0]], [None], self.interblob, permute_param=self.permute_param))
+            layers.append(caffe_layer(self.layer_type[1], self.name[1], self.interblob, self.inputs_buf, self.outputs, self.weight, self.bias, inner_product_param=self.inner_product_param))
 
         self.setConverted()
 

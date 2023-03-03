@@ -82,7 +82,7 @@ class Sub(Operator):
             layers.append(caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, self.bias, bias_param=self.bias_param))
         elif self.type == 'Scale+Bias':
             layers.append(caffe_layer(self.layer_type[0], self.name[0], [self.inputs[1]], self.inputs_buf, self.interblob, self.weight, scale_param=self.scale_param))
-            layers.append(caffe_layer(self.layer_type[1], self.name[1], self.inputs[0]+self.interblob, self.inputs_buf, self.outputs, self.bias, bias_param=self.bias_param))
+            layers.append(caffe_layer(self.layer_type[1], self.name[1], [self.inputs[0], self.interblob[0]], self.inputs_buf, self.outputs, self.bias, bias_param=self.bias_param))
         elif self.type == 'Bias+Scale':
             layers.append(caffe_layer(self.layer_type[0], self.name[0], self.inputs, self.inputs_buf, self.interblob, self.bias, bias_param=self.bias_param))
             layers.append(caffe_layer(self.layer_type[1], self.name[1], self.interblob, [None, self.weight], self.outputs, self.weight, scale_param=self.scale_param))
