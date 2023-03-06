@@ -60,9 +60,7 @@ def _remove_non_variable_resources_from_captures(concrete_func):
                     # Hack around a TF bug until PR is merged: https://github.com/tensorflow/tensorflow/pull/45610
                     arr = np.array(npval)
                     val_tensor.numpy = lambda arr=arr: arr
-    else:
-        logger.warning(
-            "Could not search for non-variable resources. Concrete function internal representation may have changed.")
+
     return resource_id_to_placeholder, placeholder_to_resource, graph_captures_copy, func_captures_copy
 
 
