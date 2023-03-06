@@ -1,8 +1,8 @@
 import sys
 import logging
 import numpy as np
-from base_Model import BaseModel
 import tensorflow as tf
+from base_Model import BaseModel
 
 from tensorflow2caffe.op.abs import Abs
 from tensorflow2caffe.op.add import Add
@@ -74,7 +74,6 @@ from tensorflow2caffe.op.maxpoolwithargmax import MaxPoolWithArgmax
 from tensorflow2caffe.op.conv2dbackpropinput import Conv2DBackpropInput
 from tensorflow2caffe.op.resizenearestneighbor import ResizeNearestNeighbor
 from tensorflow2caffe.op.placeholderwithdefault import PlaceholderWithDefault
-
 
 from caffe_transform import save_caffe_model
 from caffe_transform import make_caffe_input_layer
@@ -302,7 +301,6 @@ class Model(BaseModel):
         logger.debug('Converting the Model...')
 
         for op in self.operators:
-            logger.debug(op)
             self.layers.extend(op.convert())
 
         self.setConverted()

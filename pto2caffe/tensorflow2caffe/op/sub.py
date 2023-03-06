@@ -80,7 +80,8 @@ class Sub(Operator):
             self.attrs = self.scale_param0
             self.setParsed()
         else:
-            raise NotImplementedError
+            self.unSupported()
+            return
 
 
     def convert(self):

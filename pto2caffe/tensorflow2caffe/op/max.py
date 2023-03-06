@@ -59,7 +59,8 @@ class Max(Operator):
 
                 self.attrs = self.pooling_param
             else:
-                raise NotImplementedError(self.op.name)
+                self.unSupported('Can\'t support axis ==' + str(axis.tolist()))
+                return
 
             self.setParsed()
 

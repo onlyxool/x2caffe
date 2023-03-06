@@ -25,7 +25,8 @@ class ResizeNearestNeighbor(Operator):
             output_h = self.outputs_shape[0][-2]
             output_w = self.outputs_shape[0][-1]
         else:
-            raise ValueError(self.op.name)
+            self.unSupported('Can\'t get output shape.')
+            return
 
         # Input Shape
         input_h = self.inputs_shape[0][2]

@@ -44,7 +44,8 @@ class SpaceToDepth(Operator):
                 weight[i+7*ic:i+9*ic+1, i:i+1, 2:3, 1:2] = 1
                 weight[i+8*ic:i+9*ic+1, i:i+1, 2:3, 2:3] = 1
         else:
-             raise NotImplementedError
+            self.unSupported('Can\'t support bloack_size == ' + str(self.attrs['block_size']))
+            return
 
         self.weight = weight
 

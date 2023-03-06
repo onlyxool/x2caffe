@@ -38,7 +38,7 @@ class Sum(Operator):
                     self.attrs = self.reduction_param
                     self.setParsed()
             else:
-                raise NotImplementedError(self.op.name)
+                self.unSupported('Can\'t support axis == ' + str(axes))
         else:
             unSupported('Can\'t support axis == None')
 

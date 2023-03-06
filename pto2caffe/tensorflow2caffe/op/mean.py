@@ -49,7 +49,8 @@ class Mean(Operator):
 
             self.setParsed()
         else:
-            raise NotImplementedError
+            self.unSupported('Can\'t support axis == ' + str(axis.tolist()))
+            return
 
 
     def convert(self):

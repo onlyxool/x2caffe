@@ -35,7 +35,8 @@ class SplitV(Operator):
             else:
                 self.slice_param['axis'] = dim_map_nhwc2nchw[attr_axis]
         else:
-            raise NotImplementedError
+            self.unSupported('Can\'t support laytout == ' + self.layout)
+            return
 
         slice_point = list()
         size_splits = size_splits[:-1]
