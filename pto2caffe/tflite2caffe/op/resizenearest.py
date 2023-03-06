@@ -18,7 +18,7 @@ class ResizeNearest(Operator):
 
 
     def parse(self):
-        self.parseInputOutput()
+        super().__parse__()
 
         # Output shape
         output_h = self.outputs_shape[0][2]

@@ -19,12 +19,11 @@ class Pooling(Operator):
 
     def parse(self):
         self.type = 'Pooling'
+        super().__parse__()
 
         op_opt = self.op.BuiltinOptions()
         opt = tflite.Pool2DOptions()
         opt.Init(op_opt.Bytes, op_opt.Pos)
-
-        self.parseInputOutput()
 
         # Attributes
         self.pooling_param = dict()

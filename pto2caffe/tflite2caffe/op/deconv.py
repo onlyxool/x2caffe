@@ -20,12 +20,11 @@ class Deconvolution(Operator):
 
     def parse(self):
         self.type = 'Deconvolution'
+        super().__parse__()
 
         op_opt = self.op.BuiltinOptions()
         opt = tflite.TransposeConvOptions()
         opt.Init(op_opt.Bytes, op_opt.Pos)
-
-        self.parseInputOutput()
 
         # Weight
         self.weight = self.inputs_buf[1].transpose(3, 0, 1, 2)

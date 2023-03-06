@@ -17,13 +17,13 @@ class ResizeBilinear(Operator):
 
 
     def parse(self):
-        self.parseInputOutput()
+        self.type = 'Interp'
+        super().__parse__()
 
         op_opt = self.op.BuiltinOptions()
         opt = tflite.ResizeBilinearOptions()
         opt.Init(op_opt.Bytes, op_opt.Pos)
 
-        self.type = 'Interp'
 
         self.interp_param = dict()
         self.interp_param['align_corners'] = opt.AlignCorners()

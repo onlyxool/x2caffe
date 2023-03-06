@@ -12,9 +12,7 @@ class ReLU(Operator):
 
     def parse(self):
         self.type = 'ReLU'
-
-        if self.op is not None:
-            self.parseInputOutput()
+        super().__parse__()
 
         # Attributes
         self.relu_param = dict()

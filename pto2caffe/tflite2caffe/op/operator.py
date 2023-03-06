@@ -10,6 +10,7 @@ class Operator(BaseOperator):
     def __init__(self, model, tf_op:tflite.Operator, tf_op_name:str, index:int):
         super().__init__(model, model.graph, index)
         self.op = tf_op
+        self.isactivate = False
         self.operator_code = tf_op_name
         self.activ_type_code = tflite.ActivationFunctionType.NONE
 
@@ -37,14 +38,15 @@ class Operator(BaseOperator):
                     self.outputs_shape.append(shape_map_nhwc2nchw(self.graph.Tensors(self.op.Outputs(i)).ShapeAsNumpy().tolist()))
 
 
-    def parseInputOutput(self):
-        self.__parseInput__()
-        self.__parseOutput__()
+    def __parse__(self):
+        if self.isactivate is False:
+            self.__parseInput__()
+            self.__parseOutput__()
 
 
     def byPassOperator(self):
         if len(self.outputs) == 0 or len(self.inputs) == 0:
-            sys.exit('Error: Use byPassOperator() after parseInputOutput().')
+            sys.exit('Error: Use byPassOperator() after __parse__().')
 
         self.model.indentity[self.outputs[0]] = self.model.indentity.get(self.inputs[0], self.inputs[0])
         # Handle Legacy Pad for Ignore Op

@@ -16,8 +16,7 @@ class Softmax(Operator):
 
     def parse(self):
         self.type = 'Softmax'
-
-        self.parseInputOutput()
+        super().__parse__()
 
         self.softmax_param = dict()
         self.softmax_param['axis'] = 1

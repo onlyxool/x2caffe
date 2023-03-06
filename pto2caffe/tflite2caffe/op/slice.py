@@ -15,7 +15,7 @@ class Slice(Operator):
 
 
     def parse(self):
-        self.parseInputOutput()
+        super().__parse__()
 
         if self.inputs_shape[0] == self.outputs_shape[0]:
             self.byPassOperator()

@@ -99,6 +99,7 @@ def handleFusedActivation(op):
         actop = ReLU(op.model, None, 'RELU', op.index)
     elif op.activ_type_code == tflite.ActivationFunctionType.RELU6:
         actop = ReLUX(op.model, None, 'RELU6', op.index)
+    actop.isactivate = True
 
     for output in op.outputs:
         actop.outputs.append(output)

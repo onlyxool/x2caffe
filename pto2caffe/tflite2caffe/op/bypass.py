@@ -10,8 +10,7 @@ class ByPass(Operator):
 
 
     def parse(self):
-
-        self.parseInputOutput()
+        super().__parse__()
 
         if self.inputs_buf[0] is None:
             self.byPassOperator()

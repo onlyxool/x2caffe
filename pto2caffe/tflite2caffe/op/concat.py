@@ -19,12 +19,11 @@ class Concat(Operator):
 
     def parse(self):
         self.type = 'Concat'
+        super().__parse__()
 
         op_opt = self.op.BuiltinOptions()
         opt = tflite.ConcatenationOptions()
         opt.Init(op_opt.Bytes, op_opt.Pos)
-
-        self.parseInputOutput()
 
         # Attributes
         self.concat_param = dict()

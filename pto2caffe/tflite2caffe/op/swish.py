@@ -15,8 +15,7 @@ class Swish(Operator):
 
     def parse(self):
         self.type = 'HardSwish'
-
-        self.parseInputOutput()
+        super().__parse__()
 
         self.swish_param = dict()
         self.attrs = self.swish_param

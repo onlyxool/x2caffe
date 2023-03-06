@@ -17,7 +17,7 @@ class Sub(Operator):
 
 
     def parse(self):
-        self.parseInputOutput()
+        super().__parse__()
 
         op_opt = self.op.BuiltinOptions()
         opt = tflite.SubOptions()

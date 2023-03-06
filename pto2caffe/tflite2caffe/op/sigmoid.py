@@ -14,8 +14,7 @@ class Sigmoid(Operator):
 
     def parse(self):
         self.type = 'Sigmoid'
-
-        self.parseInputOutput()
+        super().__parse__()
 
         # Attributes
         self.sigmoid_param = dict()

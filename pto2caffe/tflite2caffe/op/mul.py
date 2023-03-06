@@ -18,12 +18,12 @@ class Mul(Operator):
 
 
     def parse(self):
+        super().__parse__()
 
         op_opt = self.op.BuiltinOptions()
         opt = tflite.MulOptions()
         opt.Init(op_opt.Bytes, op_opt.Pos)
 
-        self.parseInputOutput()
 
         # Attributes
         if self.inputs_shape[0] != self.inputs_shape[1] or self.inputs_buf[1] is not None:

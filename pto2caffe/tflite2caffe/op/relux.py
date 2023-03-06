@@ -12,9 +12,7 @@ class ReLUX(Operator):
 
     def parse(self):
         self.type = 'ReLUX'
-
-        if self.op is not None:
-            self.parseInputOutput()
+        super().__parse__()
 
         # Attributes
         self.relux_param = dict()

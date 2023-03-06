@@ -24,13 +24,11 @@ class Convolution(Operator):
 
     def parse(self):
         self.type = 'ConvolutionDepthwise' if self.isDepthwise else 'Convolution'
+        super().__parse__()
 
         op_opt = self.op.BuiltinOptions()
         opt = tflite.DepthwiseConv2DOptions() if self.isDepthwise else tflite.Conv2DOptions()
         opt.Init(op_opt.Bytes, op_opt.Pos)
-
-        # Input & OutPut
-        self.parseInputOutput()
 
         # Weight
         self.weight = self.inputs_buf[1].transpose(3, 0, 1, 2) if self.isDepthwise else self.inputs_buf[1].transpose(0, 3, 1, 2)

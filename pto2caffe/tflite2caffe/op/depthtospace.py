@@ -21,12 +21,11 @@ class DepthToSpace(Operator):
 
     def parse(self):
         self.type = 'Deconvolution'
+        super().__parse__()
 
         op_opt = self.op.BuiltinOptions()
         opt = tflite.DepthToSpaceOptions()
         opt.Init(op_opt.Bytes, op_opt.Pos)
-
-        self.parseInputOutput()
 
         scale_factor = opt.BlockSize()
         ic = out_channel = self.outputs_shape[0][1]

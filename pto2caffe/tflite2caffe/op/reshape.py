@@ -12,8 +12,7 @@ class Reshape(Operator):
 
     def parse(self):
         self.type = 'Reshape'
-
-        self.parseInputOutput()
+        super().__parse__()
 
         # Attributes
         self.reshape_param = dict(shape=dict(dim=self.outputs_shape[0]))

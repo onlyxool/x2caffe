@@ -11,8 +11,7 @@ class Shape(Operator):
 
     def parse(self):
         self.type = 'Shape'
-
-        self.parseInputOutput()
+        super().__parse__()
 
         self.saveConstant(self.outputs[0], self.graph.Tensors(self.op.Inputs(0)).ShapeAsNumpy())
 

@@ -16,8 +16,7 @@ class Permute(Operator):
 
     def parse(self):
         self.type = 'Permute'
-
-        self.parseInputOutput()
+        super().__parse__()
 
         self.permute_param = dict()
         self.permute_param['order'] = list(self.inputs_buf[1])

@@ -18,8 +18,7 @@ class StridedSlice(Operator):
 
     def parse(self):
         self.type = 'Slice'
-
-        self.parseInputOutput()
+        super().__parse__()
 
         op_opt = self.op.BuiltinOptions()
         opt = tflite.StridedSliceOptions()

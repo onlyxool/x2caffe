@@ -14,8 +14,7 @@ class PReLU(Operator):
 
     def parse(self):
         self.type = 'PReLU'
-
-        self.parseInputOutput()
+        super().__parse__()
 
         self.slope = self.inputs_buf[1].transpose(2, 0, 1)
 

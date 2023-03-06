@@ -14,8 +14,7 @@ class Pack(Operator):
 
     def parse(self):
         self.type = 'Pack'
-
-        self.parseInputOutput()
+        super().__parse__()
 
         for input_buf in self.inputs_buf:
             if input_buf is not None:

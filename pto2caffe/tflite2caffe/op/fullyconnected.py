@@ -18,6 +18,7 @@ class InnerProduct(Operator):
 
     def parse(self):
         self.type = 'InnerProduct'
+        super().__parse__()
 
         op_opt = self.op.BuiltinOptions()
         opt = tflite.FullyConnectedOptions()
@@ -25,8 +26,6 @@ class InnerProduct(Operator):
         #opt.WeightsFormat()
         #opt.KeepNumDims()
         #opt.AsymmetricQuantizeInputs())
-
-        self.parseInputOutput()
 
         # Weight
         weight = self.inputs_buf[1]

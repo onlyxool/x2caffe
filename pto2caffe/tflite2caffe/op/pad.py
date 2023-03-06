@@ -17,8 +17,7 @@ class Pad(Operator):
 
     def parse(self):
         self.type = 'Pad'
-
-        self.parseInputOutput()
+        super().__parse__()
 
         self.byPassOperator()
 

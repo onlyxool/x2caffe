@@ -14,9 +14,7 @@ class LeakyReLU(Operator):
 
     def parse(self):
         self.type = 'ReLU'
-
-        if self.op is not None:
-            self.parseInputOutput()
+        super().__parse__()
 
         op_opt = self.op.BuiltinOptions()
         opt = tflite.LeakyReluOptions()
