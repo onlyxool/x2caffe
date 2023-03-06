@@ -55,7 +55,8 @@ def get_input_tensor(param, input_shape, dtype, quantization_parameter=None):
     elif np.issubdtype(dtype, np.floating) and quantization_parameter is None:
         tensor = np.random.uniform(size=input_shape).astype(dtype)
     else:
-        raise NotImplementedError
+        errorMsg = 'Can\'t support model data type: ' + str(dtype)
+        sys.exit(errorMsg)
 
     return preprocess(tensor, param)
 
