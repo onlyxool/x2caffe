@@ -39,7 +39,9 @@ class Slice(Operator):
                 slice_points = self.inputs_buf[1][op_axis]
                 self.outputs.append('intermediate_' + str(self.index))
             else:
-                raise NotImplementedError
+                self.unSupported('Can\'t support axis == ' + op_axis)
+                return
+
             self.slice_param['slice_point'] = slice_points
 
             self.attrs = self.slice_param

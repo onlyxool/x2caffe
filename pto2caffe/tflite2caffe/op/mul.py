@@ -75,8 +75,8 @@ class Mul(Operator):
         elif self.type == 'Scale':
             layers.append(caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, scale_param=self.scale_param))
         elif self.type == 'Reshape+Scale':
-            layers.append(caffe_layer(self.layer_type[0], 'Reshape'+str(self.index), [self.inputs[1]], [None], self.interblob, reshape_param=self.reshape_param))
-            layers.append(caffe_layer(self.layer_type[1], 'Scale'+str(self.index), [self.inputs[0], self.interblob[0]], self.inputs_buf, self.outputs, self.weight, self.bias, scale_param=self.scale_param))
+            layers.append(caffe_layer(self.layer_type[0], self.name[0], [self.inputs[1]], [None], self.interblob, reshape_param=self.reshape_param))
+            layers.append(caffe_layer(self.layer_type[1], self.name[1], [self.inputs[0], self.interblob[0]], self.inputs_buf, self.outputs, self.weight, self.bias, scale_param=self.scale_param))
 
         self.setConverted()
 

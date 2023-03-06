@@ -150,7 +150,7 @@ class Model(BaseModel):
                     constant = np.frombuffer(raw, dtype=numpy_dtype[self.graph.Tensors(i).Type()]).reshape(self.graph.Tensors(i).ShapeAsNumpy())
                 self.constant[i] = self.dequantize(constant, i)
             else:
-                raise NotImplementedError
+                sys.exit('Can\'t Read Model Buffer.')
 
         # Operators
         for index in range(self.graph.OperatorsLength()):
