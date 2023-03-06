@@ -54,7 +54,8 @@ class Max(Operator):
 
             self.attrs = self.argmax_param
         else:
-            raise NotImplementedError(self)
+            self.unSupported('Can\'t support axis == ' + str(self.attrs['axis']))
+            return
 
         self.setParsed()
 

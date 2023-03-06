@@ -59,7 +59,8 @@ class ReduceMean(Operator):
             if self.attrs.get('keepdims', True):
                 self.type = 'Permute+Reduction+Permute'
             else:
-                raise NotImplementedError
+                self.unSupported('axes:' + str(self.attrs['axis']) + ' input_shape:' + str(self.inputs_shape[0]))
+                return
 
             from copy import deepcopy
             permute0 = deepcopy(input_axes)
@@ -82,8 +83,7 @@ class ReduceMean(Operator):
             self.attrs = self.reduction_param
             self.setParsed()
         else:
-            print(self)
-            raise NotImplementedError
+            self.unSupported('axes:' + str(self.attrs['axis']) + ' input_shape:' + str(self.inputs_shape[0]))
 
 
     def convert(self):

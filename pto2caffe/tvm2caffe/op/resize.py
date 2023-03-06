@@ -79,7 +79,10 @@ class Resize(Operator):
             self.interp_param['width'] = self.attrs['size'][1]
             self.attrs = self.interp_param
         elif self.attrs.get('method', 'linear') == 'cubic':
-            raise NotImplementedError
+            method = self.attrs['method'] if 'method' in self.attrs else 'None'
+            self.unSupported('Can\'t support resize method == ' + method)
+            return
+
 
         self.setParsed()
 

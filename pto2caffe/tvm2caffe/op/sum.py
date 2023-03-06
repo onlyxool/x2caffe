@@ -48,8 +48,8 @@ class Sum(Operator):
             self.attrs = self.reduction_param
             self.setParsed()
         else:
-            print(self)
-            raise NotImplementedError
+            self.unSupported('Can\'t support axis == ' + str(self.attrs['axis']) + ' & input_shape == ' + str(self.inputs_shape[0]))
+            return
 
 
     def convert(self):

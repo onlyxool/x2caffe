@@ -4,9 +4,6 @@ import tvm
 import logging
 from base_Model import BaseModel
 
-from tvm2caffe.relay import preprocess, get_relay_type, get_tensor_shape, remove_numTypeExt
-
-
 from tvm2caffe.op.abs import Abs
 from tvm2caffe.op.add import Add
 from tvm2caffe.op.exp import Exp
@@ -48,10 +45,10 @@ from tvm2caffe.op.stridedslice import StridedSlice
 from tvm2caffe.op.convtranspose import ConvTranspose
 from tvm2caffe.op.bypassoperator import ByPassOperator
 
-
+from util import shape_map_nhwc2nchw
 from caffe_transform import save_caffe_model
 from caffe_transform import make_caffe_input_layer
-from util import shape_map_nhwc2nchw
+from tvm2caffe.relay import preprocess, get_relay_type, get_tensor_shape, remove_numTypeExt
 
 
 OpMap = {

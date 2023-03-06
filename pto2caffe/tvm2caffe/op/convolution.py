@@ -31,8 +31,9 @@ class Convolution(Operator):
         elif self.attrs.get('kernel_layout', 'OIHW') == 'HWOI':
             self.weight = self.inputs_buf[1].transpose(2, 3, 0, 1)
         else:
-            print(self.attrs)
-            raise NotImplementedError
+            kernel_layout = self.attrs['kernel_layout'] if 'kernel_layout' in self.attrs else 'None'
+            self.unSupported('Can\'t support kernel layout == ' + kernel_layout)
+            return
 
         # Bias
         self.bias = self.inputs_buf[2] if len(self.inputs_buf) == 3 else None

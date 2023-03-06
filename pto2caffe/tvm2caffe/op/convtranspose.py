@@ -19,8 +19,10 @@ class ConvTranspose(Operator):
         if self.attrs.get('kernel_layout', 'IOHW') == 'IOHW':
             self.weight = self.inputs_buf[1]
         else:
-            print(self.attrs)
-            raise NotImplementedError
+            kernel_layout = self.attrs['kernel_layout'] if 'kernel_layout' in self.attrs else 'None'
+            self.unSupported('Can\'t support kernel_layout == ' + kernel_layout)
+            return
+
         self.inputs_buf[1] = self.weight
 
         # Bias
