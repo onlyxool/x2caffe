@@ -76,7 +76,7 @@ class Operator(BaseOperator):
         self.type = 'ByPassOperator'
         if len(self.outputs) == 0 or len(self.inputs) == 0:
             import sys
-            sys.exit('Error: Use byPassOperator() after parseInputOutput().')
+            sys.exit('Error: Use byPassOperator() after __parse__().')
 
         self.model.indentity[self.outputs[0]] = self.model.indentity.get(self.inputs[0], self.inputs[0])
         # Handle Legacy Pad for Ignore Op

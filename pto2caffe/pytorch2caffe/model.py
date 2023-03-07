@@ -4,10 +4,6 @@ import logging
 import numpy as np
 from base_Model import BaseModel
 
-from pytorch2caffe.pnnx import Pnnx
-from caffe_transform import save_caffe_model
-from caffe_transform import make_caffe_input_layer
-
 from pytorch2caffe.op.pad import Pad
 from pytorch2caffe.op.silu import Silu
 from pytorch2caffe.op.relu import ReLU 
@@ -36,10 +32,11 @@ from pytorch2caffe.op.expression import Expression
 from pytorch2caffe.op.convtranspose import Deconvolution
 from pytorch2caffe.op.adaptavgpooling import AdaptiveAvgPooling
 
-
+from pytorch2caffe.pnnx import Pnnx
+from caffe_transform import save_caffe_model
+from caffe_transform import make_caffe_input_layer
 
 logger = logging.getLogger('Pytorch2Caffe')
-
 
 OpMap = {
     'F.pad': Pad,
@@ -135,7 +132,6 @@ class Model(BaseModel):
             self.layers.append(make_caffe_input_layer(input, self.inputs_shape[i], i, self.param))
 
         for op in self.operators:
-            logger.debug(op)
             self.layers.extend(op.convert())
 
         self.setConverted()
