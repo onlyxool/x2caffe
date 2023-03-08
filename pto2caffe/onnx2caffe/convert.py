@@ -12,13 +12,17 @@ def check_dynamic_input(onnx_model, input_shape):
             inputs_id.append(index)
 
     if input_shape is not None:
-        if len(inputs_id) > 1:
+        if len(inputs_id) > 1 and isinstance(input_shape, tuple) and len(inputs_id) == len(input_shape):
             for index, input_id in enumerate(inputs_id):
                 for i, dim in enumerate(onnx_model.graph.input[input_id].type.tensor_type.shape.dim):
                     dim.dim_value = input_shape[index][i]
-        else:
+        elif len(inputs_id) == 1 and isinstance(input_shape, list):
              for i, dim in enumerate(onnx_model.graph.input[0].type.tensor_type.shape.dim):
                 dim.dim_value = input_shape[i]
+        elif (len(inputs_id) > 1 and isinstance(input_shape, list)) or (len(inputs_id) != len(input_shape)):
+            sys.exit('\nError: ' + str(len(inputs_id)) + ' inputs has detected in the Model, Please Use argument [input_shape] to overwrite all input shape.\n')
+        else:
+             raise NotImplementedError
     else:
         input_str = str()
         input_dict = dict()
@@ -30,7 +34,7 @@ def check_dynamic_input(onnx_model, input_shape):
                 input_str = input_str + ' ' + input.name + str(input_shape)
 
         if len(input_str) > 0:
-            sys.exit('Error: Dynamic Model input detected, Please Use -input_shape to overwrite input shape.' + input_str + '\n')
+            sys.exit('\nError: Dynamic Model input detected, Please Use -input_shape to overwrite input shape.' + input_str + '\n')
 
 
 def convert(onnx_file, caffe_model_path, param=None):
@@ -38,7 +42,6 @@ def convert(onnx_file, caffe_model_path, param=None):
     opset = onnx_model.opset_import[0].version
 
     check_dynamic_input(onnx_model, param['input_shape'])
-
 
     # ONNX Simplifier
     if param.get('simplifier', 0) == 1:
