@@ -66,7 +66,7 @@ def mean(tensor, means):
         for i, mean in enumerate(means):
             tensor[:, i, :, :] = tensor[:, i, :, :] - mean
     else:
-        errorMsg = 'mean length not equal tensor channel (' + str(len(means)) + ' != ' + str(tensor.shape[0]) + ')'
+        errorMsg = 'mean length not equal tensor channel (' + str(len(means)) + ' != ' + str(tensor.shape[1]) + ')'
         sys.exit(errorMsg)
 
     return tensor
@@ -89,7 +89,7 @@ def std(tensor, stds):
         for i, std in enumerate(stds):
             tensor[:, i, :, :] = tensor[:, i, :, :] / std
     else:
-        errorMsg = 'std length not equal tensor channel (' + str(len(stds)) + ' != ' + str(tensor.shape[0]) + ')'
+        errorMsg = 'std length not equal tensor channel (' + str(len(stds)) + ' != ' + str(tensor.shape[1]) + ')'
         sys.exit(errorMsg)
 
     return tensor
@@ -102,7 +102,7 @@ def scale(tensor, scales):
     elif len(scales) == 1:
         tensor = tensor / scales[0]
     else:
-        errorMsg = 'scale length not equal tensor channel (' + str(len(scales)) + ' != ' + str(tensor.shape[0]) + ')'
+        errorMsg = 'scale length not equal tensor channel (' + str(len(scales)) + ' != ' + str(tensor.shape[1]) + ')'
         sys.exit(errorMsg)
 
     return tensor
