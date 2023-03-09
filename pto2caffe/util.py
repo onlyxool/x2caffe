@@ -157,6 +157,8 @@ def isShapeCompatible(data_shape:list, weight_shape:list) -> bool:
             data_shape[1:2], []]
     elif weight_shape == [] or weight_shape == ():
         return True
+    elif data_shape == [] or data_shape == ():
+        return False
     else:
         print(data_shape, weight_shape)
         raise NotImplementedError
