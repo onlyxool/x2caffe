@@ -130,11 +130,12 @@ class Model(BaseModel):
 
         self.opset = []
         for i in range(len(onnx_model.opset_import)):
-            opset_version = onnx_model.opset_import[i].version
-            if opset_version <= 17 and opset_version > 3:
-                self.opset.append(opset_version)
-            else:
-                sys.exit('Error: Model opset > 13 or <= 3, it may cause incompatiblility issue. (opset:{})\n'.format(opset_version))
+            if onnx_model.opset_import[i].domain == '':
+                opset_version = onnx_model.opset_import[i].version
+                if opset_version <= 17 and opset_version > 3:
+                    self.opset.append(opset_version)
+                else:
+                    sys.exit('Error: Model opset > 13 or <= 3, it may cause incompatiblility issue. (opset:{})\n'.format(opset_version))
 
         self.setInited()
 
