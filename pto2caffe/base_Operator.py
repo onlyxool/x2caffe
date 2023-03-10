@@ -1,4 +1,7 @@
+import numpy as np
+
 from base import Base
+from util import isShapeCompatible
 
 class BaseOperator(Base):
 
@@ -60,6 +63,21 @@ class BaseOperator(Base):
 
     def ndim(self, dim):
         return self.layout.index(dim)
+
+
+    def checkShapeCompatible(self):
+        if not isShapeCompatible(self.inputs_shape[0], self.inputs_shape[1]) and self.inputs_buf[1] is None:
+            self.inputs_shape[1] = list(np.squeeze(np.random.random(self.inputs_shape[1])).shape)
+            if not isShapeCompatible(self.inputs_shape[0], self.inputs_shape[1]):
+                return False
+            return 'Squeeze'
+        elif not isShapeCompatible(self.inputs_shape[0], self.inputs_shape[1]):
+            self.inputs_buf[1] = np.squeeze(self.inputs_buf[1])
+            self.inputs_shape[1] = list(self.inputs_buf[1].shape)
+            if not isShapeCompatible(self.inputs_shape[0], self.inputs_shape[1]):
+                return False
+
+        return True
 
 
     @property

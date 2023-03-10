@@ -3,8 +3,6 @@ import numpy as np
 from caffe_transform import caffe_layer
 from onnx2caffe.op.operator import Operator
 
-from util import isShapeCompatible
-
 
 class Mul(Operator):
 
@@ -44,13 +42,13 @@ class Mul(Operator):
                 self.byPassOperator()
                 return
 
-            if not isShapeCompatible(self.inputs_shape[0], self.inputs_shape[1]) and self.inputs_buf[1] is None:
-                weight_shape = list(np.squeeze(np.random.random(self.inputs_shape[1])).shape)
-                if not isShapeCompatible(self.inputs_shape[0], weight_shape):
-                    self.unSupported('Inputs shape uncompatible for Caffe. ' + str(self.inputs_shape[0]) + ' x ' + str(self.inputs_shape[1]))
-                    return
+            WeightShape = self.inputs_shape[1]
+            CompatibleFlag = self.checkShapeCompatible()
+            if CompatibleFlag == 'Squeeze':
                 self.type = 'Reshape+Scale'
-                self.inputs_shape[1] = weight_shape
+            elif not CompatibleFlag:
+                self.unSupported('Inputs shape uncompatible for Caffe. ' + str(self.inputs_shape[0]) + ' x ' + str(WeightShape))
+                return
 
             self.scale_param = dict()
             if self.model.opset[0] >= 7:

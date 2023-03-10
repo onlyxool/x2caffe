@@ -2,8 +2,6 @@ import numpy as np
 from caffe_transform import caffe_layer
 from tensorflow2caffe.op.operator import Operator
 
-from util import isShapeCompatible
-
 
 class Add(Operator):
 
@@ -44,13 +42,13 @@ class Add(Operator):
                 self.byPassOperator()
                 return
 
-            if not isShapeCompatible(self.inputs_shape[0], self.inputs_shape[1]) and self.inputs_buf[1] is None:
-                bias_shape = list(np.squeeze(np.random.random(self.inputs_shape[1])).shape)
-                if not isShapeCompatible(self.inputs_shape[0], bias_shape):
-                    self.unSupported('Inputs shape uncompatible for Caffe. ' + str(self.inputs_shape[0]) + ' + ' + str(self.inputs_shape[1]))
-                    return
+            BiasShape = self.inputs_shape[1]
+            CompatibleFlag = self.checkShapeCompatible()
+            if CompatibleFlag == 'Squeeze':
                 self.type = 'Reshape+Bias'
-                self.inputs_shape[1] = bias_shape
+            elif not CompatibleFlag:
+                self.unSupported('Inputs shape uncompatible for Caffe. ' + str(self.inputs_shape[0]) + ' + ' + str(BiasShape))
+                return
 
             self.bias_param = dict()
             self.bias_param['axis'] = self.inputs_shape[0].index(self.inputs_shape[1][0]) if np.ones(self.inputs_shape[1]).size > 1 else 0

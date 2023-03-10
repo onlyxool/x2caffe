@@ -1,10 +1,7 @@
 import tflite
-import numpy as np
 
 from caffe_transform import caffe_layer
 from tflite2caffe.op.operator import Operator
-
-from util import isShapeCompatible
 
 
 class Mul(Operator):
@@ -24,28 +21,17 @@ class Mul(Operator):
         opt = tflite.MulOptions()
         opt.Init(op_opt.Bytes, op_opt.Pos)
 
-
-        # Attributes
         if self.inputs_shape[0] != self.inputs_shape[1] or self.inputs_buf[1] is not None:
             # Scale Layer
             self.type = 'Scale'
 
-            if not isShapeCompatible(self.inputs_shape[0], self.inputs_shape[1]):
-                weight_shape = list(np.squeeze(np.random.random(self.inputs_shape[1])).shape)
-                if not isShapeCompatible(self.inputs_shape[0], weight_shape):
-                    self.model.errorMsg.append('Error: Operator Mul Inputs shape uncompatible for Caffe. ' + str(self.inputs_shape[0]) + ' x ' + str(self.inputs_shape[1]))
-                    self.model.unsupport.append(self.operator_code)
-                    return
-            else:
-                weight_shape = self.inputs_shape[1]
-
-            if weight_shape != self.inputs_shape[1]:
-                self.inputs_shape[1] = weight_shape
-                if self.inputs_buf[1] is not None:
-                    self.inputs_buf[1] = self.inputs_buf[1].reshape(weight_shape)
-                else:
-                    self.type = 'Reshape+Scale'
-                    self.reshape_param=dict(shape=dict(dim=self.inputs_shape[1]))
+            WeightShape = self.inputs_shape[1]
+            CompatibleFlag = self.checkShapeCompatible()
+            if CompatibleFlag == 'Squeeze':
+                self.type = 'Reshape+Scale'
+            elif not CompatibleFlag:
+                self.unSupported('Inputs shape uncompatible for Caffe. ' + str(self.inputs_shape[0]) + ' x ' + str(WeightShape))
+                return
 
             self.weight = self.inputs_buf[1]
             self.bias = None
@@ -75,7 +61,7 @@ class Mul(Operator):
         elif self.type == 'Scale':
             layers.append(caffe_layer(self.layer_type, self.name, self.inputs, self.inputs_buf, self.outputs, self.weight, self.bias, scale_param=self.scale_param))
         elif self.type == 'Reshape+Scale':
-            layers.append(caffe_layer(self.layer_type[0], self.name[0], [self.inputs[1]], [None], self.interblob, reshape_param=self.reshape_param))
+            layers.append(caffe_layer(self.layer_type[0], self.name[0], [self.inputs[1]], [None], self.interblob, reshape_param=dict(shape=dict(dim=self.inputs_shape[1]))))
             layers.append(caffe_layer(self.layer_type[1], self.name[1], [self.inputs[0], self.interblob[0]], self.inputs_buf, self.outputs, self.weight, self.bias, scale_param=self.scale_param))
 
         self.setConverted()
