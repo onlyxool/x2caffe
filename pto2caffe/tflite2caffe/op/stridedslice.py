@@ -45,21 +45,17 @@ class StridedSlice(Operator):
         else:
             # Check Stride != 1
             if self.inputs_buf[3].size != list(self.inputs_buf[3]).count(1):
-                self.model.unsupport.append(self.operator_code)
-                self.model.errorMsg.append('Error: Op (STRIDED_SLICE): Do not support stride > 1. strides is ' + str(self.inputs_buf[3]))
+                self.unSupported('Do not support stride > 1. strides is ' + str(self.inputs_buf[3]))
                 return
 
             if len(self.inputs_shape[0]) > 4:
-                self.model.unsupport.append(self.operator_code)
-                self.model.errorMsg.append('Error: Op (STRIDED_SLICE): Do not support dimitions > 4.')
+                self.unSupported('Do not support dimitions > 4.')
                 return
 
             axis_index = np.nonzero(self.inputs_buf[2] - self.inputs_buf[1])[0]
 
             if axis_index.size > 1:
-                self.model.unsupport.append(self.operator_code)
-                self.model.errorMsg.append('Error: Op (STRIDED_SLICE): Can\'t slice more than one axis, begin: '
-                        + str(self.inputs_buf[1]) + ' ends: ' + str(self.inputs_buf[2]))
+                self.unSupported('Can\'t slice more than one axis, begin: ' + str(self.inputs_buf[1]) + ' ends: ' + str(self.inputs_buf[2]))
                 return
             else:
                 axis_index = int(axis_index)
@@ -71,16 +67,13 @@ class StridedSlice(Operator):
             shrink_axis_mask = opt.ShrinkAxisMask()
 
             if ellipsis_mask > 0:
-                self.model.unsupport.append(self.operator_code)
-                self.model.errorMsg.append('Error: Op (STRIDED_SLICE): Can\'t Support ellipsis_mask > 0')
+                self.unSupported('Can\'t Support ellipsis_mask > 0')
                 return
             if new_axis_mask > 0:
-                self.model.unsupport.append(self.operator_code)
-                self.model.errorMsg.append('Error: Op (STRIDED_SLICE): Can\'t Support new_axis_mask > 0')
+                self.unSupported('Can\'t Support new_axis_mask > 0')
                 return
             if shrink_axis_mask > 0:
-                self.model.unsupport.append(self.operator_code)
-                self.model.errorMsg.append('Error: Op (STRIDED_SLICE): Can\'t Support shrink_axis_mask > 0')
+                self.unSupported('Can\'t Support shrink_axis_mask > 0')
                 return
 
             begin_mask = str.zfill('{:b}'.format(begin_mask),len(self.inputs_shape[0]))
@@ -104,9 +97,7 @@ class StridedSlice(Operator):
                 slice_point = start
                 self.outputs.insert(0, 'intermediate_' + str(self.index))
             else:
-                self.model.unsupport.append(self.operator_code)
-                self.model.errorMsg.append('Error Op (STRIDED_SLICE): Can\'t support begin: ' + str(self.inputs_buf[1]) + ' end: ' + str(self.inputs_buf[2]))
-                print(errorMsg)
+                self.unSupported('Can\'t support begin: ' + str(self.inputs_buf[1]) + ' end: ' + str(self.inputs_buf[2]))
                 return
 
             self.slice_param = dict()

@@ -53,8 +53,8 @@ class DepthToSpace(Operator):
                 weight[i+7*ic:i+9*ic+1, i:i+1, 2:3, 1:2] = 1 
                 weight[i+8*ic:i+9*ic+1, i:i+1, 2:3, 2:3] = 1
         else:
-            errorMsg = 'DepthToSpace can\'t support BlockSize:' + str(opt.BlockSize())
-            sys.exit(errorMsg)
+            self.unSupported('DepthToSpace can\'t support BlockSize:' + str(opt.BlockSize()))
+            return
 
         self.weight = weight
 

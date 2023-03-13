@@ -49,8 +49,7 @@ class ReduceMax(Operator):
             self.type = 'Reduction'
 
             if axis != [i for i in range(len(self.inputs_shape[0]))][-len(axis):]:
-                self.model.unsupport.append(self.operator_code)
-                self.model.errorMsg.append('Error: Op (REDUCE_MAX): Do not support axis:' + str(axis))
+                self.unSupported('Do not support axis:' + str(axis))
                 return
 
             self.reduction_param = dict()

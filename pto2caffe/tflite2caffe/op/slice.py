@@ -25,8 +25,7 @@ class Slice(Operator):
             self.slice_param = dict()
 
             if len(np.where(self.inputs_buf[2]>0)) > 1:
-                self.model.unsupport.append(self.operator_code)
-                self.model.errorMsg.append('Error: Op (SLICE): Do not support begin:' + str(self.inputs_buf[1]))
+                self.unSupported('Do not support begin:' + str(self.inputs_buf[1]))
                 return
 
             op_axis = (self.inputs_buf[2]>0).tolist().index(True)
