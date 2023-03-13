@@ -22,8 +22,7 @@ class Squeeze(Operator):
             if self.outputs_shape[0] is not None:
                 self.reshape_param = dict(shape=dict(dim=self.outputs_shape[0]))
             else:
-                errorMsg = 'Can\'t Support Output Shape = ' + str(self.outputs_shape[0])
-                self.unSupported(errorMsg)
+                self.unSupported('Can\'t Support Output Shape = ' + str(self.outputs_shape[0]))
                 return
 
             self.attrs = self.reshape_param

@@ -24,8 +24,7 @@ class ExpandDims(Operator):
             if self.outputs_shape[0] is not None and all(self.outputs_shape[0]):
                 target_shape = list(np.expand_dims(np.random.random(self.inputs_shape[0]), dim).shape)
             else:
-                errorMsg = 'Can\'t Support Output Shape is ' + str(self.outputs_shape[0])
-                self.unSupported(errorMsg)
+                self.unSupported('Can\'t Support Output Shape is ' + str(self.outputs_shape[0]))
                 return
 
             self.reshape_param = dict(shape=dict(dim=target_shape))

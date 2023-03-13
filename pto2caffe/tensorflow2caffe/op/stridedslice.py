@@ -41,8 +41,7 @@ class StridedSlice(Operator):
 
                 # Check Stride != 1
                 if self.inputs_buf[3].size != list(self.inputs_buf[3]).count(1):
-                    errorMsg = 'Do not support stride > 1. OP ' + self.op.name + '\'s strides is ' + str(self.inputs_buf[3]) + '\n'
-                    self.unSupported(errorMsg)
+                    self.unSupported('Do not support stride == ' + str(self.inputs_buf[3]))
                     return
 
                 if self.inputs_shape[0] is not None and len(self.inputs_shape[0]) > 4:
@@ -65,8 +64,7 @@ class StridedSlice(Operator):
                     slice_point = start
                     self.outputs.insert(0, 'intermediate_' + str(self.index))
                 else:
-                    errorMsg = 'Can\'t support begin: ' + str(self.inputs_buf[1]) + ' end: ' + str(self.inputs_buf[2])
-                    self.unSupported(errorMsg)
+                    self.unSupported('Can\'t support begin: ' + str(self.inputs_buf[1]) + ' end: ' + str(self.inputs_buf[2]))
                     return
 
                 self.slice_param = dict()
