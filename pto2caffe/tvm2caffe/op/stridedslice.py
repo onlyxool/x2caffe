@@ -25,8 +25,7 @@ class StridedSlice(Operator):
 
         # Check Stride != 1
         if self.attrs['strides'].count(1) != len(self.attrs['strides']):
-            errorMsg = 'Do not support stride > 1. OP ' + self.name + '\'s strides is ' + str(self.attrs['strides']) + '\n'
-            self.unSupported(errorMsg)
+            self.unSupported('Do not support stride == ' + str(self.attrs['strides']))
             return
 
         if self.attrs['axes'] is not None:
