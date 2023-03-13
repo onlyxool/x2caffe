@@ -17,8 +17,7 @@ class Pooling(Operator):
         super().__parse__()
 
         if 'dilations' in self.attrs and self.attrs['dilations'] != [1, 1]:
-            self.model.unsupport.append(self.operator_code)
-            self.model.errorMsg.append('[' + self.node.name + ']: Operator ' + self.operator_code + ': Caffe Pooling don\'t support dilation.')
+            self.unSupported('Caffe Pooling don\'t support dilation.')
             return
 
         # Attributes

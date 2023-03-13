@@ -16,8 +16,7 @@ class Pad(Operator):
         super().__parse__()
 
         if self.attrs.get('value', 0.0) != 0.0 or self.attrs.get('mode', b'constant').decode() != 'constant':
-            errorMsg = 'Caffe support constant Pad mode only.'
-            print('Warning:', errorMsg)
+            print('Warning:', 'Caffe support constant Pad mode only.')
 
         if self.model.opset[0] >= 11:
             pad = self.inputs_buf[1].reshape(-1, len(self.inputs_shape[0]))
@@ -35,8 +34,7 @@ class Pad(Operator):
                 pad_dict['bottom']  = pad[1][2]
                 self.model.pad[self.outputs[0]] = pad_dict
             else:
-                self.model.errorMsg.append('[' + self.node.name + ']: Input tensor has' + str(len(self.inputs_shape[0])) + 'dimentions')
-                self.model.unsupport.append(self.operator_code)
+                self.unSupported('Input tensor has' + str(len(self.inputs_shape[0])) + 'dimentions')
 
 
     def convert(self):
