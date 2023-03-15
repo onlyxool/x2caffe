@@ -1,3 +1,5 @@
+import numpy as np
+
 from caffe_transform import caffe_layer
 from onnx2caffe.op.operator import Operator
 
@@ -24,7 +26,6 @@ class ReduceMean(Operator):
                 self.unSupported('axes length > 1')
                 return
 
-            import numpy as np
             self.saveConstant(self.outputs[0], np.mean(self.inputs_buf[0], axis=self.attrs['axes'][0], dtype=self.inputs_buf[0].dtype, keepdims=self.attrs.get('keepdims', True)))
         elif len(self.inputs_shape[0]) == 4 and axes == [2, 3]:
             if self.attrs.get('keepdims', True):
@@ -63,10 +64,9 @@ class ReduceMean(Operator):
             self.setParsed()
         elif len(axes) == 1 and input_axes.index(axes[0]) < input_axes[-1]:
             if self.attrs.get('keepdims', True):
-                self.type = 'Permute+Reduction+Permute'
+                self.type = 'Permute+Reduction+Reshape+Permute'
             else:
-                self.unSupported('axes:' + str(axes) + ' input_shape:' + str(self.inputs_shape[0]))
-                return
+                self.type = 'Permute+Reduction' # Need Test
 
             from copy import deepcopy
             permute0 = deepcopy(input_axes)
@@ -81,10 +81,12 @@ class ReduceMean(Operator):
             self.permute_param0['order'] = permute0+[axes[0]]
             self.permute_param1['order'] = permute1
 
+            intermediate_shape = list(np.ones(self.inputs_shape[0]).transpose(self.permute_param0['order']).shape)
+            self.reshape_param = dict(shape=dict(dim=intermediate_shape[:-1]+[1]))
 
             self.reduction_param = dict()
             self.reduction_param['operation'] = 4
-            self.reduction_param['axis'] = axes[0]
+            self.reduction_param['axis'] = len(self.inputs_shape[0]) - 1
 
             self.attrs = self.reduction_param
             self.setParsed()
@@ -105,10 +107,14 @@ class ReduceMean(Operator):
         elif self.type == 'Reduction+Reshape':
             layers.append(caffe_layer(self.layer_type[0], self.name[0], self.inputs, self.inputs_buf, self.interblob, reduction_param=self.reduction_param))
             layers.append(caffe_layer(self.layer_type[1], self.name[1], self.interblob, [None], self.outputs, reshape_param=dict(shape=dict(dim=self.outputs_shape[0]))))
-        elif self.type == 'Permute+Reduction+Permute':
+        elif self.type == 'Permute+Reduction':
+            layers.append(caffe_layer(self.layer_type[0], self.name[0], self.inputs, self.inputs_buf, [self.interblob[0]], permute_param=self.permute_param0))
+            layers.append(caffe_layer(self.layer_type[1], self.name[1], [self.interblob[0]], self.inputs_buf, self.outputs, reduction_param=self.reduction_param))
+        elif self.type == 'Permute+Reduction+Reshape+Permute':
             layers.append(caffe_layer(self.layer_type[0], self.name[0], self.inputs, self.inputs_buf, [self.interblob[0]], permute_param=self.permute_param0))
             layers.append(caffe_layer(self.layer_type[1], self.name[1], [self.interblob[0]], self.inputs_buf, [self.interblob[1]], reduction_param=self.reduction_param))
-            layers.append(caffe_layer(self.layer_type[2], self.name[2], [self.interblob[1]], self.inputs_buf, self.outputs, permute_param=self.permute_param1))
+            layers.append(caffe_layer(self.layer_type[2], self.name[2], [self.interblob[1]], self.inputs_buf, [self.interblob[2]], reshape_param=self.reshape_param))
+            layers.append(caffe_layer(self.layer_type[3], self.name[3], [self.interblob[2]], self.inputs_buf, self.outputs, permute_param=self.permute_param1))
 
         self.setConverted()
 
