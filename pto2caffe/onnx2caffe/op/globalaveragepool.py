@@ -29,9 +29,8 @@ class GlobalAveragePool(Operator):
 
             self.scale_param = dict()
             self.scale_param['axis'] = 0
-            self.scale_param['num_axes'] = len(self.inputs_shape[0])
-            self.weight = np.ones(shape=self.outputs_shape[0]) / (self.inputs_shape[0][-2] * self.inputs_shape[0][-1])
-
+            self.scale_param['num_axes'] = 0
+            self.weight = 1 / (self.inputs_shape[0][-2] * self.inputs_shape[0][-1])
         else:
             self.type = 'Pooling'
 
