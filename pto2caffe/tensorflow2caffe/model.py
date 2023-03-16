@@ -75,7 +75,6 @@ from tensorflow2caffe.op.conv2dbackpropinput import Conv2DBackpropInput
 from tensorflow2caffe.op.resizenearestneighbor import ResizeNearestNeighbor
 from tensorflow2caffe.op.placeholderwithdefault import PlaceholderWithDefault
 
-from caffe_transform import save_caffe_model
 from caffe_transform import make_caffe_input_layer
 from util import shape_map_nhwc2nchw, shape_map_nchw2nhwc
 
@@ -304,10 +303,6 @@ class Model(BaseModel):
             self.layers.extend(op.convert())
 
         self.setConverted()
-
-
-    def save(self, caffe_model_path):
-        return save_caffe_model(caffe_model_path, self.layers)
 
 
     def forward(self, output_name, inputs_tensor):

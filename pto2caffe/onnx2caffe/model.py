@@ -55,7 +55,6 @@ from onnx2caffe.op.instancenormalization import InstanceNormalization
 
 from onnx2caffe.op.mish import Mish
 
-from caffe_transform import save_caffe_model
 from caffe_transform import make_caffe_input_layer
 
 
@@ -214,10 +213,6 @@ class Model(BaseModel):
             self.layers.extend(op.convert())
 
         self.setConverted()
-
-
-    def save(self, caffe_model_path):
-        return save_caffe_model(caffe_model_path, self.layers)
 
 
     def forward(self, output_name, inputs_tensor):

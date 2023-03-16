@@ -1,4 +1,5 @@
 from base import Base
+from caffe_transform import save_caffe_model
 
 class BaseModel(Base):
     def __init__(self, model, graph, param):
@@ -15,3 +16,7 @@ class BaseModel(Base):
         self.operators = list()
         self.unsupport = list()
         self.tensor_shape = dict()
+
+
+    def save(self, caffe_model_path):
+        return save_caffe_model(caffe_model_path, self.layers)

@@ -46,7 +46,6 @@ from tvm2caffe.op.convtranspose import ConvTranspose
 from tvm2caffe.op.bypassoperator import ByPassOperator
 
 from util import shape_map_nhwc2nchw
-from caffe_transform import save_caffe_model
 from caffe_transform import make_caffe_input_layer
 from tvm2caffe.relay import preprocess, get_relay_type, get_tensor_shape, remove_numTypeExt
 
@@ -234,10 +233,6 @@ class Model(BaseModel):
             self.layers.extend(op.convert())
 
         self.setConverted()
-
-
-    def save(self, caffe_model_path):
-        return save_caffe_model(caffe_model_path, self.layers)
 
 
     def forward(self, output_name, inputs_tensor):
