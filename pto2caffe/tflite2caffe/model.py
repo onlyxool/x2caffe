@@ -195,18 +195,6 @@ class Model(BaseModel):
         self.setParsed()
 
 
-    def convert(self):
-        logger.debug("Converting the Model...")
-
-        for index, input_name in enumerate(self.inputs):
-            self.layers.append(make_caffe_input_layer(input_name, self.inputs_shape[index], index, self.param))
-
-        for op in self.operators:
-            self.layers.extend(op.convert())
-
-        self.setConverted()
-
-
     def quantize(self, tensor, index):
         quantization_parameter = self.get_tensor_quantization_parameter(index)
 

@@ -45,8 +45,7 @@ from tvm2caffe.op.stridedslice import StridedSlice
 from tvm2caffe.op.convtranspose import ConvTranspose
 from tvm2caffe.op.bypassoperator import ByPassOperator
 
-from util import shape_map_nhwc2nchw
-from caffe_transform import make_caffe_input_layer
+from util import shape_map_nhwc2nchw, shape_map_nchw2nhwc
 from tvm2caffe.relay import preprocess, get_relay_type, get_tensor_shape, remove_numTypeExt
 
 
@@ -185,12 +184,13 @@ class Model(BaseModel):
         inputs_str = relays[0][relays[0].find('main')+4:relays[0].rfind('hash')].strip()
         for inputs in inputs_str.split('(%')[-1].split(', %'):
             self.inputs.append(inputs.split(' ')[0])
-            self.inputs_shape.append(eval('['+get_tensor_shape(inputs.split(': ')[-1])[0]+']'))
+            input_shape = eval('['+get_tensor_shape(inputs.split(': ')[-1])[0]+']')
+            self.inputs_shape.append(shape_map_nhwc2nchw(input_shape) if self.layout == 'NHWC' else input_shape)
             self.inputs_dtype.append(re.compile(r'\), (.+?)\]').findall(inputs.split(': ')[-1])[0])
 
         for index, inputs_name in enumerate(self.inputs):
             print(inputs_name, end=':')
-            print(self.inputs_shape[index], self.inputs_dtype[index])
+            print(shape_map_nchw2nhwc(self.inputs_shape[index]) if self.layout == 'NHWC' else self.inputs_shape[index], self.inputs_dtype[index])
             self.tensor_shape[inputs_name] = self.inputs_shape[index]
 
         for index, relay in enumerate(self.relays):
@@ -220,19 +220,6 @@ class Model(BaseModel):
             sys.exit(errorMsg)
 
         self.setParsed()
-
-
-    def convert(self):
-        logger.debug("Converting the Model...")
-
-        for index, input_name in enumerate(self.inputs):
-            input_shape = shape_map_nhwc2nchw(self.inputs_shape[index]) if self.layout == 'NHWC' else self.inputs_shape[index]
-            self.layers.append(make_caffe_input_layer(input_name, input_shape, index, self.param))
-
-        for op in self.operators:
-            self.layers.extend(op.convert())
-
-        self.setConverted()
 
 
     def forward(self, output_name, inputs_tensor):

@@ -75,7 +75,6 @@ from tensorflow2caffe.op.conv2dbackpropinput import Conv2DBackpropInput
 from tensorflow2caffe.op.resizenearestneighbor import ResizeNearestNeighbor
 from tensorflow2caffe.op.placeholderwithdefault import PlaceholderWithDefault
 
-from caffe_transform import make_caffe_input_layer
 from util import shape_map_nhwc2nchw, shape_map_nchw2nhwc
 
 
@@ -238,7 +237,6 @@ class Model(BaseModel):
 
         for i, shape in enumerate(self.inputs_shape):
             print(self.inputs[i], shape_map_nchw2nhwc(shape))
-            self.layers.append(make_caffe_input_layer(self.inputs[i], input_shape, i, self.param))
 
         # Check Input Shape
         if len(self.inputs_shape) > 0:
@@ -294,15 +292,6 @@ class Model(BaseModel):
             sys.exit(errorMsg)
 
         self.setParsed()
-
-
-    def convert(self):
-        logger.debug('Converting the Model...')
-
-        for op in self.operators:
-            self.layers.extend(op.convert())
-
-        self.setConverted()
 
 
     def forward(self, output_name, inputs_tensor):

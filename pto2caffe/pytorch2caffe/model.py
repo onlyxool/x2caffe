@@ -33,7 +33,6 @@ from pytorch2caffe.op.convtranspose import Deconvolution
 from pytorch2caffe.op.adaptavgpooling import AdaptiveAvgPooling
 
 from pytorch2caffe.pnnx import Pnnx
-from caffe_transform import make_caffe_input_layer
 
 logger = logging.getLogger('Pytorch2Caffe')
 
@@ -122,18 +121,6 @@ class Model(BaseModel):
             print(name, self.inputs_shape[i])
 
         self.setParsed()
-
-
-    def convert(self):
-        logger.debug('Converting the Model...')
-
-        for i, input in enumerate(self.inputs):
-            self.layers.append(make_caffe_input_layer(input, self.inputs_shape[i], i, self.param))
-
-        for op in self.operators:
-            self.layers.extend(op.convert())
-
-        self.setConverted()
 
 
     def forward(self, output_name, inputs_tensor):

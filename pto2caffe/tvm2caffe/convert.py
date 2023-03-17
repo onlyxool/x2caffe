@@ -119,7 +119,6 @@ def convert(model_file, caffe_model_path, param=None):
 
     inputs_tensor = list()
     for index, input_name in enumerate(model.inputs):
-        input_shape = shape_map_nhwc2nchw(model.inputs_shape[index]) if model.layout == 'NHWC' else model.inputs_shape[index]
-        inputs_tensor.append(get_input_tensor(param, input_shape, model.inputs_dtype[index], None))
+        inputs_tensor.append(get_input_tensor(param, model.inputs_shape[index], model.inputs_dtype[index], None))
 
     compare(model, caffe_net, inputs_tensor, param.get('compare', -1))

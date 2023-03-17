@@ -1,5 +1,7 @@
 from base import Base
+from util import shape_map_nhwc2nchw
 from caffe_transform import save_caffe_model
+from caffe_transform import make_caffe_input_layer
 
 class BaseModel(Base):
     def __init__(self, model, graph, param):
@@ -16,6 +18,18 @@ class BaseModel(Base):
         self.operators = list()
         self.unsupport = list()
         self.tensor_shape = dict()
+
+
+    def convert(self):
+        print("Converting the Caffe Model...")
+
+        for index, input_name in enumerate(self.inputs):
+            self.layers.append(make_caffe_input_layer(input_name, self.inputs_shape[index], index, self.param))
+
+        for op in self.operators:
+            self.layers.extend(op.convert())
+
+        self.setConverted()
 
 
     def save(self, caffe_model_path):
