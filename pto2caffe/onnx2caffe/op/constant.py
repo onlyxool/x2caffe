@@ -16,7 +16,7 @@ class Constant(Operator):
             self.saveConstant(self.outputs[0], self.attrs['value'])
         elif self.operator_code == 'ConstantOfShape' and self.inputs_buf[0] is not None:
             import numpy as np
-            self.saveConstant(self.outputs[0], np.ones(self.inputs_buf[0], dtype=self.attrs['value'].dtype) * self.attrs['value'])
+            self.saveConstant(self.outputs[0], np.ones(self.inputs_buf[0].shape, dtype=self.attrs['value'].dtype) * self.attrs['value'])
         else:
             self.unSupported()
 
