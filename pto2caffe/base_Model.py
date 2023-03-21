@@ -1,5 +1,4 @@
 from base import Base
-from util import shape_map_nhwc2nchw
 from caffe_transform import save_caffe_model
 from caffe_transform import make_caffe_input_layer
 

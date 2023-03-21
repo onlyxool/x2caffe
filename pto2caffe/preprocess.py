@@ -1,52 +1,10 @@
-import os
 import sys
-import cv2
 import numpy as np
 
 
-def load_file2tensor(path, param):
-    '''
-    Load image or raw data as tensor[C, H, W]
-    '''
-    ext = os.path.basename(path).split('.')[-1].lower()
-    if ext in ['bin']:
-        tensor = np.fromfile(path, param['dtype'])
-        tensor = np.array(tensor, dtype=np.float32)
-        tensor = np.reshape(tensor , param['bin_shape'])
-        param['source_shape'] = [1] + list(tensor.shape)
-    elif ext in ['jpg', 'bmp', 'png', 'jpeg']:
-        tensor = cv2.imread(path, cv2.IMREAD_GRAYSCALE if param['color_format'] == 'GRAY' else cv2.IMAGE_COLOR)
-        assert(tensor is not None), 'Error: Input file is None  ' + path
-        tensor = np.expand_dims(tensor, axis=2) if param['color_format'] == 'GRAY' else tensor
-        if param['color_format'] == 'RGB':
-            tensor = cv2.cvtColor(tensor, cv2.COLOR_BGR2RGB)
-        tensor = tensor.transpose(2, 0, 1).astype(np.float32) # HWC->CHW
-    else:
-        errorMsg = 'Do not support input file format: ' + ext
-        sys.exit(errorMsg)
+def gen_input_tensor(param, input_shape, dtype, quantization_parameter=None):
 
-    return tensor
-
-
-def get_one_file(folder_path):
-    folder = os.walk(folder_path)
-    for path, dir_list, file_list in folder:
-        for file_name in file_list:
-            if file_name.split('.')[-1].lower() in ['jpg', 'bmp', 'png', 'jpeg', 'bin']:
-                return path+'/'+file_name
-
-
-def get_input_tensor(param, input_shape, dtype, quantization_parameter=None):
-    root_path = param.get('root_folder', None)
-
-    if root_path is not None and os.path.isfile(root_path):
-        tensor = load_file2tensor(root_path, param)
-
-    elif root_path is not None and os.path.isdir(root_path):
-        param['input_file'] = get_one_file(root_path)
-        tensor = load_file2tensor(param['input_file'], param)
-
-    elif np.issubdtype(dtype, np.integer) and quantization_parameter is not None:
+    if np.issubdtype(dtype, np.integer) and quantization_parameter is not None:
         maxval = 1. if isinstance(quantization_parameter['maxval'], int) else quantization_parameter['maxval']
         minval = -1. if isinstance(quantization_parameter['minval'], int) else quantization_parameter['minval']
         tensor = np.random.uniform(low=minval, high=maxval, size=input_shape).astype(np.float32)

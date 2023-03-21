@@ -1,6 +1,6 @@
 import tflite
 from compare import compare
-from preprocess import get_input_tensor
+from preprocess import gen_input_tensor
 from tflite2caffe.model import Model
 
 
@@ -17,6 +17,6 @@ def convert(tf_file, caffe_model_path, param=None):
 
     inputs_tensor = list()
     for index, input_name in enumerate(model.inputs):
-        inputs_tensor.append(get_input_tensor(param, model.inputs_shape[index], model.inputs_dtype[index], quantization_parameter=model.inputs_quantization_parameter[index]))
+        inputs_tensor.append(gen_input_tensor(param, model.inputs_shape[index], model.inputs_dtype[index], quantization_parameter=model.inputs_quantization_parameter[index]))
 
     compare(model, caffe_net, inputs_tensor, param.get('compare', -1))

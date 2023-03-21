@@ -4,9 +4,8 @@ import tvm
 import pathlib
 
 from compare import compare
-from preprocess import get_input_tensor
+from preprocess import gen_input_tensor
 from tvm2caffe.model import Model
-from util import shape_map_nhwc2nchw
 
 
 def get_input_shape_dict(model, model_type, param):
@@ -119,6 +118,6 @@ def convert(model_file, caffe_model_path, param=None):
 
     inputs_tensor = list()
     for index, input_name in enumerate(model.inputs):
-        inputs_tensor.append(get_input_tensor(param, model.inputs_shape[index], model.inputs_dtype[index], None))
+        inputs_tensor.append(gen_input_tensor(param, model.inputs_shape[index], model.inputs_dtype[index], None))
 
     compare(model, caffe_net, inputs_tensor, param.get('compare', -1))
