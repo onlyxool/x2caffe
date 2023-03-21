@@ -66,9 +66,13 @@ def mean(tensor, means):
     if len(means) == tensor.shape[1]:
         for i, mean in enumerate(means):
             tensor[:, i, :, :] = tensor[:, i, :, :] - mean
+    elif len(means) == tensor.shape[3]:
+        for i, mean in enumerate(means):
+            tensor[:, :, :, i] = tensor[:, :, :, i] - mean
+    elif len(means) == 1:
+        tensor = tensor - means[0]
     else:
-        errorMsg = 'mean length not equal tensor channel (' + str(len(means)) + ' != ' + str(tensor.shape[1]) + ')'
-        sys.exit(errorMsg)
+        sys.exit('mean length not equal tensor channel.')
 
     return tensor
 
@@ -89,9 +93,13 @@ def std(tensor, stds):
     if len(stds) == tensor.shape[1]:
         for i, std in enumerate(stds):
             tensor[:, i, :, :] = tensor[:, i, :, :] / std
+    elif len(stds) == tensor.shape[3]:
+        for i, std in enumerate(stds):
+            tensor[:, :, :, i] = tensor[:, :, :, i] / std
+    elif len(stds) == 1:
+        tensor = tensor / stds[0]
     else:
-        errorMsg = 'std length not equal tensor channel (' + str(len(stds)) + ' != ' + str(tensor.shape[1]) + ')'
-        sys.exit(errorMsg)
+        sys.exit('std length not equal tensor channel.')
 
     return tensor
 
@@ -100,19 +108,18 @@ def scale(tensor, scales):
     if len(scales) == tensor.shape[1]:
         for i, scale in enumerate(scales):
             tensor[: i, :, :] = tensor[:, i, :, :] / scale
+    elif len(scales) == tensor.shape[3]:
+        for i, scale in enumerate(scales):
+            tensor[: :, :, i] = tensor[:, :, :, i] / scale
     elif len(scales) == 1:
         tensor = tensor / scales[0]
     else:
-        errorMsg = 'scale length not equal tensor channel (' + str(len(scales)) + ' != ' + str(tensor.shape[1]) + ')'
-        sys.exit(errorMsg)
+        sys.exit('scale length not equal tensor channel.')
 
     return tensor
 
 
 def preprocess(tensor, param):
-    '''
-        Input tensor should be 3 dimensions and has [C, H, W] layout
-    '''
     if param['scale'] is not None:
         tensor = scale(tensor, param['scale'])
 
@@ -124,11 +131,6 @@ def preprocess(tensor, param):
 
     if param['crop_h'] is not None and param['crop_w'] is not None and param.get('root_folder', None) is not None:
         tensor = crop(tensor, param['crop_h'], param['crop_w'])
-
-    if param.get('savetensor', 0) == 1:
-        model_ext = param['model'].split('.')[-1]
-        bin_file = param['model'][:-len(model_ext)] + 'bin'
-        tensor.tofile(bin_file)
 
     if param.get('root_folder', None) is None:
         return tensor
