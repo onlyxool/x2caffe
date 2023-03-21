@@ -73,6 +73,7 @@ class ReduceMax(Operator):
             self.permute_param0['order'] = permute0+[axes[0]]
             self.permute_param1['order'] = permute1
 
+            import numpy as np
             intermediate_shape = list(np.ones(self.inputs_shape[0]).transpose(self.permute_param0['order']).shape)
             self.reshape_param = dict(shape=dict(dim=intermediate_shape[:-1]+[1]))
 
