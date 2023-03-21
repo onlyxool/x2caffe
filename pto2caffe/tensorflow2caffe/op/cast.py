@@ -13,7 +13,7 @@ class Cast(Operator):
         self.type = 'Cast'
         super().__parse__()
 
-        if self.inputs_buf is not None:
+        if self.inputs_buf[0] is not None:
             self.saveConstant(self.outputs[0], self.inputs_buf[0])
         else:
             self.byPassOperator()
