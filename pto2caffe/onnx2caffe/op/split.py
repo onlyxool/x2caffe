@@ -1,3 +1,5 @@
+import numpy as np
+
 from caffe_transform import caffe_layer
 from onnx2caffe.op.operator import Operator
 
@@ -14,20 +16,20 @@ class Split(Operator):
         self.type = 'Slice'
         super().__parse__()
 
-        # Attributes
         self.slice_param = dict()
 
         # Axis
-        self.slice_param['axis'] = self.attrs['axis']
+        self.slice_param['axis'] = self.attrs['axis'] if self.attrs['axis'] > 0 else self.attrs['axis'] + len(self.inputs_shape[0])
 
         # Slice Point
-        slice_point = self.attrs['split']
-        for i in range(len(self.attrs['split'])):
-            if i != 0:
-                slice_point[i] = slice_point[i-1] + self.attrs['split'][i]
-        if slice_point[-1] == self.inputs_shape[0][self.attrs['axis']]:
-            slice_point.pop()
-        self.slice_param['slice_point'] = slice_point
+        if 'split' in self.attrs:
+            slice_point = self.attrs['split']
+        elif len(self.inputs_buf) > 1 and isinstance(self.inputs_buf[1], np.ndarray):
+            slice_point = self.inputs_buf[1].tolist
+        else:
+            slice_point = np.array(self.outputs_shape)[:, self.slice_param['axis']:self.slice_param['axis']+1]
+
+        self.slice_param['slice_point'] = np.cumsum(slice_point).tolist()[:-1]
 
         self.attrs = self.slice_param
 
