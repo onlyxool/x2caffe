@@ -15,8 +15,6 @@ class NonZero(Operator):
         super().__parse__()
 
         if self.inputs_buf[0] is not None:
-            print(self.inputs_buf[0])
-            print(np.array(np.nonzero(self.inputs_buf[0])), type(np.array(np.nonzero(self.inputs_buf[0]))))
             self.saveConstant(self.outputs[0], np.nonzero(self.inputs_buf[0])[0])
         else:
             self.unSupported()
