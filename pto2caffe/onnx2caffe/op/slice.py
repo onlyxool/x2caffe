@@ -29,7 +29,7 @@ class Slice(Operator):
             num_slices = len(self.inputs_buf[1])
             starts = list(self.inputs_buf[1])
             ends = list(self.inputs_buf[2])
-            axes = list(self.inputs_buf[3]) if len(self.inputs_buf) >= 4 else None
+            axes = list(self.inputs_buf[3]) if len(self.inputs_buf) >= 4 else [0]
             steps = list(self.inputs_buf[4]) if len(self.inputs_buf) >= 5 else [1]*num_slices
 
         if self.inputs_buf[0] is not None:
