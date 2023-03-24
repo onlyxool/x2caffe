@@ -16,7 +16,7 @@ class Shape(Operator):
 
         if self.inputs_buf[0] is not None:
             self.saveConstant(self.outputs[0], np.array(self.inputs_buf[0].shape))
-        elif len(self.inputs_shape[0]) > 0:
+        elif self.inputs_shape[0] is not None and len(self.inputs_shape[0]) > 0:
             self.saveConstant(self.outputs[0], np.array(self.model.tensor_shape[self.inputs[0]]))
         else:
             self.unSupported()
