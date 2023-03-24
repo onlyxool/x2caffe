@@ -16,15 +16,12 @@ class Resize(Operator):
     def parse(self):
         super().__parse__()
 
-        scale = self.inputBuf_byName('scales')
-        if scale is None:
-            if max(self.model.opset) <= 10:
-                scale = self.inputs_buf[1]
-            else:
-                scale = self.inputs_buf[2]
+        scale = self.inputs_buf[1] if max(self.model.opset) <= 10 else self.inputs_buf[2]
 
-        if hasattr(scale, '__iter__') and len(scale) >= 4:
+        if hasattr(scale, '__iter__') and len(scale) == len(self.inputs_shape[0]):
             scale_factor = int(scale[2] if scale[2] == scale[3] else 0)
+            if self.outputs_shape[0] is None:
+                self.outputs_shape[0] = [int(a * b) for a, b in zip(self.inputs_shape[0], scale)]
         else:
             input_h = self.inputs_shape[0][2]
             input_w = self.inputs_shape[0][3]
