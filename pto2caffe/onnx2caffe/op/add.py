@@ -26,8 +26,8 @@ class Add(Operator):
         elif (self.inputs_buf[0] is not None or self.inputs_buf[1] is not None) or (self.inputs_shape[0] != self.inputs_shape[1]):
             self.type = 'Bias'
 
-            inputs_size0 = np.multiply.reduce(self.inputs_shape[0], axis=None)
-            inputs_size1 = np.multiply.reduce(self.inputs_shape[1], axis=None)
+            inputs_size0 = np.multiply.reduce(self.inputs_shape[0], axis=None) if len(self.inputs_shape[0]) > 0 else 0
+            inputs_size1 = np.multiply.reduce(self.inputs_shape[1], axis=None) if len(self.inputs_shape[1]) > 0 else 0
 
             if self.inputs_buf[0] is not None and self.inputs_buf[1] is None:
                 self.inputs.reverse()
