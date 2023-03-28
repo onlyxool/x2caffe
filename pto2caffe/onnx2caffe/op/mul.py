@@ -51,7 +51,7 @@ class Mul(Operator):
             if CompatibleFlag == 'Squeeze':
                 self.type = 'Reshape+Scale'
             elif not CompatibleFlag:
-                self.unSupported('Inputs shape uncompatible for Caffe. ' + str(self.inputs_shape[0]) + ' x ' + str(WeightShape))
+                self.unSupported('Inputs incompatible shapes for Caffe. ' + str(self.inputs_shape[0]) + ' x ' + str(WeightShape))
                 return
 
             self.scale_param = dict()

@@ -51,7 +51,7 @@ class Add(Operator):
             if CompatibleFlag == 'Squeeze':
                 self.type = 'Reshape+Bias'
             elif not CompatibleFlag:
-                self.unSupported('Inputs shape uncompatible for Caffe. ' + str(self.inputs_shape[0]) + ' + ' + str(BiasShape))
+                self.unSupported('Inputs incompatible shape for Caffe. ' + str(self.inputs_shape[0]) + ' + ' + str(BiasShape))
                 return
 
             self.bias_param = dict()
