@@ -26,6 +26,10 @@ class Mul(Operator):
         elif (self.inputs_buf[0] is not None or self.inputs_buf[1] is not None) or (self.inputs_shape[0] != self.inputs_shape[1]):
             self.type = 'Scale'
 
+            if self.inputs_shape[0] is None or self.inputs_shape[1] is None:
+                self.unSupported('Inputs incompatible shapes for Caffe. ' + str(self.inputs_shape[0]) + ' x ' + str(self.inputs_shape[1]))
+                return
+
             inputs_size0 = np.multiply.reduce(self.inputs_shape[0], axis=None)
             inputs_size1 = np.multiply.reduce(self.inputs_shape[1], axis=None)
 
