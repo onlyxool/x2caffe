@@ -15,7 +15,7 @@ class NonZero(Operator):
         super().__parse__()
 
         if self.inputs_buf[0] is not None:
-            self.saveConstant(self.outputs[0], np.nonzero(self.inputs_buf[0])[0])
+            self.saveConstant(self.outputs[0], np.nonzero(self.inputs_buf[0]))
         else:
             self.unSupported()
 
