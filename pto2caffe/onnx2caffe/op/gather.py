@@ -16,7 +16,6 @@ class Gather(Operator):
         if self.inputs_buf[0] is not None and self.inputs_buf[1] is not None and self.inputs_buf[1].size > 0:
             import numpy as np
             self.saveConstant(self.node.output[0], np.take(self.inputs_buf[0], indices=self.inputs_buf[1], axis=self.attrs.get('axis', 0)))
-#elif self.inputs_buf[1] is not None and self.inputs_buf[1].size >= 1: # TODO
         elif self.inputs_buf[1] is not None and self.inputs_buf[1].size == 1: #TODO
             self.type = 'Slice'
 
