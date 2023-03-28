@@ -16,6 +16,7 @@ class BaseModel(Base):
         self.indentity = dict()
         self.operators = list()
         self.unsupport = list()
+        self.tensor_dtype = dict()
         self.tensor_shape = dict()
 
 
