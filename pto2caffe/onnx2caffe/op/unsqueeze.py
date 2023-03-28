@@ -2,23 +2,22 @@ from caffe_transform import caffe_layer
 from onnx2caffe.op.operator import Operator
 
 
-class Reshape(Operator):
+class Unsqueeze(Operator):
 
     def __init__(self, model, node, index):
         super().__init__(model, node, index)
-        assert(self.operator_code in ('Reshape', 'Squeeze'))
+        assert(self.operator_code == 'Unsqueeze')
         self.setInited()
 
 
     def parse(self):
         super().__parse__()
 
-        if 'shape' in self.attrs:
-            output_shape = self.attrs['shape']
+        if isinstance(self.inputs_shape[0], list) and len(self.inputs_shape[0]) > 0 and 'axes' in self.attrs:
+            import numpy as np
+            output_shape = list(np.expand_dims(np.ones(self.inputs_shape[0]), axis=self.attrs['axes']).shape)
         elif isinstance(self.outputs_shape[0], list) and len(self.outputs_shape[0]) > 0:
             output_shape = self.outputs_shape[0]
-        elif len(self.inputs_buf) >= 2 and self.inputs_buf[1] is not None:
-            output_shape = self.inputs_buf[1].tolist()
         else:
             self.unSupported('Can\'t Get Output Shape in ' + self.node.name)
             return
