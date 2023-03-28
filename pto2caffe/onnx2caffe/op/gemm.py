@@ -14,11 +14,7 @@ class InnerProduct(Operator):
         self.type = 'InnerProduct'
         super().__parse__()
 
-        if self.inputs_shape[0] is None or self.inputs_shape[1] is None:
-            self.unSupported('Input shape of Gemm is None.')
-            return
-
-        if len(self.inputs_shape[1]) != 2 or len(self.inputs_shape[0]) != 2:
+        if (isinstance(self.inputs_shape[0], list) and len(self.inputs_shape[0]) != 2) or (isinstance(self.inputs_shape[1], list) and len(self.inputs_shape[1]) != 2):
             self.unSupported('only support input dimentions == 2')
             return
 
