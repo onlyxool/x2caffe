@@ -16,9 +16,9 @@ class GlobalAveragePool(Operator):
     def parse(self):
         super().__parse__()
 
-        kernel_size = self.inputs_shape[0][-2:]
+        kernel_size = self.inputs_shape[0][-2:] if isinstance(self.inputs_shape[0], list) and len(self.inputs_shape[0]) == 4 else None
 
-        if kernel_size[0] > 15 or kernel_size[1] > 15:
+        if kernel_size is not None and (kernel_size[0] > 15 or kernel_size[1] > 15):
             self.type = 'Reduction+Reshape+Scale'
             self.reduction_param = dict()
             self.reduction_param['operation'] = 1
@@ -42,9 +42,10 @@ class GlobalAveragePool(Operator):
             self.pooling_param['global_pooling'] = True
 
             # Padding
-            legacy_pad = self.model.pad.get(self.node.input[0], {'left': 0, 'right': 0, 'top': 0, 'bottom': 0})
-            padding = computePad(self.layer_type, self.attrs, self.inputs_shape[0], self.outputs_shape[0], kernel_size, [1, 1], legacy_pad)
-            self.pooling_param.update(padding)
+            if kernel_size is not None:
+                legacy_pad = self.model.pad.get(self.node.input[0], {'left': 0, 'right': 0, 'top': 0, 'bottom': 0})
+                padding = computePad(self.layer_type, self.attrs, self.inputs_shape[0], self.outputs_shape[0], kernel_size, [1, 1], legacy_pad)
+                self.pooling_param.update(padding)
 
             self.attrs = self.pooling_param
 
