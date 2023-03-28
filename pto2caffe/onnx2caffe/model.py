@@ -15,6 +15,7 @@ from onnx2caffe.op.pad import Pad
 from onnx2caffe.op.sub import Sub
 from onnx2caffe.op.sum import Sum
 from onnx2caffe.op.cast import Cast
+from onnx2caffe.op.less import Less
 from onnx2caffe.op.relu import ReLU
 from onnx2caffe.op.sqrt import Sqrt
 from onnx2caffe.op.tanh import TanH
@@ -36,6 +37,7 @@ from onnx2caffe.op.compare import Compare
 from onnx2caffe.op.dropout import Dropout
 from onnx2caffe.op.flatten import Flatten
 from onnx2caffe.op.pooling import Pooling
+from onnx2caffe.op.nonzero import NonZero
 from onnx2caffe.op.reshape import Reshape
 from onnx2caffe.op.sigmoid import Sigmoid
 from onnx2caffe.op.softmax import Softmax
@@ -47,6 +49,7 @@ from onnx2caffe.op.upsample import Upsample
 from onnx2caffe.op.transpose import Permute
 from onnx2caffe.op.batchnorm import BatchNorm
 from onnx2caffe.op.reducemax import ReduceMax
+from onnx2caffe.op.unsqueeze import Unsqueeze
 from onnx2caffe.op.reducemean import ReduceMean
 from onnx2caffe.op.hardsigmoid import HardSigmoid
 from onnx2caffe.op.convtranspose import Deconvolution
@@ -73,6 +76,7 @@ OpMap = {
     'Sub': Sub,
     'Sum': Sum,
     'Cast': Cast,
+    'Less': Less,
     'Relu': ReLU,
     'Sqrt': Sqrt,
     'Tanh': TanH,
@@ -94,6 +98,7 @@ OpMap = {
     'Dropout': Dropout,
     'Flatten': Flatten,
     'MaxPool': Pooling,
+    'NonZero': NonZero,
     'Reshape': Reshape,
     'Sigmoid': Sigmoid,
     'Softmax': Softmax,
@@ -104,8 +109,8 @@ OpMap = {
     'Softplus': Softplus,
     'Upsample': Upsample,
     'Transpose': Permute,
-    'Unsqueeze': Reshape,
     'ReduceMax': ReduceMax,
+    'Unsqueeze': Unsqueeze,
     'AveragePool': Pooling,
     'ReduceMean': ReduceMean,
     'HardSigmoid': HardSigmoid,
@@ -129,10 +134,10 @@ class Model(BaseModel):
         for i in range(len(onnx_model.opset_import)):
             if onnx_model.opset_import[i].domain == '':
                 opset_version = onnx_model.opset_import[i].version
-                if opset_version <= 17 and opset_version > 3:
+                if opset_version <= 17:
                     self.opset.append(opset_version)
                 else:
-                    sys.exit('Error: Model opset > 13 or <= 3, it may cause incompatiblility issue. (opset:{})\n'.format(opset_version))
+                    sys.exit('Error: Model opset > 17, it may cause incompatiblility issue. (opset:{})\n'.format(opset_version))
 
         self.setInited()
 
@@ -142,17 +147,25 @@ class Model(BaseModel):
 
         # Get Shape
         for value_info in self.graph.value_info:
+            self.tensor_dtype[value_info.name] = value_info.type.tensor_type.elem_type
             self.tensor_shape[value_info.name] = [int(dim.dim_value) for dim in value_info.type.tensor_type.shape.dim]
         for value_info in self.graph.input:
+            self.tensor_dtype[value_info.name] = value_info.type.tensor_type.elem_type
             self.tensor_shape[value_info.name] = [int(dim.dim_value) for dim in value_info.type.tensor_type.shape.dim]
         for value_info in self.graph.output:
+            self.tensor_dtype[value_info.name] = value_info.type.tensor_type.elem_type
             self.tensor_shape[value_info.name] = [int(dim.dim_value) for dim in value_info.type.tensor_type.shape.dim]
+
+        for key, value in self.tensor_shape.items():
+            self.tensor_shape[key] = None if 0 in value else self.tensor_shape[key]
 
         # Get Weight & Bias
         for tensor in self.model.graph.initializer:
             self.constant[tensor.name] = onnx.numpy_helper.to_array(tensor)
+            self.tensor_dtype[tensor.name] = numpy_dtype.index(onnx.numpy_helper.to_array(tensor).dtype)
         for tensor in self.model.graph.sparse_initializer:
             self.constant[tensor.name] = onnx.numpy_helper.to_array(tensor)
+            self.tensor_dtype[tensor.name] = numpy_dtype.index(onnx.numpy_helper.to_array(tensor).dtype)
 
         if len(self.graph.input) == 0 or self.graph.input is None:
             sys.exit('model input can\'t be None')
