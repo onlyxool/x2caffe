@@ -206,8 +206,8 @@ class Model(BaseModel):
                     inputs_tensor1.append(np.random.random((input_shape)).astype(self.param['dtype']))
                     inputs_tensor2.append(np.random.random((input_shape)).astype(self.param['dtype']))
 
-                output1 = self.forward([op.outputs[0].name], inputs_tensor1)
-                output2 = self.forward([op.outputs[0].name], inputs_tensor2)
+                output1 = self.forward(op.outputs[0].name, inputs_tensor1)
+                output2 = self.forward(op.outputs[0].name, inputs_tensor2)
 
                 if output1 is not None and output2 is not None and np.allclose(output1, output2):
                     self.constant[op.outputs[0].name] = output1
