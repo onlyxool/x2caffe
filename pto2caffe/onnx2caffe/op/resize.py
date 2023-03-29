@@ -1,5 +1,3 @@
-import numpy as np
-
 from caffe_transform import caffe_layer
 from onnx2caffe.op.operator import Operator
 from onnx2caffe.utility import computePad
@@ -18,11 +16,18 @@ class Resize(Operator):
 
         scale = self.inputs_buf[1] if max(self.model.opset) <= 10 else self.inputs_buf[2]
 
+        if not isinstance(self.inputs_shape[0], list):
+            self.unSupported('Can\'t Support inputs Shape: ' + str(self.inputs_shape[0]))
+            return
+
         if hasattr(scale, '__iter__') and len(scale) == len(self.inputs_shape[0]):
             scale_factor = int(scale[2] if scale[2] == scale[3] else 0)
             if self.outputs_shape[0] is None:
                 self.outputs_shape[0] = [int(a * b) for a, b in zip(self.inputs_shape[0], scale)]
         else:
+            if not isinstance(self.outputs_shape[0], list):
+                self.unSupported('Can\'t Support Output Shape: ' + str(self.outputs_shape[0]))
+                return
             input_h = self.inputs_shape[0][2]
             input_w = self.inputs_shape[0][3]
             output_h = self.outputs_shape[0][2]
@@ -55,6 +60,7 @@ class Resize(Operator):
                 self.convolution_param.update(padding)
                 self.attrs = self.convolution_param
 
+                import numpy as np
                 self.weight = np.ones((self.outputs_shape[0][1], 1, scale_factor, scale_factor), dtype=int)
                 self.inputs_buf[1] = self.weight
                 self.inputs_shape[1] = self.inputs_buf[1].shape
