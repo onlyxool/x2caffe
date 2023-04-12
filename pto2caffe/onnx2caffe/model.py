@@ -3,6 +3,7 @@ import onnx
 import logging
 import numpy as np
 from base_Model import BaseModel
+from util import isShapeFullyDefined
 
 from onnx2caffe.op.add import Add
 from onnx2caffe.op.div import Div
@@ -49,6 +50,7 @@ from onnx2caffe.op.upsample import Upsample
 from onnx2caffe.op.transpose import Permute
 from onnx2caffe.op.batchnorm import BatchNorm
 from onnx2caffe.op.reducemax import ReduceMax
+from onnx2caffe.op.reducesum import ReduceSum
 from onnx2caffe.op.unsqueeze import Unsqueeze
 from onnx2caffe.op.reducemean import ReduceMean
 from onnx2caffe.op.hardsigmoid import HardSigmoid
@@ -110,6 +112,7 @@ OpMap = {
     'Upsample': Upsample,
     'Transpose': Permute,
     'ReduceMax': ReduceMax,
+    'ReduceSum': ReduceSum,
     'Unsqueeze': Unsqueeze,
     'AveragePool': Pooling,
     'ReduceMean': ReduceMean,
@@ -157,7 +160,7 @@ class Model(BaseModel):
             self.tensor_shape[value_info.name] = [int(dim.dim_value) for dim in value_info.type.tensor_type.shape.dim]
 
         for key, value in self.tensor_shape.items():
-            self.tensor_shape[key] = None if 0 in value else self.tensor_shape[key]
+            self.tensor_shape[key] = self.tensor_shape[key] if isShapeFullyDefined(value) else []
 
         # Get Weight & Bias
         for tensor in self.model.graph.initializer:
@@ -195,6 +198,11 @@ class Model(BaseModel):
                 continue
 
             if node.op_type not in OpMap: # Unsupport OP
+                if self.param['log'] == 1:
+                    from onnx2caffe.op.operator import Operator
+                    op = Operator(self, node, index)
+                    op.__parse__()
+                    print(op)
                 self.unsupport.append(node.op_type)
                 continue
 
