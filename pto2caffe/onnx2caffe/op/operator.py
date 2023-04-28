@@ -1,3 +1,5 @@
+import numpy as np
+
 from onnx import numpy_helper
 from base_Operator import BaseOperator
 
@@ -15,7 +17,8 @@ class Operator(BaseOperator):
     def __parseInput__(self):
         for input in self.node.input:
             self.inputs.append(self.model.indentity.get(input, input))
-            self.inputs_buf.append(self.model.constant.get(input, None))
+            input_buf = self.model.constant.get(input, None)
+            self.inputs_buf.append(None if input_buf is None else np.array(input_buf))
             if input in self.model.tensor_shape:
                 self.inputs_shape.append(self.model.tensor_shape[input])
             elif input in self.model.constant:
