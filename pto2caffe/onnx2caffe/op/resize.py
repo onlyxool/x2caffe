@@ -22,7 +22,7 @@ class Resize(Operator):
 
         if hasattr(scale, '__iter__') and len(scale) == len(self.inputs_shape[0]):
             scale_factor = int(scale[2] if scale[2] == scale[3] else 0)
-            if self.outputs_shape[0] is None:
+            if self.outputs_shape[0] is None or self.outputs_shape[0] == []:
                 self.outputs_shape[0] = [int(a * b) for a, b in zip(self.inputs_shape[0], scale)]
         else:
             if not isinstance(self.outputs_shape[0], list):
