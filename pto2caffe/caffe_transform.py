@@ -44,7 +44,7 @@ def assign_proto(proto, name, val):
             try:
                 getattr(proto, name).extend(val)
             except:
-                print('Value Error: Check Attribute data type, name:', name, '   value:', val)
+                print('Value Error: Check Attribute data type, name:', name, ' value:', val)
                 raise ValueError
     elif isinstance(val, dict):
         for key, value in val.items():
