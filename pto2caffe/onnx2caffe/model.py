@@ -130,8 +130,12 @@ class Model(BaseModel):
 
     def __init__(self, onnx_model, param):
         super().__init__(onnx_model, onnx_model.graph, param)
+
         self.model_version = onnx_model.model_version
         self.producer = onnx_model.producer_name +' '+ onnx_model.producer_version
+
+        if onnx_model.producer_name == 'onnx.quantize':
+            sys.exit('Error: Quantize Model dose not support.\n')
 
         self.opset = []
         for i in range(len(onnx_model.opset_import)):
