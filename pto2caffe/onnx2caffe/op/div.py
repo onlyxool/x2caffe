@@ -20,9 +20,19 @@ class Div(Operator):
         elif self.inputs_buf[0] is None and self.inputs_buf[1] is not None:
             self.type = 'Scale'
 
+            WeightShape = self.inputs_shape[1]
+            CompatibleFlag = self.checkShapeCompatible()
+
+            if CompatibleFlag == 'Squeeze':
+                self.type = 'Reshape+Scale'
+                self.inputs_shape[1] = [1] if self.inputs_shape[1] == [] else self.inputs_shape[1]
+            elif not CompatibleFlag:
+                self.unSupported('Inputs incompatible shapes for Caffe. ' + str(self.inputs_shape[0]) + ' / ' + str(WeightShape))
+                return
+
             # Scale Parameter
             self.scale_param = dict()
-            self.scale_param['axis'] = self.inputs_shape[0].index(self.inputs_shape[1][0]) if np.ones(self.inputs_shape[1]).size > 1 else 0
+            self.scale_param['axis'] = self.inputs_shape[0].index(self.inputs_shape[1][0]) if len(self.inputs_shape[1]) > 0 else 0
             self.scale_param['num_axes'] = len(self.inputs_shape[1])
             self.scale_param['bias_term'] = False
 
@@ -48,11 +58,11 @@ class Div(Operator):
                 self.type = 'Power+Reshape+Scale'
                 self.inputs_shape[1] = [1] if self.inputs_shape[1] == [] else self.inputs_shape[1]
             elif not CompatibleFlag:
-                self.unSupported('Inputs incompatible shapes for Caffe. ' + str(self.inputs_shape[0]) + ' x ' + str(WeightShape))
+                self.unSupported('Inputs incompatible shapes for Caffe. ' + str(self.inputs_shape[0]) + ' / ' + str(WeightShape))
                 return
 
             self.scale_param = dict()
-            self.scale_param['axis'] = self.inputs_shape[0].index(self.inputs_shape[1][0]) if np.ones(self.inputs_shape[1]).size > 1 else 0
+            self.scale_param['axis'] = self.inputs_shape[0].index(self.inputs_shape[1][0]) if len(self.inputs_shape[1]) > 0 else 0
             self.scale_param['num_axes'] = len(self.inputs_shape[1]) if np.ones(self.inputs_shape[1]).size > 1 else 0
             self.scale_param['bias_term'] = False
 
