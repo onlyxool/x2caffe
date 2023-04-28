@@ -130,7 +130,10 @@ def handleLegacyPad(padding_mode, input_size, output_size, proto_param:dict, leg
 
 # Caffe Scale Operand Shape Compatible
 def isShapeCompatible(data_shape:list, weight_shape:list) -> bool:
-    if len(weight_shape) == weight_shape.count(1):
+    if len(weight_shape) == weight_shape.count(1) and len(weight_shape) > 0:
+        return False
+
+    if data_shape == weight_shape:
         return True
 
     if len(data_shape) == 5 and len(weight_shape) <= 5:
@@ -164,3 +167,10 @@ def isShapeCompatible(data_shape:list, weight_shape:list) -> bool:
         raise NotImplementedError
 
     return weight_shape in compatible_shape
+
+
+def isShapeFullyDefined(shape:list):
+    if not isinstance(shape, list) or 0 in shape:
+        return False
+    else:
+        return True
