@@ -20,7 +20,7 @@ class Reshape(Operator):
         elif len(self.inputs_buf) >= 2 and self.inputs_buf[1] is not None:
             output_shape = self.inputs_buf[1].tolist()
         else:
-            self.unSupported('Can\'t Get Output Shape in ' + self.node.name)
+            self.unSupported('Can\'t Get Output Shape in Node:' + self.node.name)
             return
 
         if self.inputs_buf[0] is not None:
