@@ -57,7 +57,7 @@ class BaseOperator(Base):
         onames = str([t for t in self.outputs])
         ishape = str(self.inputs_shape)
         oshape = str(self.outputs_shape)
-        inbufs = str([None if t is None else 'np.array' for t in self.inputs_buf])
+        inbufs = str(['np.array' if isinstance(t, np.ndarray) else t for t in self.inputs_buf])
         return '\n%s\n%s    %s -> %s\n    %s -> %s\n    %s\n' % (self.shorty, self.attrs2str, inames, onames, ishape, oshape, inbufs)
 
 
@@ -102,8 +102,8 @@ class BaseOperator(Base):
 
     def saveConstant(self, name, constant):
         self.type = 'Constant'
-        self.model.constant[name] = constant if isinstance(constant, np.ndarray) else np.array(constant)
-        self.model.tensor_shape[name] = list(constant.shape) if isinstance(constant, np.ndarray) else np.array(constant).shape
+        self.model.constant[name] = constant if isinstance(constant, np.ndarray) else constant
+        self.model.tensor_shape[name] = list(constant.shape) if isinstance(constant, np.ndarray) else list(np.array(constant).shape)
 
 
     def byPassOperator(self):
