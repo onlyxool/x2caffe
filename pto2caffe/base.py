@@ -60,6 +60,7 @@ class Base(ABC):
         self.inputs_quantization_parameter = list()
 
         self.outputs = list()
+        self.outputs_buf = list()
         self.outputs_shape = list()
         self.outputs_dtype = list()
         self.outputs_maxval = list()
