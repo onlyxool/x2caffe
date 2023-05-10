@@ -16,7 +16,7 @@ class To(Operator):
         if self.inputs_buf[0] is not None:
             self.saveConstant(self.outputs[0], self.inputs_buf[0])
         else:
-            self.byPassOperator()
+            self.byPassOperator(0)
         
 
     def convert(self):
