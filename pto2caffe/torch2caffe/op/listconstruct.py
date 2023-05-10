@@ -21,7 +21,7 @@ class Listconstruct(Operator):
                 break
 
         if constant:
-            self.saveConstant(self.outputs[0], [int(self.model.constant[input_name]) for input_name in self.inputs])
+            self.saveConstant(self.outputs[0], [self.model.constant[input_name] for input_name in self.inputs])
         else:
             self.byPassOperator()
 
