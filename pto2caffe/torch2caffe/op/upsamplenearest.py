@@ -17,8 +17,8 @@ class UpsampleNearest(Operator):
             self.unSupported('Illegal Input Shape.')
             return
 
-        self.outputs_shape[0] = self.inputs_shape[0][:2]+self.inputs_buf[1] if self.inputs_buf[1] is not None else list(np.array(self.inputs_shape[0]) * np.array([1,1]+self.inputs_buf[2]))
-        self.model.tensor_shape[self.outputs[0]] = self.outputs_shape[0]
+        outputs_shape = self.inputs_shape[0][:2]+self.inputs_buf[1] if self.inputs_buf[1] is not None else list((np.array(self.inputs_shape[0]) * np.array([1,1]+self.inputs_buf[2])).astype(int))
+        self.model.tensor_shape[self.outputs[0]] = self.outputs_shape[0] = outputs_shape
 
 
     def parse(self):
@@ -29,8 +29,8 @@ class UpsampleNearest(Operator):
         output_size = self.inputs_buf[1]
         scale_factors = self.inputs_buf[2]
 
-        scale_factor_h = scale_factors[0] if output_size is None else int(output_size[0] / self.inputs_shape[0][2])
-        scale_factor_w = scale_factors[1] if output_size is None else int(output_size[1] / self.inputs_shape[0][3])
+        scale_factor_h = int(scale_factors[0] if output_size is None else int(output_size[0] / self.inputs_shape[0][2]))
+        scale_factor_w = int(scale_factors[1] if output_size is None else int(output_size[1] / self.inputs_shape[0][3]))
 
         scale_factor = scale_factor_h if scale_factor_h == scale_factor_w else 0
         assert(scale_factor != 0)
