@@ -19,6 +19,7 @@ class Linear(Operator):
 
         self.inner_product_param = dict()
         self.inner_product_param['num_output'] = self.weight.shape[0]
+        self.inner_product_param['axis'] = self.inputs_shape[0].index(self.weight.shape[1])
         self.inner_product_param['transpose'] = False
 
         self.inner_product_param['weight_filler'] = dict()
