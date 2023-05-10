@@ -172,6 +172,7 @@ class InternalTorchIRNode:
         else:
             self.inputs = inputs
             self.outputs = outputs
+            self.outputs_buf = [None]*len(outputs)
             self.kind = kind
             self.blocks = blocks if blocks is not None else []
             self.attr = attr if attr is not None else {"value": None}
