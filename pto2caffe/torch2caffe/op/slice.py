@@ -1,5 +1,3 @@
-from math import ceil
-
 from caffe_transform import caffe_layer
 from torch2caffe.op.operator import Operator
 
@@ -12,17 +10,17 @@ class Slice(Operator):
         self.setInited()
 
 
+    def compute_output_shape(self):
+        if not self.isInputShapeFullyDefined(0):
+            self.unSupported('Illegal Input Shape.')
+            return
+
+        self.model.tensor_shape[self.outputs[0]] = self.outputs_shape[0]
+
+
     def parse(self):
         self.type = 'Slice'
         super().__parse__()
-
-        if len(self.outputs) == 1:
-            self.byPassOperator()
-            return
-
-        # TODO
-        self.slice_param = dict()
-        self.slice_param['axis'] = self.inputs_buf[1]
 
         def chunk_split(length, n):
             chunk_size = length // n
@@ -34,9 +32,35 @@ class Slice(Operator):
 
             return split_points
 
-        self.slice_param['slice_point'] = chunk_split(self.inputs_shape[0][self.attrs['dim']], self.attrs['chunks'])
+
+        if len(self.inputs_buf) == 5:
+            if self.inputs_buf[2] == 0: # Start
+                slice_point = [self.inputs_buf[3]]
+                self.outputs.append('intermediate_' + str(self.index))
+                self.outputs_shape[0][self.inputs_buf[1]] = slice_point[0]
+            elif self.inputs_buf[3] >= self.inputs_shape[0][self.inputs_buf[1]]: # End
+                slice_point = [self.inputs_buf[2]]
+                self.outputs.insert(0, 'intermediate_' + str(self.index))
+                self.outputs_shape[0][self.inputs_buf[1]] = self.outputs_shape[0][self.inputs_buf[1]] - slice_point[0]
+            else:
+                slice_point = [self.inputs_buf[2], self.inputs_buf[3]]
+                self.outputs.insert(0, 'intermediate_' + str(self.index) + '_0')
+                self.outputs.append('intermediate_' + str(self.index) + '_1')
+                self.outputs_shape[0][self.inputs_buf[1]] = slice_point[1] - slice_point[0]
+
+            if self.inputs_buf[4] != 1:
+                self.unSupported('Can\'t Support Step == ' + str(self.inputs_buf[3]))
+                return
+        elif 'dim' in self.attrs and 'chunks' in self.attrs:
+            slice_point = chunk_split(self.inputs_shape[0][self.attrs['dim']], self.attrs['chunks'])
+
+        self.slice_param = dict()
+        self.slice_param['axis'] = self.inputs_buf[1]
+        self.slice_param['slice_point'] = slice_point
 
         self.attrs = self.slice_param
+
+        self.compute_output_shape()
         self.setParsed()
 
 
