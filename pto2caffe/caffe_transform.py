@@ -106,7 +106,7 @@ _param_names = param_name_dict()
 def save_caffe_model(caffe_model_path, layers):
     proto = caffe_pb2.NetParameter()
     proto_layers = []
-    for id, layer in enumerate(layers):
+    for layer in layers:
         proto_layers.append(layer._to_proto())
     proto.layer.extend(proto_layers)
 
@@ -121,7 +121,7 @@ def save_caffe_model(caffe_model_path, layers):
         caffe.set_mode_cpu()
 
     model = caffe.Net(prototxt_save_path, caffe.TEST)
-    for id, layer in enumerate(layers):
+    for layer in layers:
         try:
             if layer.weight is not None:
                 np.copyto(model.params[layer.name][0].data, layer.weight, casting='same_kind')
