@@ -24,23 +24,32 @@ class Stack(Operator):
 
     def parse(self):
         super().__parse__()
-        self.type = ('Reshape+' * (len(self.inputs[:-1]))) + 'Concat'
 
-        axis = self.inputs_buf[-1]
+        for input_buf in self.inputs_buf[:-1]:
+            if input_buf is not None:
+                constant = True
+            else:
+                constant = False
+                break
 
-        self.reshape_param = list()
-        for index, input_name in enumerate(self.inputs[:-1]):
-            inter_shape = deepcopy(self.inputs_shape[index])
-            inter_shape.insert(axis, 1)
-            self.reshape_param.append(dict(shape=dict(dim=inter_shape)))
+        if constant:
+            self.saveConstant(self.outputs[0], np.stack(self.inputs_buf[:-1], axis=self.inputs_buf[-1])) 
+        else:
+            self.type = ('Reshape+' * (len(self.inputs[:-1]))) + 'Concat'
 
-        self.concat_param = dict()
-        self.concat_param['axis'] = axis
+            self.reshape_param = list()
+            for index, input_name in enumerate(self.inputs[:-1]):
+                inter_shape = deepcopy(self.inputs_shape[index])
+                inter_shape.insert(axis, 1)
+                self.reshape_param.append(dict(shape=dict(dim=inter_shape)))
 
-        self.attrs = self.concat_param
-        self.compute_output_shape()
+            self.concat_param = dict()
+            self.concat_param['axis'] = self.inputs_buf[-1]
 
-        self.setParsed()
+            self.attrs = self.concat_param
+            self.compute_output_shape()
+
+            self.setParsed()
 
 
     def convert(self):
