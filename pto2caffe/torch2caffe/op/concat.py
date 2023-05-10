@@ -22,16 +22,26 @@ class Concat(Operator):
 
 
     def parse(self):
-        self.type = 'Concat'
         super().__parse__()
 
-        self.concat_param = dict()
-        self.concat_param['axis'] = self.inputs_buf[-1]
+        for input_buf in self.inputs_buf[:-1]:
+            if input_buf is not None:
+                constant = True
+            else:
+                constant = False
+                break
 
-        self.attrs = self.concat_param
-        self.compute_output_shape()
+        if constant:
+            self.saveConstant(self.outputs[0], np.concatenate(self.inputs_buf[0], axis=self.inputs_buf[-1]))
+        else:
+            self.type = 'Concat'
+            self.concat_param = dict()
+            self.concat_param['axis'] = self.inputs_buf[-1]
 
-        self.setParsed()
+            self.attrs = self.concat_param
+            self.compute_output_shape()
+
+            self.setParsed()
 
 
     def convert(self):
