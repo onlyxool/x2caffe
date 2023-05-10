@@ -13,7 +13,7 @@ class Permute(Operator):
 
 
     def compute_output_shape(self):
-        if not self.isInputShapeFullyDefined(0) or len(self.inputs_shape[0]) != len(self.inputs_buf[1]):
+        if not self.isInputShapeFullyDefined(0):
             self.unSupported('Illegal Input Shape.')
             return
 
