@@ -10,6 +10,16 @@ class AdaptiveAvgPooling(Operator):
         self.setInited()
 
 
+    def compute_output_shape(self):
+        if not self.isInputShapeFullyDefined(0):
+            self.unSupported('Illegal Input Shape.')
+            return
+
+        self.outputs_shape[0][-1] = 1
+        self.outputs_shape[0][-2] = 1
+        self.model.tensor_shape[self.outputs[0]] = self.outputs_shape[0]
+
+
     def parse(self):
         self.type = 'Pooling'
         super().__parse__()
@@ -31,6 +41,7 @@ class AdaptiveAvgPooling(Operator):
 
         self.attrs = self.pooling_param
 
+        self.compute_output_shape()
         self.setParsed()
 
 
