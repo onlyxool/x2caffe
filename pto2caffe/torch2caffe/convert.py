@@ -11,16 +11,8 @@ def convert(pytorch_file, caffe_model_path, param=None):
     except:
         sys.exit('Error: Model file is not Torchscript.\n')
 
-    if not isinstance(torchscript, torch.jit.ScriptModule):
-        sys.exit('Error: Model file is not Torchscript.\n')
-
     if hasattr(torchscript, 'training') and torchscript.training:
-        print("Model is not in eval mode. "
-                         "Consider calling '.eval()' on your model prior to conversion")
-
-    if type(torchscript) == torch.jit._script.RecursiveScriptModule:
-        print("Support for converting Torch Script Models is experimental. "
-                         "If possible you should use a traced model for conversion.")
+        torchscript.eval()
 
     if not isinstance(param['input_shape'], list):
         sys.exit('\nError: Dynamic Model input detected, Please Use -input_shape to overwrite input shape.\n')
@@ -29,7 +21,6 @@ def convert(pytorch_file, caffe_model_path, param=None):
     model.parse()
     model.convert()
     caffe_net = model.save(caffe_model_path)
-
 
     inputs_tensor = list()
     for index, input_name in enumerate(model.inputs):
