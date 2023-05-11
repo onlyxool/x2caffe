@@ -40,7 +40,7 @@ class Stack(Operator):
             self.reshape_param = list()
             for index, input_name in enumerate(self.inputs[:-1]):
                 inter_shape = deepcopy(self.inputs_shape[index])
-                inter_shape.insert(axis, 1)
+                inter_shape.insert(self.inputs_buf[-1], 1)
                 self.reshape_param.append(dict(shape=dict(dim=inter_shape)))
 
             self.concat_param = dict()
@@ -55,7 +55,7 @@ class Stack(Operator):
     def convert(self):
         layers = list()
         for i, reshap_param in enumerate(self.reshape_param):
-            layers.append(self.layer_type[i], self.name[i], self.inputs, self.inputs_buf, self.interblob[i], reshape_param=self.reshape_param[i])
+            layers.append(caffe_layer(self.layer_type[i], self.name[i], [self.inputs[i]], self.inputs_buf, [self.interblob[i]], reshape_param=self.reshape_param[i]))
             index = i + 1
 
         layers.append(caffe_layer(self.layer_type[index], self.name[index], self.interblob, self.inputs_buf, self.outputs, concat_param=self.concat_param))
