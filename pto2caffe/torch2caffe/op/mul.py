@@ -34,11 +34,13 @@ class Mul(Operator):
                 self.inputs_shape.reverse()
                 self.inputs_buf.reverse()
                 self.outputs_shape[0] = self.inputs_shape[0]
+                self.model.tensor_shape[self.outputs[0]] = self.outputs_shape[0]
             elif self.inputs_buf[0] is None and self.inputs_buf[1] is None and inputs_size0 < inputs_size1:
                 self.inputs.reverse()
                 self.inputs_shape.reverse()
                 self.inputs_buf.reverse()
                 self.outputs_shape[0] = self.inputs_shape[0]
+                self.model.tensor_shape[self.outputs[0]] = self.outputs_shape[0]
 
             if self.inputs_buf[1] is not None and np.all(self.inputs_buf[1] == 1): 
                 self.byPassOperator()
