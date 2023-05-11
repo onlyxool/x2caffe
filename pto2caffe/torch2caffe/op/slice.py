@@ -32,6 +32,12 @@ class Slice(Operator):
 
             return split_points
 
+        if self.inputs_buf[2] == 0 and self.inputs_buf[3] == 9223372036854775807:
+            self.byPassOperator()
+            return
+
+        if self.inputs_buf[3] == 9223372036854775807:
+            self.inputs_buf[3] = self.inputs_shape[0][self.inputs_buf[1]]
 
         if len(self.inputs_buf) == 5:
             if self.inputs_buf[2] == 0: # Start
