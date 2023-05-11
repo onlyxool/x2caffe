@@ -16,7 +16,7 @@ class Flatten(Operator):
             self.unSupported('Illegal Input Shape.' + str(self.inputs_shape))
             return
 
-        self.outputs_shape[0] = list(torch.flatten(torch.rand(self.outputs_shape[0]), self.inputs_buf[1], self.inputs_buf[2]).shape)
+        self.outputs_shape[0] = list(torch.flatten(torch.rand(self.inputs_shape[0]), start_dim=self.inputs_buf[1], end_dim=self.inputs_buf[2]).shape)
         self.model.tensor_shape[self.outputs[0]] = self.outputs_shape[0]
 
 
