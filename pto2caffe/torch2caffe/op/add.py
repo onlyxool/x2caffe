@@ -1,3 +1,4 @@
+import torch
 import numpy as np
 
 from caffe_transform import caffe_layer
@@ -44,3 +45,11 @@ class Add(Operator):
         self.setConverted()
 
         return [layer]
+
+
+    def forward(self):
+        output = torch.add(self.model.variable[self.inputs[0]], self.model.variable[self.inputs[1]], alpha=self.inputs_buf[2])
+
+        self.model.variable[self.outputs[0]] = output
+        self.model.tensor_shape[self.outputs[0]] = list(output.shape)
+
