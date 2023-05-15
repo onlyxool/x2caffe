@@ -1,3 +1,5 @@
+from torch.nn.functional import relu
+
 from caffe_transform import caffe_layer
 from torch2caffe.op.operator import Operator
 
@@ -28,3 +30,10 @@ class ReLU(Operator):
         self.setConverted()
 
         return [layer]
+
+
+    def forward(self):
+        output = relu(self.model.variable[self.inputs[0]])
+
+        self.model.variable[self.outputs[0]] = output
+        self.model.tensor_shape[self.outputs[0]] = list(output.shape)
