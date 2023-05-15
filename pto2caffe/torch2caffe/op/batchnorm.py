@@ -1,3 +1,6 @@
+import torch
+from torch.nn.functional import batch_norm
+
 from caffe_transform import caffe_layer
 from torch2caffe.op.operator import Operator
 
@@ -29,7 +32,7 @@ class BatchNorm(Operator):
         # Attributes
         self.batch_norm_param = dict()
         self.batch_norm_param['eps'] = self.inputs_buf[7]
-        self.batch_norm_param['use_global_stats'] = self.inputs_buf[5]
+        self.batch_norm_param['use_global_stats'] = True
 
         self.scale_param = dict()
         self.scale_param['bias_term'] = self.inputs_buf[8]
@@ -47,3 +50,11 @@ class BatchNorm(Operator):
         self.setConverted()
 
         return [layer0, layer1]
+
+
+    def forward(self):
+        output = batch_norm(self.model.variable[self.inputs[0]], running_mean=torch.Tensor(self.mean), running_var=torch.Tensor(self.var),
+                weight=torch.Tensor(self.weight), bias=torch.Tensor(self.bias), training=self.inputs_buf[5], momentum=self.inputs_buf[6], eps=self.inputs_buf[7])
+
+        self.model.variable[self.outputs[0]] = output
+        self.model.tensor_shape[self.outputs[0]] = list(output.shape)
