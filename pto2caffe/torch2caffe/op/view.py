@@ -1,5 +1,3 @@
-import numpy as np
-
 from caffe_transform import caffe_layer
 from torch2caffe.op.operator import Operator
 
@@ -10,15 +8,6 @@ class View(Operator):
         super().__init__(model, model.graph, node, index)
         assert(self.operator_code == 'view')
         self.setInited()
-
-
-    def compute_output_shape(self):
-        if not self.isInputShapeFullyDefined(0):
-            self.unSupported('Illegal Input Shape.')
-            return
-
-        self.outputs_shape[0] = list(np.zeros(self.inputs_shape[0]).reshape(self.inputs_buf[1]).shape)
-        self.model.tensor_shape[self.outputs[0]] = self.outputs_shape[0]
 
 
     def parse(self):
@@ -32,7 +21,6 @@ class View(Operator):
             self.reshape_param = dict(shape=dict(dim=self.inputs_buf[1]))
             self.attrs = self.reshape_param
     
-            self.compute_output_shape()
             self.setParsed()
 
 
@@ -42,3 +30,10 @@ class View(Operator):
         self.setConverted()
 
         return [layer]
+
+
+    def forward(self):
+        output = self.model.variable[self.inputs[0]].reshape(self.inputs_buf[1])
+
+        self.model.variable[self.outputs[0]] = output
+        self.model.tensor_shape[self.outputs[0]] = list(output.shape)
