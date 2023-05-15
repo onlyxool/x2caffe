@@ -1,3 +1,4 @@
+import torch
 import numpy as np
 
 from caffe_transform import caffe_layer
@@ -10,15 +11,6 @@ class Concat(Operator):
         super().__init__(model, model.graph, node, index)
         assert(self.operator_code == 'cat')
         self.setInited()
-
-
-    def compute_output_shape(self):
-        if not self.isInputShapeFullyDefined(-1):
-            self.unSupported('Illegal Input Shape.' + str(self.inputs_shape))
-            return
-
-        self.outputs_shape[0][self.concat_param['axis']] = np.sum([shape[self.concat_param['axis']] for shape in self.inputs_shape[:-1]])
-        self.model.tensor_shape[self.outputs[0]] = self.outputs_shape[0]
 
 
     def parse(self):
@@ -39,7 +31,6 @@ class Concat(Operator):
             self.concat_param['axis'] = self.inputs_buf[-1]
 
             self.attrs = self.concat_param
-            self.compute_output_shape()
 
             self.setParsed()
 
@@ -50,3 +41,13 @@ class Concat(Operator):
         self.setConverted()
 
         return [layer]
+
+
+    def forward(self):
+        inputs = list()
+        for input_name in self.inputs[:-1]:
+            inputs.append(self.model.variable[input_name])
+        output = torch.cat(inputs, dim=self.inputs_buf[-1], out=None)
+
+        self.model.variable[self.outputs[0]] = output
+        self.model.tensor_shape[self.outputs[0]] = list(output.shape)
