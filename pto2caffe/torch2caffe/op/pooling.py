@@ -1,3 +1,6 @@
+import torch
+from torch.nn.functional import max_pool2d, avg_pool2d
+
 from math import ceil
 
 from caffe_transform import caffe_layer
@@ -10,24 +13,6 @@ class Pooling(Operator):
         super().__init__(model, model.graph, node, index)
         assert(self.operator_code in ('max_pool2d', 'avg_pool2d'))
         self.setInited()
-
-
-    def compute_output_shape(self):
-        if not self.isInputShapeFullyDefined(0):
-            self.unSupported('Illegal Input Shape.')
-            return
-
-        n = self.inputs_shape[0][0]
-        c = self.inputs_shape[0][1]
-        if self.pooling_param['ceil_mode']:
-            h = ceil((self.inputs_shape[0][2] + self.attrs['pad_h'] * 2 - self.attrs['kernel_h']) / self.attrs['stride_h']) + 1
-            w = ceil((self.inputs_shape[0][3] + self.attrs['pad_w'] * 2 - self.attrs['kernel_w']) / self.attrs['stride_w']) + 1
-        else:
-            h = int((self.inputs_shape[0][2] + self.attrs['pad_h'] * 2 - self.attrs['kernel_h']) / self.attrs['stride_h']) + 1
-            w = int((self.inputs_shape[0][3] + self.attrs['pad_w'] * 2 - self.attrs['kernel_w']) / self.attrs['stride_w']) + 1
- 
-        self.outputs_shape[0] = [n,c,h,w]
-        self.model.tensor_shape[self.outputs[0]] = self.outputs_shape[0]
 
 
     def parse(self):
@@ -48,8 +33,6 @@ class Pooling(Operator):
 
         self.attrs = self.pooling_param
 
-        self.compute_output_shape()
-
         self.setParsed()
 
 
@@ -59,3 +42,15 @@ class Pooling(Operator):
         self.setConverted()
 
         return [layer]
+
+
+    def forward(self):
+        if self.operator_code == 'max_pool2d':
+            output = max_pool2d(self.model.variable[self.inputs[0]], kernel_size=self.inputs_buf[1], stride=self.inputs_buf[2],
+                    padding=self.inputs_buf[3], dilation=self.inputs_buf[4], ceil_mode=self.inputs_buf[5], return_indices=False)
+        elif self.operator_code == 'avg_pool2d':
+            output = avg_pool2d(self.model.variable[self.inputs[0]], kernel_size=self.inputs_buf[1], stride=self.inputs_buf[2],
+                    padding=self.inputs_buf[3], dilation=self.inputs_buf[4], ceil_mode=self.inputs_buf[5], return_indices=False)
+
+        self.model.variable[self.outputs[0]] = output
+        self.model.tensor_shape[self.outputs[0]] = list(output.shape)
