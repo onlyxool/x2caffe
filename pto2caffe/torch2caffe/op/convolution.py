@@ -1,4 +1,6 @@
+import torch
 import numpy as np
+from torch.nn.functional import conv2d
 
 from caffe_transform import caffe_layer
 from torch2caffe.op.operator import Operator
@@ -10,26 +12,6 @@ class Convolution(Operator):
         super().__init__(model, model.graph, node, index)
         assert(self.operator_code == 'convolution')
         self.setInited()
-
-
-    def compute_output_shape(self):
-        if not self.isInputShapeFullyDefined(0):
-            self.unSupported('Illegal Input Shape.')
-            return
-
-        kernel_extent_h = self.attrs['dilation'][0] * (self.attrs['kernel_h'] - 1) + 1;
-        kernel_extent_w = self.attrs['dilation'][1] * (self.attrs['kernel_w'] - 1) + 1;
-
-        pad_ext_h = self.attrs['pad_t'] + self.attrs['pad_t'] if 'pad_t' in self.attrs and 'pad_b' in self.attrs else self.attrs['pad_h'] * 2
-        pad_ext_w = self.attrs['pad_l'] + self.attrs['pad_r'] if 'pad_l' in self.attrs and 'pad_r' in self.attrs else self.attrs['pad_w'] * 2
-
-        n = self.inputs_shape[0][0]
-        c = self.attrs['num_output']
-        h = int((self.inputs_shape[0][2] + pad_ext_h - kernel_extent_h) / self.attrs['stride_h'] + 1)
-        w = int((self.inputs_shape[0][3] + pad_ext_w - kernel_extent_w) / self.attrs['stride_w'] + 1)
-
-        self.outputs_shape[0] = [n,c,h,w]
-        self.model.tensor_shape[self.outputs[0]] = self.outputs_shape[0]
 
 
     def parse(self):
@@ -67,7 +49,6 @@ class Convolution(Operator):
             self.convolution_param['pad_r'] = padding[1] - output_padding[1]
 
         self.attrs = self.convolution_param
-        self.compute_output_shape()
 
         self.setParsed()
 
@@ -78,3 +59,11 @@ class Convolution(Operator):
         self.setConverted()
 
         return [layer]
+
+
+    def forward(self):
+        output = conv2d(input=self.model.variable[self.inputs[0]], weight=torch.Tensor(self.weight), bias=torch.Tensor(self.bias),
+                stride=self.inputs_buf[3], padding=self.inputs_buf[4], dilation=self.inputs_buf[5], groups=self.inputs_buf[8])
+
+        self.model.variable[self.outputs[0]] = output
+        self.model.tensor_shape[self.outputs[0]] = list(output.shape)
