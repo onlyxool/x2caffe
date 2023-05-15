@@ -1,3 +1,6 @@
+import torch
+from torch.nn.functional import adaptive_avg_pool2d
+
 from caffe_transform import caffe_layer
 from torch2caffe.op.operator import Operator
 
@@ -8,16 +11,6 @@ class AdaptiveAvgPooling(Operator):
         super().__init__(model, model.graph, node, index)
         assert(self.operator_code == 'adaptive_avg_pool2d')
         self.setInited()
-
-
-    def compute_output_shape(self):
-        if not self.isInputShapeFullyDefined(0):
-            self.unSupported('Illegal Input Shape.')
-            return
-
-        self.outputs_shape[0][-1] = 1
-        self.outputs_shape[0][-2] = 1
-        self.model.tensor_shape[self.outputs[0]] = self.outputs_shape[0]
 
 
     def parse(self):
@@ -41,7 +34,6 @@ class AdaptiveAvgPooling(Operator):
 
         self.attrs = self.pooling_param
 
-        self.compute_output_shape()
         self.setParsed()
 
 
@@ -51,3 +43,10 @@ class AdaptiveAvgPooling(Operator):
         self.setConverted()
 
         return [layer]
+
+
+    def forward(self):
+        output = adaptive_avg_pool2d(self.model.variable[self.inputs[0]], self.inputs_buf[1])
+
+        self.model.variable[self.outputs[0]] = output
+        self.model.tensor_shape[self.outputs[0]] = list(output.shape)
