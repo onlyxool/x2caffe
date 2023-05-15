@@ -1,4 +1,4 @@
-import numpy as np
+import torch
 
 from caffe_transform import caffe_layer
 from torch2caffe.op.operator import Operator
@@ -12,15 +12,6 @@ class Permute(Operator):
         self.setInited()
 
 
-    def compute_output_shape(self):
-        if not self.isInputShapeFullyDefined(0):
-            self.unSupported('Illegal Input Shape.')
-            return
-
-        self.outputs_shape[0] = list(np.zeros(self.inputs_shape[0]).transpose(self.inputs_buf[1]).shape)
-        self.model.tensor_shape[self.outputs[0]] = self.outputs_shape[0]
-
-
     def parse(self):
         super().__parse__()
 
@@ -30,7 +21,6 @@ class Permute(Operator):
 
         self.attrs = self.permute_param
 
-        self.compute_output_shape()
         self.setParsed()
 
 
@@ -40,3 +30,11 @@ class Permute(Operator):
         self.setConverted()
 
         return [layer]
+
+
+    def forward(self):
+        output = torch.permute(self.model.variable[self.inputs[0]], dims=self.inputs_buf[1])
+
+        self.model.variable[self.outputs[0]] = output
+        self.model.tensor_shape[self.outputs[0]] = list(output.shape)
+
