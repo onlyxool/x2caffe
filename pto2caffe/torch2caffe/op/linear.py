@@ -1,3 +1,6 @@
+import torch
+from torch.nn.functional import linear
+
 from caffe_transform import caffe_layer
 from torch2caffe.op.operator import Operator
 
@@ -42,3 +45,10 @@ class Linear(Operator):
         self.setConverted()
 
         return [layer]
+
+
+    def forward(self):
+        output = linear(self.model.variable[self.inputs[0]], weight=torch.Tensor(self.weight), bias=torch.Tensor(self.bias))
+
+        self.model.variable[self.outputs[0]] = output
+        self.model.tensor_shape[self.outputs[0]] = list(output.shape)
