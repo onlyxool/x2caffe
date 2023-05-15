@@ -18,12 +18,14 @@ def convert(pytorch_file, caffe_model_path, param=None):
         sys.exit('\nError: Dynamic Model input detected, Please Use -input_shape to overwrite input shape.\n')
 
     model = Model(torchscript, param)
-    model.parse()
-    model.convert()
-    caffe_net = model.save(caffe_model_path)
 
     inputs_tensor = list()
     for index, input_name in enumerate(model.inputs):
         inputs_tensor.append(gen_input_tensor(param, model.inputs_shape[index], model.inputs_dtype[index], None))
+        model.variable[input_name] = torch.Tensor(inputs_tensor[index])
+
+    model.parse()
+    model.convert()
+    caffe_net = model.save(caffe_model_path)
 
     compare(model, caffe_net, inputs_tensor, param.get('compare', -1))
