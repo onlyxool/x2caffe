@@ -42,6 +42,10 @@ class Operator(BaseOperator):
         self.__parseAttributes__()
 
 
+    def forward(self):
+        pass
+
+
     def isInputShapeFullyDefined(self, index):
         if index > 0:
             return isShapeFullyDefined(self.inputs_shape[index])
