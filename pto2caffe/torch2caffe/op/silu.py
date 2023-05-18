@@ -1,3 +1,5 @@
+from torch.nn.functional import silu
+
 from caffe_transform import caffe_layer
 from torch2caffe.op.operator import Operator
 
@@ -28,3 +30,7 @@ class Silu(Operator):
         self.setConverted()
 
         return [layer]
+
+
+    def forward(self):
+        return silu(self.model.variable[self.inputs[0]], inplace=False)
