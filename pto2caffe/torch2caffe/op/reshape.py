@@ -12,23 +12,12 @@ class Reshape(Operator):
         self.setInited()
 
 
-    def compute_output_shape(self):
-        if not self.isInputShapeFullyDefined(0):
-            self.unSupported('Illegal Input Shape.')
-            return
-
-        self.outputs_shape[0] = list(np.zeros(self.inputs_shape[0]).reshape(self.inputs_buf[1]).shape)
-        self.model.tensor_shape[self.outputs[0]] = self.outputs_shape[0]
-
-
     def parse(self):
         super().__parse__()
 
         self.type = 'Reshape'
 
-        self.compute_output_shape()
-
-        self.reshape_param = dict(shape=dict(dim=self.outputs_shape[0]))
+        self.reshape_param = dict(shape=dict(dim=self.inputs_buf[1]))
 
         self.attrs = self.reshape_param
 
@@ -41,3 +30,7 @@ class Reshape(Operator):
         self.setConverted()
 
         return [layer]
+
+
+    def forward(self):
+        return self.model.variable[self.inputs[0]].reshape(self.inputs_buf[1])
