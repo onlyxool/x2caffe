@@ -1,3 +1,5 @@
+import torch
+
 from caffe_transform import caffe_layer
 from torch2caffe.op.operator import Operator
 
@@ -27,3 +29,7 @@ class Sigmoid(Operator):
         self.setConverted()
 
         return [layer]
+
+
+    def forward(self):
+        return torch.sigmoid(self.model.variable[self.inputs[0]])
