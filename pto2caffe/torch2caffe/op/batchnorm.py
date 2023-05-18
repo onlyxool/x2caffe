@@ -53,8 +53,5 @@ class BatchNorm(Operator):
 
 
     def forward(self):
-        output = batch_norm(self.model.variable[self.inputs[0]], running_mean=torch.Tensor(self.mean), running_var=torch.Tensor(self.var),
+        return batch_norm(self.model.variable[self.inputs[0]], running_mean=torch.Tensor(self.mean), running_var=torch.Tensor(self.var),
                 weight=torch.Tensor(self.weight), bias=torch.Tensor(self.bias), training=self.inputs_buf[5], momentum=self.inputs_buf[6], eps=self.inputs_buf[7])
-
-        self.model.variable[self.outputs[0]] = output
-        self.model.tensor_shape[self.outputs[0]] = list(output.shape)
