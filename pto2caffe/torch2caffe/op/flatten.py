@@ -33,7 +33,4 @@ class Flatten(Operator):
 
 
     def forward(self):
-        output = torch.flatten(self.model.variable[self.inputs[0]], start_dim=self.inputs_buf[1], end_dim=self.inputs_buf[2]) 
-
-        self.model.variable[self.outputs[0]] = output
-        self.model.tensor_shape[self.outputs[0]] = list(output.shape)
+        return torch.flatten(self.model.variable[self.inputs[0]], start_dim=self.inputs_buf[1], end_dim=self.inputs_buf[2])
