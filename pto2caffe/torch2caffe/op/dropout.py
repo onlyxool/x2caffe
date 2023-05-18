@@ -33,7 +33,4 @@ class Dropout(Operator):
 
 
     def forward(self):
-        output = dropout(self.model.variable[self.inputs[0]], p=self.inputs_buf[1], training=False, inplace=self.inputs_buf[2])
-
-        self.model.variable[self.outputs[0]] = output
-        self.model.tensor_shape[self.outputs[0]] = list(output.shape)
+        return dropout(self.model.variable[self.inputs[0]], p=self.inputs_buf[1], training=False, inplace=self.inputs_buf[2])
