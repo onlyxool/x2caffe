@@ -1,4 +1,4 @@
-import numpy as np
+import torch
 
 from caffe_transform import caffe_layer
 from torch2caffe.op.operator import Operator
@@ -10,17 +10,6 @@ class Mean(Operator):
         super().__init__(model, model.graph, node, index)
         assert(self.operator_code == 'mean')
         self.setInited()
-
-
-    def compute_output_shape(self):
-        if not self.isInputShapeFullyDefined(0):
-            self.unSupported('Illegal Input Shape.')
-            return
-
-        output_shape = list(np.random.random(self.inputs_shape[0]).mean(axis=tuple(self.inputs_buf[1]), keepdims=self.inputs_buf[2]).shape)
-
-        self.outputs_shape[0] = output_shape
-        self.model.tensor_shape[self.outputs[0]] = self.outputs_shape[0]
 
 
     def parse(self):
@@ -41,7 +30,7 @@ class Mean(Operator):
             self.pooling_param['ceil_mode'] = False
 
             self.attrs = self.pooling_param
-            self.compute_output_shape()
+
             self.setParsed()
         else:
             self.unSupported('axes:' + str(axes) + ' input_shape:' + str(self.inputs_shape[0]))
@@ -59,3 +48,7 @@ class Mean(Operator):
         self.setConverted()
 
         return layers
+
+
+    def forward(self):
+        return torch.mean(input=self.model.variable[self.inputs[0]], dim=self.inputs_buf[1], keepdim=self.inputs_buf[2], dtype=None)
