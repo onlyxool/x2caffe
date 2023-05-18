@@ -46,7 +46,4 @@ class AdaptiveAvgPooling(Operator):
 
 
     def forward(self):
-        output = adaptive_avg_pool2d(self.model.variable[self.inputs[0]], self.inputs_buf[1])
-
-        self.model.variable[self.outputs[0]] = output
-        self.model.tensor_shape[self.outputs[0]] = list(output.shape)
+        return adaptive_avg_pool2d(self.model.variable[self.inputs[0]], self.inputs_buf[1])
