@@ -47,7 +47,5 @@ class Concat(Operator):
         inputs = list()
         for input_name in self.inputs[:-1]:
             inputs.append(self.model.variable[input_name])
-        output = torch.cat(inputs, dim=self.inputs_buf[-1], out=None)
 
-        self.model.variable[self.outputs[0]] = output
-        self.model.tensor_shape[self.outputs[0]] = list(output.shape)
+        return torch.cat(inputs, dim=self.inputs_buf[-1])
