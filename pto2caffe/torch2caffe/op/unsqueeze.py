@@ -1,3 +1,5 @@
+import torch
+
 from caffe_transform import caffe_layer
 from torch2caffe.op.operator import Operator
 
@@ -39,3 +41,7 @@ class Unsqueeze(Operator):
         self.setConverted()
 
         return [layer]
+
+
+    def forward(self):
+        return torch.unsqueeze(self.model.variable[self.inputs[0]], dim=self.inputs_buf[1])
