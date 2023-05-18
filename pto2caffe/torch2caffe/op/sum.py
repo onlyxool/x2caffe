@@ -1,3 +1,4 @@
+import torch
 import numpy as np
 
 from caffe_transform import caffe_layer
@@ -81,3 +82,7 @@ class Sum(Operator):
         self.setConverted()
 
         return layers
+
+
+    def forward(self):
+        return torch.sum(self.model.variable[self.inputs[0]], dim=self.inputs_buf[1], keepdim=self.inputs_buf[2])
