@@ -1,4 +1,4 @@
-import numpy as np
+from torch.nn.functional import interpolate
 
 from caffe_transform import caffe_layer
 from torch2caffe.op.operator import Operator
@@ -12,25 +12,14 @@ class UpsampleBilinear(Operator):
         self.setInited()
 
 
-    def compute_output_shape(self):
-        if not self.isInputShapeFullyDefined(0):
-            self.unSupported('Illegal Input Shape.')
-            return
-
-        self.outputs_shape[0] = self.inputs_shape[0][:2]+self.inputs_buf[1] if self.inputs_buf[1] is not None else list(np.array(self.inputs_shape[0]) * np.array([1,1]+self.inputs_buf[2]))
-        self.model.tensor_shape[self.outputs[0]] = self.outputs_shape[0]
-
-
     def parse(self):
         self.type = 'Interp'
         super().__parse__()
 
-        self.compute_output_shape()
-
         self.interp_param = dict()
         self.interp_param['align_corners'] = self.inputs_buf[2]
-        self.interp_param['height'] = self.outputs_shape[0][2]
-        self.interp_param['width'] = self.outputs_shape[0][3]
+        self.interp_param['height'] = self.inputs_buf[1][0]
+        self.interp_param['width'] = self.inputs_buf[1][1]
         self.attrs = self.interp_param
 
         self.setParsed()
@@ -42,3 +31,8 @@ class UpsampleBilinear(Operator):
         self.setConverted()
 
         return [layer]
+
+
+    def forward(self):
+        return interpolate(self.model.variable[self.inputs[0]], size=self.inputs_buf[1],
+                scale_factor=None, mode='bilinear', align_corners=self.inputs_buf[2], recompute_scale_factor=None)
