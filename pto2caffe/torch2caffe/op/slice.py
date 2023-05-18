@@ -22,6 +22,11 @@ class Slice(Operator):
         self.type = 'Slice'
         super().__parse__()
 
+        dim = self.inputs_buf[1]
+        start = self.inputs_buf[2]
+        end = self.inputs_buf[3]
+        step = self.inputs_buf[4]
+
         def chunk_split(length, n):
             chunk_size = length // n
             remainder = length % n
@@ -76,3 +81,7 @@ class Slice(Operator):
         self.setConverted()
 
         return [layer]
+
+
+    def forward(self):
+        return self.model.variable[self.inputs[0]].narrow(self.inputs_buf[1], self.inputs_buf[2], self.inputs_buf[3]-self.inputs_buf[2])
