@@ -1,4 +1,4 @@
-import numpy as np
+import torch
 
 from caffe_transform import caffe_layer
 from torch2caffe.op.operator import Operator
@@ -10,15 +10,6 @@ class Transpose(Operator):
         super().__init__(model, model.graph, node, index)
         assert(self.operator_code == 'transpose')
         self.setInited()
-
-
-    def compute_output_shape(self):
-        if not self.isInputShapeFullyDefined(0):
-            self.unSupported('Illegal Input Shape.')
-            return
-
-        self.outputs_shape[0] = list(np.zeros(self.inputs_shape[0]).transpose(self.permute_param['order']).shape)
-        self.model.tensor_shape[self.outputs[0]] = self.outputs_shape[0]
 
 
     def parse(self):
@@ -34,7 +25,6 @@ class Transpose(Operator):
 
         self.attrs = self.permute_param
 
-        self.compute_output_shape()
         self.setParsed()
 
 
@@ -44,3 +34,7 @@ class Transpose(Operator):
         self.setConverted()
 
         return [layer]
+
+
+    def forward(self):
+        return torch.transpose(self.model.variable[self.inputs[0]], dim0=self.inputs_buf[1], dim1=self.inputs_buf[2])
