@@ -46,11 +46,8 @@ class Pooling(Operator):
 
     def forward(self):
         if self.operator_code == 'max_pool2d':
-            output = max_pool2d(self.model.variable[self.inputs[0]], kernel_size=self.inputs_buf[1], stride=self.inputs_buf[2],
+            return max_pool2d(self.model.variable[self.inputs[0]], kernel_size=self.inputs_buf[1], stride=self.inputs_buf[2],
                     padding=self.inputs_buf[3], dilation=self.inputs_buf[4], ceil_mode=self.inputs_buf[5], return_indices=False)
         elif self.operator_code == 'avg_pool2d':
-            output = avg_pool2d(self.model.variable[self.inputs[0]], kernel_size=self.inputs_buf[1], stride=self.inputs_buf[2],
-                    padding=self.inputs_buf[3], dilation=self.inputs_buf[4], ceil_mode=self.inputs_buf[5], return_indices=False)
-
-        self.model.variable[self.outputs[0]] = output
-        self.model.tensor_shape[self.outputs[0]] = list(output.shape)
+            return avg_pool2d(self.model.variable[self.inputs[0]], kernel_size=self.inputs_buf[1], stride=self.inputs_buf[2],
+                    padding=self.inputs_buf[3], ceil_mode=self.inputs_buf[5], count_include_pad=True, divisor_override=None)
