@@ -48,7 +48,4 @@ class Linear(Operator):
 
 
     def forward(self):
-        output = linear(self.model.variable[self.inputs[0]], weight=torch.Tensor(self.weight), bias=torch.Tensor(self.bias))
-
-        self.model.variable[self.outputs[0]] = output
-        self.model.tensor_shape[self.outputs[0]] = list(output.shape)
+        return linear(self.model.variable[self.inputs[0]].to(torch.float), weight=torch.Tensor(self.weight), bias=torch.Tensor(self.bias))
