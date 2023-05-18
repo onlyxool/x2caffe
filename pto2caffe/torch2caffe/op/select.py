@@ -1,3 +1,5 @@
+import torch
+
 from caffe_transform import caffe_layer
 from torch2caffe.op.operator import Operator
 
@@ -24,7 +26,6 @@ class Select(Operator):
         super().__parse__()
 
         if self.inputs_buf[0] is not None:
-            import torch
             self.saveConstant(self.outputs[0], torch.select(torch.Tensor(self.inputs_buf[0]), self.inputs_buf[1], self.inputs_buf[2]).detach().numpy())
         else:
             self.slice_param = dict()
@@ -57,3 +58,7 @@ class Select(Operator):
         self.setConverted()
 
         return layers
+
+
+    def forward(self):
+        return torch.select(self.model.variable[self.inputs[0]], dim=self.inputs_buf[1], index=self.inputs_buf[2])
