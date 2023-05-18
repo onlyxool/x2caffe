@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-from torch.nn.functional import conv2d
+from torch.nn.functional import conv2d, conv_transpose2d
 
 from caffe_transform import caffe_layer
 from torch2caffe.op.operator import Operator
@@ -62,8 +62,9 @@ class Convolution(Operator):
 
 
     def forward(self):
-        output = conv2d(input=self.model.variable[self.inputs[0]], weight=torch.Tensor(self.weight), bias=torch.Tensor(self.bias),
-                stride=self.inputs_buf[3], padding=self.inputs_buf[4], dilation=self.inputs_buf[5], groups=self.inputs_buf[8])
-
-        self.model.variable[self.outputs[0]] = output
-        self.model.tensor_shape[self.outputs[0]] = list(output.shape)
+        if self.inputs_buf[6]:
+            return conv_transpose2d(self.model.variable[self.inputs[0]], weight=torch.Tensor(self.weight), bias=torch.Tensor(self.bias),
+                    stride=self.inputs_buf[3], padding=self.inputs_buf[4], output_padding=self.inputs_buf[7], groups=self.inputs_buf[8], dilation=self.inputs_buf[5])
+        else:
+            return conv2d(self.model.variable[self.inputs[0]], weight=torch.Tensor(self.weight), bias=torch.Tensor(self.bias),
+                    stride=self.inputs_buf[3], padding=self.inputs_buf[4], dilation=self.inputs_buf[5], groups=self.inputs_buf[8])
