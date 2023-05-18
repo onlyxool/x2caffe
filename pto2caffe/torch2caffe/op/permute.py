@@ -33,8 +33,4 @@ class Permute(Operator):
 
 
     def forward(self):
-        output = torch.permute(self.model.variable[self.inputs[0]], dims=self.inputs_buf[1])
-
-        self.model.variable[self.outputs[0]] = output
-        self.model.tensor_shape[self.outputs[0]] = list(output.shape)
-
+        return torch.permute(self.model.variable[self.inputs[0]], dims=self.inputs_buf[1])
