@@ -33,7 +33,4 @@ class ReLU(Operator):
 
 
     def forward(self):
-        output = relu(self.model.variable[self.inputs[0]])
-
-        self.model.variable[self.outputs[0]] = output
-        self.model.tensor_shape[self.outputs[0]] = list(output.shape)
+        return relu(self.model.variable[self.inputs[0]])
