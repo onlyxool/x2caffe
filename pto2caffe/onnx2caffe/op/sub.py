@@ -27,7 +27,16 @@ class Sub(Operator):
         elif self.inputs_buf[0] is None and self.inputs_buf[1] is not None:
             self.type = 'Bias'
 
-            self.bias = self.inputs_buf[1] * -1
+            BiasShape = self.inputs_shape[1]
+            CompatibleFlag = self.checkShapeCompatible()
+            if CompatibleFlag == 'Squeeze':
+                self.type = 'Scale+Reshape+Bias'
+                self.reshape_param = dict(shape=dict(dim=self.inputs_shape[1]))
+            elif not CompatibleFlag:
+                self.unSupported('Inputs incompatible shape for Caffe. ' + str(self.inputs_shape[0]) + ' - ' + str(BiasShape))
+                return
+
+            self.bias = self.inputs_buf[1].reshape(self.inputs_shape[1]) * -1
 
             self.bias_param = dict()
             self.bias_param['axis'] = self.inputs_shape[0].index(self.inputs_shape[1][0]) if len(self.inputs_shape[1]) > 0 else 0
