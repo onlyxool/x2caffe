@@ -102,7 +102,7 @@ class BaseOperator(Base):
 
     def saveConstant(self, name, constant):
         self.type = 'Constant'
-        self.model.constant[name] = constant if isinstance(constant, np.ndarray) else constant
+        self.model.constant[name] = constant
         self.model.tensor_shape[name] = list(constant.shape) if isinstance(constant, np.ndarray) else []
 
 
