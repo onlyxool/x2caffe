@@ -1,3 +1,4 @@
+import torch
 import numpy as np
 
 from caffe_transform import caffe_layer
@@ -72,3 +73,10 @@ class Mul(Operator):
         self.setConverted()
 
         return [layer]
+
+
+    def forward(self):
+        if self.inputs_buf[1] is not None:
+            return self.model.variable[self.inputs[0]].mul(torch.as_tensor(np.array(self.inputs_buf[1])))
+        else:
+            raise NotImplementedError
