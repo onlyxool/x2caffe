@@ -12,7 +12,6 @@ class Deconvolution(Operator):
         super().__init__(model, tf_op, tf_op_name, index)
 
         assert(self.operator_code == 'TRANSPOSE_CONV')
-        assert(self.op.InputsLength() == 3), "TFLite Conv always has bias"
         assert(self.op.OutputsLength() == 1)
 
         self.setInited()
