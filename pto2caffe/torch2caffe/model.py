@@ -29,6 +29,7 @@ from torch2caffe.op.slice import Slice
 from torch2caffe.op.stack import Stack
 from torch2caffe.op.arange import Arange
 from torch2caffe.op.detach import Detach
+from torch2caffe.op.expand import Expand
 from torch2caffe.op.concat import Concat
 from torch2caffe.op.linear import Linear
 from torch2caffe.op.matmul import Matmul
@@ -83,6 +84,7 @@ OpMap = {
     'stack': Stack,
     'arange': Arange,
     'detach': Detach,
+#'expand': Expand,
     'linear': Linear,
     'matmul': Matmul,
     'select': Select,
@@ -175,10 +177,13 @@ class Model(BaseModel):
             op = OpMap[node.kind](self, node, index)
             op.parse()
 
-            if op.status.parsed:
-                output = op.forward()
-                op.post_forward(output if isinstance(output, tuple) else [output])
-                self.operators.append(op)
+            try:
+                if op.status.parsed:
+                    output = op.forward()
+                    op.post_forward(output if isinstance(output, tuple) else [output])
+                    self.operators.append(op)
+            except KeyError:
+                break
 
         for errorMsg in list(set(self.errorMsg)):
             print(errorMsg)
