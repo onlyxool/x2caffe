@@ -9,8 +9,8 @@ class Operator(BaseOperator):
     def __init__(self, model, graph, node, index):
         super().__init__(model, graph, index)
         self.node = node
-        self.inputs = self.node.inputs
-        self.outputs = self.node.outputs
+        self.inputs = deepcopy(self.node.inputs)
+        self.outputs = deepcopy(self.node.outputs)
         self.operator_code = node.kind 
 
 
@@ -42,8 +42,10 @@ class Operator(BaseOperator):
         self.__parseAttributes__()
 
 
-    def forward(self):
-        pass
+    def post_forward(self, outputs):
+        for index, output in enumerate(outputs):
+            self.model.variable[self.outputs[index]] = output
+            self.model.tensor_shape[self.outputs[index]] = self.outputs_shape[index] = list(output.shape)
 
 
     def isInputShapeFullyDefined(self, index):
