@@ -12,6 +12,7 @@ class BaseModel(Base):
         self.pad = dict()
         self.layers = list()
         self.constant = dict()
+        self.variable = dict()
         self.errorMsg = list()
         self.indentity = dict()
         self.operators = list()
