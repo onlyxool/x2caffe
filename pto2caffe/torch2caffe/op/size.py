@@ -17,7 +17,7 @@ class Size(Operator):
             self.unSupported('Illegal Input Shape.')
             return
 
-        self.saveConstant(self.outputs[0], self.inputs_shape[0][self.inputs_buf[1]])
+        self.saveConstant(self.outputs[0], self.inputs_shape[0] if self.inputs_buf[1] is None else self.inputs_shape[0][self.inputs_buf[1]])
 
 
     def convert(self):
