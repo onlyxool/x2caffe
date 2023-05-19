@@ -1,3 +1,5 @@
+import torch
+
 from caffe_transform import caffe_layer
 from torch2caffe.op.operator import Operator
 
@@ -10,21 +12,11 @@ class Matmul(Operator):
         self.setInited()
 
 
-    def compute_output_shape(self):
-        if not self.isInputShapeFullyDefined(0):
-            self.unSupported('Illegal Input Shape.')
-            return
-
-        import numpy as np
-        self.outputs_shape[0] = list(np.matmul(np.ones(self.inputs_shape[0]), np.ones(self.inputs_shape[1])).shape)
-        self.model.tensor_shape[self.outputs[0]] = self.outputs_shape[0]
-
-
     def parse(self):
         super().__parse__()
 
         if self.inputs_buf[0] is None and self.inputs_buf[1] is not None and (len(self.inputs_shape[0]) == 2 and len(self.inputs_shape[1]) == 2):
-            print('ssss----------')
+            raise NotImplementedError
         else:
             self.type = 'MatMul'
 
@@ -32,8 +24,6 @@ class Matmul(Operator):
             self.matmul_param['transpose_a'] = 0 
             self.matmul_param['transpose_b'] = 0 
             self.attrs = self.matmul_param
-
-            self.compute_output_shape()
 
             self.setParsed()
 
@@ -47,3 +37,7 @@ class Matmul(Operator):
         self.setConverted()
 
         return [layer]
+
+
+    def forward(self):
+        return torch.matmul(self.model.variable[self.inputs[0]], self.model.variable[self.inputs[1]])
