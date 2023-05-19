@@ -10,14 +10,6 @@ class Slice(Operator):
         self.setInited()
 
 
-    def compute_output_shape(self):
-        if not self.isInputShapeFullyDefined(0):
-            self.unSupported('Illegal Input Shape.')
-            return
-
-        self.model.tensor_shape[self.outputs[0]] = self.outputs_shape[0]
-
-
     def parse(self):
         self.type = 'Slice'
         super().__parse__()
@@ -45,6 +37,10 @@ class Slice(Operator):
             self.inputs_buf[3] = self.inputs_shape[0][self.inputs_buf[1]]
 
         if len(self.inputs_buf) == 5:
+            if self.inputs_buf[4] != 1:
+                self.unSupported('Can\'t Support Step == ' + str(self.inputs_buf[4]))
+                return
+
             if self.inputs_buf[2] == 0: # Start
                 slice_point = [self.inputs_buf[3]]
                 self.outputs.append('intermediate_' + str(self.index))
@@ -59,9 +55,6 @@ class Slice(Operator):
                 self.outputs.append('intermediate_' + str(self.index) + '_1')
                 self.outputs_shape[0][self.inputs_buf[1]] = slice_point[1] - slice_point[0]
 
-            if self.inputs_buf[4] != 1:
-                self.unSupported('Can\'t Support Step == ' + str(self.inputs_buf[3]))
-                return
         elif 'dim' in self.attrs and 'chunks' in self.attrs:
             slice_point = chunk_split(self.inputs_shape[0][self.attrs['dim']], self.attrs['chunks'])
 
@@ -71,7 +64,6 @@ class Slice(Operator):
 
         self.attrs = self.slice_param
 
-        self.compute_output_shape()
         self.setParsed()
 
 
