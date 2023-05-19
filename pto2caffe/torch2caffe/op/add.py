@@ -48,8 +48,5 @@ class Add(Operator):
 
 
     def forward(self):
-        output = torch.add(self.model.variable[self.inputs[0]], self.model.variable[self.inputs[1]], alpha=self.inputs_buf[2])
-
-        self.model.variable[self.outputs[0]] = output
-        self.model.tensor_shape[self.outputs[0]] = list(output.shape)
-
+        return torch.add(self.model.variable[self.inputs[0]],
+                self.model.variable[self.inputs[1]] if self.inputs_buf[1] is None else torch.Tensor(np.array(self.inputs_buf[1])), alpha=self.inputs_buf[2])
