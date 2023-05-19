@@ -148,8 +148,8 @@ def Convert(param=None):
     param['model_name'] = os.path.basename(model_path)
     caffe_model_path = os.path.splitext(model_path)[0]
 
-    if framework == 'pytorch':
-        from pytorch2caffe.convert import convert as PytorchConvert
+    if framework in ['pytorch', 'torch']:
+        from torch2caffe.convert import convert as PytorchConvert
         PytorchConvert(model_path, caffe_model_path, param)
     elif framework == 'tensorflow':
         from tensorflow2caffe.convert import convert as TensorflowConvert
