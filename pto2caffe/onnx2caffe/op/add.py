@@ -56,7 +56,12 @@ class Add(Operator):
 
             self.bias_param = dict()
             self.bias_param['axis'] = self.inputs_shape[0].index(self.inputs_shape[1][0]) if len(self.inputs_shape[1]) > 0 else 0
-            self.bias_param['num_axes'] = len(self.bias.shape) if isinstance(self.bias, np.ndarray) else 0
+
+            if self.inputs_buf[1] is not None:
+                self.bias_param['num_axes'] = len(self.inputs_buf[1].shape) if isinstance(self.inputs_buf[1], np.ndarray) else 0
+            else:
+                self.bias_param['num_axes'] = len(self.inputs_shape[1])
+
             self.attrs = self.bias_param
 
             self.bias = self.inputs_buf[1]
