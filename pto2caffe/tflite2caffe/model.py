@@ -39,7 +39,7 @@ from util import shape_map_nhwc2nchw
 from caffe_transform import make_caffe_input_layer
 
 
-numpy_dtype = [np.float32, np.float16, np.int32, np.uint8, np.int64, 'string', np.bool, np.int16, np.complex64, np.int8, np.float64, np.complex128]
+numpy_dtype = [np.float32, np.float16, np.int32, np.uint8, np.int64, 'string', np.bool_, np.int16, np.complex64, np.int8, np.float64, np.complex128]
 
 tf_dtype_map = [tf.float32, tf.float16, tf.qint32, tf.quint8, tf.int64, 'string', tf.bool, tf.qint16, tf.complex64, tf.qint8, tf.float64, tf.complex128]
 
