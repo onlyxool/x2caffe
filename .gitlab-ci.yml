@@ -1,57 +1,26 @@
 ---
 stages:
+  - .pre
   - build
-  - test
+  - .post
 workflow:
   rules:
     - if: $CI_PIPELINE_SOURCE != "merge_request_event"
 variables:
-  CONDA_EXE: "/usr/local/bin/conda"
-  CONDA_PREFIX: "/usr/local/envs/mc"
-  CONDA_PREFIX_1: "/usr/local"
-  CONDA_PYTHON_EXE: "/usr/local/bin/python"
-  CONDA_DEFAULT_ENV: "mc"
-  PATH: "/usr/local/envs/mc/bin:/usr/local/condabin:/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+  GIT_SUBMODULE_STRATEGY: recursive
+  GIT_SUBMODULE_UPDATE_FLAGS: --jobs 6
 
-pre-job:
-  stage: .pre
-  rules:
-    - if: $GITLAB_CI_PRE_STAGE_ENABLE == "true"
-  script:
-    - echo "This job runs in the .pre stage, before all other stages."
-
-build-job:
+build-release-job:
   stage: build
   timeout: 30m
-  image: test:cpu
+  image: vimicro-mc:cpu
   before_script:
     - TZ=UTC-8 date "+%Y-%m-%d %H:%M:%S"
   script:
-    - echo "This job builds the target of pto2caffe"
-    - python3 build.py --help
-    - python3 build.py
+    - python3 setup.py --help
+    - python3 setup.py --build_type="release" --jobs="$(($(nproc) / 2))" --is_vc0768
   after_script:
     - TZ=UTC-8 date "+%Y-%m-%d %H:%M:%S"
   artifacts:
     paths:
       - build_*
-
-test-job:
-  stage: test
-  before_script:
-    - TZ=UTC-8 date "+%Y-%m-%d %H:%M:%S"
-  script:
-    - echo "This job tests pto2caffe."
-    - mkdir test
-  after_script:
-    - TZ=UTC-8 date "+%Y-%m-%d %H:%M:%S"
-  artifacts:
-    paths:
-      - test
-
-post-job:
-  stage: .post
-  rules:
-    - if: $GITLAB_CI_POST_STAGE_ENABLE == "true"
-  script:
-    - echo "This job runs in the .post stage, after all other stages."
