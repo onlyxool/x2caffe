@@ -5,6 +5,7 @@ import numpy as np
 from base_Model import BaseModel
 from util import isShapeFullyDefined
 
+from onnx2caffe.op.abs import Abs
 from onnx2caffe.op.add import Add
 from onnx2caffe.op.div import Div
 from onnx2caffe.op.elu import Elu
@@ -66,6 +67,7 @@ numpy_dtype = [None, np.float32, np.uint8, np.int8, np.uint16, np.int16, np.int3
 logger = logging.getLogger('ONNX2Caffe')
 
 OpMap = {
+    'Abs': Abs,
     'Add': Add,
     'Div': Div,
     'Elu': Elu,
