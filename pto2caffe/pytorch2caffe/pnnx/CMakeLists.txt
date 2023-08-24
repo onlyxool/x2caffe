@@ -7,7 +7,8 @@ set(CMAKE_CXX_STANDARD 14)
 
 option(PNNX_COVERAGE "build for coverage" OFF)
 
-set(Torch_INSTALL_DIR "/usr/local/envs/mc/lib/python3.7/site-packages/torch" CACHE STRING "")
+execute_process(COMMAND python3 -c "import torch;print((torch.__path__)[0])" OUTPUT_VARIABLE TORCH_INSTALL_DIR__ OUTPUT_STRIP_TRAILING_WHITESPACE)
+set(Torch_INSTALL_DIR "${TORCH_INSTALL_DIR__}" CACHE STRING "")
 
 set(Torch_DIR "${Torch_INSTALL_DIR}/share/cmake/Torch")
 set(TorchVision_DIR "${TorchVision_INSTALL_DIR}/share/cmake/TorchVision")

@@ -62,7 +62,7 @@ from onnx2caffe.op.instancenormalization import InstanceNormalization
 from onnx2caffe.op.mish import Mish
 
 
-numpy_dtype = [None, np.float32, np.uint8, np.int8, np.uint16, np.int16, np.int32, np.int64, 'string', np.bool, np.float16, np.double, np.uint32, np.uint64, np.complex64, np.complex128, 'bfloat16']
+numpy_dtype = [None, np.float32, np.uint8, np.int8, np.uint16, np.int16, np.int32, np.int64, 'string', np.bool_, np.float16, np.double, np.uint32, np.uint64, np.complex64, np.complex128, 'bfloat16']
 
 logger = logging.getLogger('ONNX2Caffe')
 

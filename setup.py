@@ -31,6 +31,8 @@ def main():
                        help=f'build for vc0728')
     group.add_argument('--is_vc0768', action="store_true",
                        help=f'build for vc0768')
+    group.add_argument('--is_vc0778', action="store_true",
+                       help=f'build for vc0778')
 
     args = parser.parse_args()
 
@@ -39,6 +41,7 @@ def main():
     jobs = min(mp.cpu_count() - 1, args.jobs)  # number of working threads
     is_vc0728 = args.is_vc0728  # {False|True}
     is_vc0768 = args.is_vc0768  # {False|True}
+    is_vc0778 = args.is_vc0778  # {False|True}
 
     current_dir = os.getcwd()
     project_root = os.path.dirname(os.path.realpath(sys.argv[0]))
@@ -59,7 +62,7 @@ def main():
     # build pnnx
     pnnx_dir = f'{project_root}/pto2caffe/pytorch2caffe/pnnx'
     pnnx_build_dir = f'{pnnx_dir}/build-{build_type}'
-    shutil.rmtree(pnnx_build_dir, ignore_errors=True)
+    # shutil.rmtree(pnnx_build_dir, ignore_errors=True) # rm -rf build*/
     os.system(f'cmake -H{pnnx_dir} -B{pnnx_build_dir} -DCMAKE_BUILD_TYPE={cmake_build_type}')
     os.system(f'cmake --build {pnnx_build_dir} --target all -- -j {jobs}')
     shutil.copyfile(f'{pnnx_build_dir}/src/libpnnx.so', f'{target_dir}/pytorch2caffe/libpnnx.so')
