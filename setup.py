@@ -61,9 +61,9 @@ def main():
 
     # build pnnx
     pnnx_dir = f'{project_root}/pto2caffe/pytorch2caffe/pnnx'
-    pnnx_build_dir = f'{pnnx_dir}/build-{build_type}'
+    pnnx_build_dir = f'{pnnx_dir}/build_{build_type}'
     # shutil.rmtree(pnnx_build_dir, ignore_errors=True) # rm -rf build*/
-    os.system(f'cmake -H{pnnx_dir} -B{pnnx_build_dir} -DCMAKE_BUILD_TYPE={cmake_build_type}')
+    os.system(f'cmake -H{pnnx_dir} -B {pnnx_build_dir} -D CMAKE_BUILD_TYPE={cmake_build_type} -D CMAKE_CXX_STANDARD=11')
     os.system(f'cmake --build {pnnx_build_dir} --target all -- -j {jobs}')
     shutil.copyfile(f'{pnnx_build_dir}/src/libpnnx.so', f'{target_dir}/pytorch2caffe/libpnnx.so')
     shutil.copyfile(f'{pnnx_build_dir}/src/libpnnx.so', f'{project_root}/pto2caffe/pytorch2caffe/libpnnx.so')
