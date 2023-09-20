@@ -60,6 +60,7 @@ from onnx2caffe.op.globalaveragepool import GlobalAveragePool
 from onnx2caffe.op.instancenormalization import InstanceNormalization
 
 from onnx2caffe.op.mish import Mish
+from onnx2caffe.op.max import Max
 
 
 numpy_dtype = [None, np.float32, np.uint8, np.int8, np.uint16, np.int16, np.int32, np.int64, 'string', np.bool_, np.float16, np.double, np.uint32, np.uint64, np.complex64, np.complex128, 'bfloat16']
@@ -125,6 +126,7 @@ OpMap = {
     'GlobalAveragePool': GlobalAveragePool,
     'InstanceNormalization': InstanceNormalization,
     'Mish': Mish, # Yolov4
+    'Max': Max, # Yolov4
 }
 
 
