@@ -23,6 +23,9 @@ def main():
     parser.add_argument('--build_type', required=False,
                         default='release', type=str, choices=['release', 'debug'],
                         help='set build type (default: release)')
+    parser.add_argument('--build_dir_postfix', required=False,
+                        default='', type=str,
+                        help='set build directory postfix (default: \'\')')
     parser.add_argument('-j', '--jobs', required=False,
                         default=int(mp.cpu_count() / 2), type=int,
                         help=f'set the number of threads to use (default: {int(mp.cpu_count() / 2)})')
@@ -39,14 +42,15 @@ def main():
     build_type = str(args.build_type)  # {debug|release}
     cmake_build_type = build_type.capitalize()  # {Debug|Release}
     jobs = min(mp.cpu_count() - 1, args.jobs)  # number of working threads
+    postfix = args.build_dir_postfix  # '', '_DEPRECATED'
+
     is_vc0728 = args.is_vc0728  # {False|True}
     is_vc0768 = args.is_vc0768  # {False|True}
     is_vc0778 = args.is_vc0778  # {False|True}
 
-    current_dir = os.getcwd()
     project_root = os.path.dirname(os.path.realpath(sys.argv[0]))
-    target_dir = f'{current_dir}/build_{build_type}'
-    shutil.rmtree(target_dir, ignore_errors=True)
+    target_dir = f'{project_root}/build_{build_type}{postfix}'
+    #shutil.rmtree(target_dir, ignore_errors=True)
 
     # compile py to pyc
     py_base_dir = f'{project_root}/pto2caffe'
@@ -61,8 +65,8 @@ def main():
 
     # build pnnx
     pnnx_dir = f'{project_root}/pto2caffe/pytorch2caffe/pnnx'
-    pnnx_build_dir = f'{pnnx_dir}/build_{build_type}'
-    # shutil.rmtree(pnnx_build_dir, ignore_errors=True) # rm -rf build*/
+    pnnx_build_dir = f'{target_dir}/pnnx_build_{build_type}{postfix}'
+    # shutil.rmtree(pnnx_build_dir, ignore_errors=True)
     os.system(f'cmake -H{pnnx_dir} -B {pnnx_build_dir} -D CMAKE_BUILD_TYPE={cmake_build_type} -D CMAKE_CXX_STANDARD=11')
     os.system(f'cmake --build {pnnx_build_dir} --target all -- -j {jobs}')
     shutil.copyfile(f'{pnnx_build_dir}/src/libpnnx.so', f'{target_dir}/pytorch2caffe/libpnnx.so')
