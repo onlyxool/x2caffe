@@ -16,7 +16,7 @@ class Pow(Operator):
 
         # Attributes
         self.power_param = dict()
-        self.power_param['power'] = self.inputs_buf[1]
+        self.power_param['power'] = float(self.inputs_buf[1])
         self.power_param['scale'] = 1
         self.power_param['shift'] = 0
 
