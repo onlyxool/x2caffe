@@ -13,7 +13,7 @@ variables:
 build-release-job:
   stage: build
   timeout: 30m
-  image: vimicro-mc:cpu
+  image: duruyao/vimicro-mc:cpu-v0.9.5
   before_script:
     - TZ=UTC-8 date "+%Y-%m-%d %H:%M:%S"
   script:
