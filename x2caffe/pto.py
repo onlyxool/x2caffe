@@ -136,7 +136,7 @@ def convert(model_path, convertor, platform, op):
 
     appex = ' -compare=1 -crop_h=224 -crop_w=224 ' if platform == 'pytorch' else ' -compare=1 '
     simplifier = '-simplifier=1' if platform == 'onnx' else ''
-    command = 'python ' + convertor + ' -platform=' + platform + ' -model=' + model_path + appex + simplifier
+    command = 'python3 ' + convertor + ' -platform=' + platform + ' -model=' + model_path + appex + simplifier
 
     ret = os.system(command)
     if ret != 0:
@@ -150,7 +150,7 @@ def convert(model_path, convertor, platform, op):
 def main():
     # Arg parse
     if sys.argv[0].endswith('pyc'):
-        convertor = envroot + 'toolchain/pto2caffe/convert.pyc'
+        convertor = envroot + 'toolchain/x2caffe/convert.pyc'
     elif sys.argv[0].endswith('py'):
         convertor = 'convert.py'
 
