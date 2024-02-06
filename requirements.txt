@@ -1,0 +1,15 @@
+streamlit
+streamlit_dynamic_filters==0.1.3
+streamlit-aggrid==0.3.3
+pandas==1.5.0
+python-pptx~=0.6.21
+openpyxl
+Pillow==9.3.0
+requests
+plotly
+yahooquery
+kaleido
+openai
+snowflake-connector-python
+langchain
+
